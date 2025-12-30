@@ -153,6 +153,44 @@ Dataset: 200 variants
   ...
 ```
 
+### 4. Compare Models
+
+Compare multiple LLM models side-by-side:
+
+```bash
+# Run same variants through multiple models
+python scripts/compare_models.py --models openai/gpt-4o google/gemini-2.5-flash anthropic/claude-sonnet-4
+
+# Limit variants for quick test
+python scripts/compare_models.py --models openai/gpt-4o google/gemini-2.5-flash --limit 20
+
+# Compare existing results
+python scripts/compare_models.py --results-dir results/
+```
+
+**Output:**
+```
+================================================================================
+MODEL COMPARISON REPORT
+================================================================================
+
+Model                                      Exact   Direct   Errors   Avg Time
+--------------------------------------------------------------------------------
+openai/gpt-4o                              78.5%    91.2%        2      45230ms
+google/gemini-2.5-flash                    72.3%    89.7%        5      28150ms
+anthropic/claude-sonnet-4                  75.1%    90.5%        3      38420ms
+
+--------------------------------------------------------------------------------
+Best Exact Match:    openai/gpt-4o (78.5%)
+Best Directional:    openai/gpt-4o (91.2%)
+
+================================================================================
+MODEL AGREEMENT ANALYSIS
+================================================================================
+  gpt-4o vs gemini-2.5-flash: 82.3% agreement (161/195)
+  gpt-4o vs claude-sonnet-4: 85.1% agreement (166/195)
+```
+
 ## Project Structure
 
 ```
@@ -166,11 +204,13 @@ aiva-bench/
 │   └── sample_200.jsonl
 ├── results/
 │   ├── classifications_*.jsonl
+│   ├── comparison_*.json
 │   └── metrics_*.json
 └── scripts/
     ├── parse_erepo.py    # Parse & sample eRepo data
     ├── classify.py       # Call AIVA API
-    └── benchmark.py      # Calculate metrics
+    ├── benchmark.py      # Calculate metrics
+    └── compare_models.py # Compare multiple models
 ```
 
 ## Rate Limiting
