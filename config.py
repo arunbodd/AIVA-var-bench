@@ -19,19 +19,19 @@ AIVA_API_URL = os.getenv("AIVA_API_URL", "http://localhost:8000")
 AIVA_API_TOKEN = os.getenv("AIVA_API_TOKEN", "")
 
 # Classification settings
-DEFAULT_ASSEMBLY = "GRCh38"
+DEFAULT_ASSEMBLY = os.getenv("DEFAULT_ASSEMBLY", "GRCh38")
 CLASSIFICATION_TYPE = "acmg"  # acmg for germline, amp for somatic
-DEFAULT_MODEL = "google/gemini-3-flash-preview"  # None uses AIVA default (gemini-2.5-flash), or set e.g. "openai/gpt-4o"
+DEFAULT_MODEL = os.getenv("DEFAULT_MODEL", "google/gemini-3-flash-preview")  # None uses AIVA default (gemini-2.5-flash), or set e.g. "openai/gpt-4o"
 
 # Request settings
-CONCURRENCY_LIMIT = 5  # Keep low to avoid rate limits
+CONCURRENCY_LIMIT = os.getenv("CONCURRENCY_LIMIT", 5)  # Keep low to avoid rate limits
 REQUEST_TIMEOUT = 300  # 5 minutes
 MAX_RETRIES = 5
 RETRY_DELAY = 10  # seconds base delay
 RATE_LIMIT_DELAY = 30  # seconds to wait on 429
 
 # Sampling settings
-DEFAULT_SAMPLE_SIZE = 200
+DEFAULT_SAMPLE_SIZE = os.getenv("DEFAULT_SAMPLE_SIZE", 200)
 RANDOM_SEED = 42
 
 # Classification categories
