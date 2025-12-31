@@ -1,6 +1,8 @@
 *.json
 *.jsonl
 *.csv
+!data/bias_unified.jsonl
+data/bias_2015/
 *.log
 *.pyc
 __pycache__
