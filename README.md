@@ -4,12 +4,38 @@ Benchmark suite for evaluating AIVA's AI-powered variant classification against 
 
 ## Overview
 
-This tool measures how well AIVA's variant classification aligns with expert panel (VCEP) curations using ACMG/AMP guidelines. It calculates:
+This tool measures how well AIVA's variant classification aligns with expert panel (VCEP) curations using ACMG/AMP guidelines. It supports two benchmarking workflows:
 
+### Workflow A: Quick AIVA Model Comparison
+Compare different LLM models within AIVA using a sample of eRepo variants.
+
+### Workflow B: 4-Way Tool Comparison
+Compare AIVA against InterVar and BIAS-2015 using pre-computed predictions from the [BIAS-2015 paper](https://github.com/bitscopic/BIAS-2015).
+
+**Metrics calculated:**
 - **Classification accuracy** (5-class and 3-class directional)
 - **Per-class precision, recall, and F1 scores**
-- **ACMG criteria agreement** (which evidence codes AIVA identifies correctly)
+- **ACMG criteria agreement** (which evidence codes each tool identifies)
 - **Confusion matrices** for error analysis
+
+## Quick Start
+
+```bash
+# Setup
+python3 -m venv venv && source venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env  # Add your AIVA_API_TOKEN
+
+# Workflow A: Quick model comparison (5 min)
+python scripts/parse_erepo.py --sample-size 50
+python scripts/compare_models.py --models google/gemini-3-flash-preview --limit 10
+python scripts/benchmark.py
+
+# Workflow B: 4-way tool comparison (requires BIAS-2015 data)
+python scripts/parse_bias_data.py
+python scripts/compare_models.py --models google/gemini-3-flash-preview --input data/bias_unified.jsonl --limit 100
+python scripts/compare_tools.py --aiva-results results/classifications_*.jsonl
+```
 
 ## Setup
 
@@ -43,7 +69,11 @@ Edit `config.py` or set environment variables:
 
 ## Usage
 
-### 1. Parse eRepo Data
+### Workflow A: Quick AIVA Model Comparison
+
+Use this to compare different LLM models within AIVA on a sample of eRepo variants.
+
+#### Step 1: Parse eRepo Data
 
 Download the eRepo TSV from [ClinGen](https://erepo.clinicalgenome.org/evrepo/) and parse it:
 
@@ -53,44 +83,114 @@ python scripts/parse_erepo.py
 
 # Custom sample size
 python scripts/parse_erepo.py --sample-size 500
-
-# Parse all without sampling
-python scripts/parse_erepo.py --full
 ```
 
 **Output:**
 - `data/parsed_variants.jsonl` - All parsed variants
 - `data/sample_200.jsonl` - Stratified sample
 
-### 2. Run Classification
+#### Step 2: Run Classification & Compare Models
 
 ```bash
-# Use default sample and model
-python scripts/classify.py
+# Compare multiple models on the sample
+python scripts/compare_models.py --models google/gemini-3-flash-preview openai/gpt-4o
 
-# Specify model
-python scripts/classify.py --model openai/gpt-4o
-
-# Limit variants (for testing)
-python scripts/classify.py --limit 10
-
-# Adjust concurrency
-python scripts/classify.py --concurrency 2
+# Limit variants for quick testing
+python scripts/compare_models.py --models google/gemini-3-flash-preview --limit 20
 ```
 
-**Output:** `results/classifications_YYYYMMDD_HHMMSS.jsonl`
-
-### 3. Calculate Metrics
+#### Step 3: Calculate Detailed Metrics
 
 ```bash
 # Use most recent results
 python scripts/benchmark.py
 
 # Specify input file
-python scripts/benchmark.py --input results/classifications_20241229_123456.jsonl
+python scripts/benchmark.py --input results/classifications_*.jsonl
 ```
 
-**Output:** `results/metrics_YYYYMMDD_HHMMSS.json`
+---
+
+### Workflow B: 4-Way Tool Comparison (AIVA vs InterVar vs BIAS-2015)
+
+Use this to compare AIVA against InterVar and BIAS-2015 on 7,617 variants from the BIAS-2015 paper.
+
+#### Step 1: Download BIAS-2015 Supplementary Data
+
+Download pre-computed predictions from the BIAS-2015 paper:
+
+```bash
+# Download from S3
+aws s3 cp s3://bias-2015/bias_v2.0.0_supplementary_files.zip /tmp/
+unzip /tmp/bias_v2.0.0_supplementary_files.zip -d /tmp/bias_supp/
+
+# Copy required files to project
+cp /tmp/bias_supp/bias_v2.0.0_supplementary_files/erepo_feb_2nd.tabbed data/bias_2015/
+cp /tmp/bias_supp/bias_v2.0.0_supplementary_files/erepo_feb_2nd.hg19_multianno.txt.intervar data/bias_2015/
+cp /tmp/bias_supp/bias_v2.0.0_supplementary_files/erepo_feb_2nd_bitscopic_classifications.tsv data/bias_2015/
+cp /tmp/bias_supp/bias_v2.0.0_supplementary_files/erepo_feb_2nd_sorted.vcf data/bias_2015/
+```
+
+**Files needed:**
+| File | Description |
+|------|-------------|
+| `erepo_feb_2nd.tabbed` | eRepo ground truth (expert classifications) |
+| `erepo_feb_2nd.hg19_multianno.txt.intervar` | InterVar predictions |
+| `erepo_feb_2nd_bitscopic_classifications.tsv` | BIAS-2015 predictions |
+| `erepo_feb_2nd_sorted.vcf` | Authoritative variant list (VCF format) |
+
+#### Step 2: Parse and Unify Data
+
+```bash
+python scripts/parse_bias_data.py
+```
+
+This creates `data/bias_unified.jsonl` containing 7,617 variants with:
+- Ground truth classifications from eRepo
+- InterVar predictions
+- BIAS-2015 predictions
+- All in AIVA-compatible format (hg19/GRCh37)
+
+#### Step 3: Run AIVA Classification
+
+```bash
+# Test with small sample first
+python scripts/compare_models.py \
+    --models google/gemini-3-flash-preview \
+    --input data/bias_unified.jsonl \
+    --limit 100
+
+# Full dataset (takes ~19 hours per model at ~9s/variant)
+python scripts/compare_models.py \
+    --models google/gemini-3-flash-preview \
+    --input data/bias_unified.jsonl
+```
+
+#### Step 4: Run 4-Way Comparison
+
+```bash
+python scripts/compare_tools.py \
+    --aiva-results results/classifications_google_gemini-3-flash-preview_*.jsonl
+```
+
+**Output:**
+```
+=== FAIR COMPARISON (on N AIVA-predicted variants) ===
+
+Tool                  N Valid      Exact     Direct   Macro F1     Dir F1
+------------------------------------------------------------------------------------------
+AIVA                      100      75.0%      88.0%      68.2%      85.3%
+BIAS-2015                 100      58.0%      81.0%      51.4%      81.5%
+InterVar                  100      49.0%      65.0%      43.0%      65.9%
+
+REFERENCE: Full dataset metrics (all 7617 variants)
+Tool                  N Valid      Exact     Direct
+------------------------------------------------------------------------------------------
+InterVar (full)          7617      49.6%      65.3%
+BIAS-2015 (full)         7617      58.2%      81.2%
+```
+
+The comparison is **fair** - all tools are evaluated on the exact same variants that AIVA classified.
 
 ## Metrics Explained
 
@@ -153,65 +253,48 @@ Dataset: 200 variants
   ...
 ```
 
-### 4. Compare Models
-
-Compare multiple LLM models side-by-side:
-
-```bash
-# Run same variants through multiple models
-python scripts/compare_models.py --models openai/gpt-4o google/gemini-2.5-flash anthropic/claude-sonnet-4
-
-# Limit variants for quick test
-python scripts/compare_models.py --models openai/gpt-4o google/gemini-2.5-flash --limit 20
-
-# Compare existing results
-python scripts/compare_models.py --results-dir results/
-```
-
-**Output:**
-```
-================================================================================
-MODEL COMPARISON REPORT
-================================================================================
-
-Model                                      Exact   Direct   Errors   Avg Time
---------------------------------------------------------------------------------
-openai/gpt-4o                              78.5%    91.2%        2      45230ms
-google/gemini-2.5-flash                    72.3%    89.7%        5      28150ms
-anthropic/claude-sonnet-4                  75.1%    90.5%        3      38420ms
-
---------------------------------------------------------------------------------
-Best Exact Match:    openai/gpt-4o (78.5%)
-Best Directional:    openai/gpt-4o (91.2%)
-
-================================================================================
-MODEL AGREEMENT ANALYSIS
-================================================================================
-  gpt-4o vs gemini-2.5-flash: 82.3% agreement (161/195)
-  gpt-4o vs claude-sonnet-4: 85.1% agreement (166/195)
-```
-
 ## Project Structure
 
 ```
 aiva-bench/
 ├── config.py              # Configuration settings
+├── metrics.py             # Shared metrics calculations
 ├── requirements.txt       # Python dependencies
-├── .env.example          # Environment template
+├── .env.example           # Environment template
 ├── data/
-│   ├── erepo-tabbed.tsv  # Raw eRepo download
+│   ├── erepo-tabbed.tsv   # Raw eRepo download (Workflow A)
 │   ├── parsed_variants.jsonl
-│   └── sample_200.jsonl
+│   ├── sample_200.jsonl
+│   ├── bias_2015/         # BIAS-2015 supplementary files (Workflow B)
+│   │   ├── erepo_feb_2nd.tabbed
+│   │   ├── erepo_feb_2nd.hg19_multianno.txt.intervar
+│   │   ├── erepo_feb_2nd_bitscopic_classifications.tsv
+│   │   └── erepo_feb_2nd_sorted.vcf
+│   └── bias_unified.jsonl # Unified dataset for 4-way comparison
 ├── results/
 │   ├── classifications_*.jsonl
 │   ├── comparison_*.json
-│   └── metrics_*.json
+│   ├── metrics_*.json
+│   └── tool_comparison_detailed.jsonl
 └── scripts/
-    ├── parse_erepo.py    # Parse & sample eRepo data
-    ├── classify.py       # Call AIVA API
-    ├── benchmark.py      # Calculate metrics
-    └── compare_models.py # Compare multiple models
+    ├── parse_erepo.py     # Parse & sample eRepo data (Workflow A)
+    ├── parse_bias_data.py # Parse BIAS-2015 data (Workflow B)
+    ├── classify.py        # Call AIVA API (single model)
+    ├── compare_models.py  # Compare multiple AIVA models
+    ├── compare_tools.py   # 4-way tool comparison
+    └── benchmark.py       # Calculate detailed metrics
 ```
+
+## Script Reference
+
+| Script | Purpose | When to Use |
+|--------|---------|-------------|
+| `parse_erepo.py` | Parse ClinGen eRepo TSV, create stratified sample | Workflow A, Step 1 |
+| `parse_bias_data.py` | Parse BIAS-2015 supplementary files, create unified dataset | Workflow B, Step 2 |
+| `classify.py` | Run AIVA classification (single model) | Quick single-model test |
+| `compare_models.py` | Run AIVA with multiple models, compare results | Both workflows |
+| `compare_tools.py` | Compare AIVA vs InterVar vs BIAS-2015 | Workflow B, Step 4 |
+| `benchmark.py` | Calculate detailed metrics, confusion matrices | Detailed analysis |
 
 ## Rate Limiting
 

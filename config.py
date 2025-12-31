@@ -57,3 +57,7 @@ CLASSIFICATION_TO_DIRECTION = {
 }
 
 DIRECTION_LABELS = ["pathogenic", "vus", "benign"]
+
+# wInterVar API Configuration
+WINTERVAR_API_URL = os.getenv("WINTERVAR_API_URL", "http://wintervar.wglab.org/api_new.php")
+WINTERVAR_ASSEMBLY = os.getenv("WINTERVAR_ASSEMBLY", "hg38")  # hg19 or hg38
