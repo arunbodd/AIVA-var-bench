@@ -119,9 +119,19 @@ Use this to compare AIVA against InterVar and BIAS-2015 on 7,617 variants from t
 
 Download pre-computed predictions from the BIAS-2015 paper:
 
+**Option A: Direct download (no AWS CLI required)**
+
+Download: https://bias-2015.s3.amazonaws.com/bias_v2.0.0_supplementary_files.zip
+
+**Option B: AWS CLI**
+
 ```bash
-# Download from S3
 aws s3 cp s3://bias-2015/bias_v2.0.0_supplementary_files.zip /tmp/
+```
+
+Then extract and copy files:
+
+```bash
 unzip /tmp/bias_v2.0.0_supplementary_files.zip -d /tmp/bias_supp/
 
 # Copy required files to project
