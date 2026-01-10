@@ -296,7 +296,7 @@ def plot_confusion_matrices(aiva_data: Dict, unified_data: Dict, output_dir: Pat
 # =============================================================================
 
 def plot_performance_by_category(metrics_tsv: Path, output_dir: Path):
-    """Generate grouped bar charts showing performance by disease category."""
+    """Generate grouped bar charts showing F1 scores by disease category."""
     
     import csv
     
@@ -309,13 +309,18 @@ def plot_performance_by_category(metrics_tsv: Path, output_dir: Path):
             cat = row['category']
             model = row['model']
             metrics[cat][model] = {
-                'accuracy': float(row['directional_accuracy']),
-                'plp_sens': float(row['plp_sensitivity']),
+                'dir_accuracy': float(row['directional_accuracy']),
+                'exact_accuracy': float(row.get('exact_accuracy', 0)),
                 'plp_f1': float(row['plp_f1']),
-                'vus_sens': float(row['vus_sensitivity']),
                 'vus_f1': float(row['vus_f1']),
-                'blb_sens': float(row['blb_sensitivity']),
                 'blb_f1': float(row['blb_f1']),
+                # Exact 5-class F1 scores
+                'exact_p_f1': float(row.get('exact_p_f1', 0)),
+                'exact_lp_f1': float(row.get('exact_lp_f1', 0)),
+                'exact_vus_f1': float(row.get('exact_vus_f1', 0)),
+                'exact_lb_f1': float(row.get('exact_lb_f1', 0)),
+                'exact_b_f1': float(row.get('exact_b_f1', 0)),
+                'exact_macro_f1': float(row.get('exact_macro_f1', 0)),
             }
     
     # Filter to categories in our order
@@ -330,76 +335,76 @@ def plot_performance_by_category(metrics_tsv: Path, output_dir: Path):
     tools = sorted([t for t in all_tools if 'claude' in t.lower() or 'gemini' in t.lower() or 'gpt' in t.lower()])
     tools += sorted([t for t in all_tools if t in ['BIAS-2015', 'InterVar']])
     
-    # Create figure with subplots
+    # Create figure with subplots - 2x2 showing F1 scores
     fig, axes = plt.subplots(2, 2, figsize=(14, 10))
     
     x = np.arange(len(categories))
     width = 0.15
     
-    # Plot 1: Overall Directional Accuracy
+    # Plot 1: Exact Macro F1 Score (5-class)
     ax = axes[0, 0]
     for i, tool in enumerate(tools):
-        values = [metrics[cat].get(tool, {}).get('accuracy', 0) for cat in categories]
+        values = [metrics[cat].get(tool, {}).get('exact_macro_f1', 0) for cat in categories]
         offset = (i - len(tools)/2 + 0.5) * width
         bars = ax.bar(x + offset, values, width, label=get_short_name(tool),
                      color=get_tool_color(tool), edgecolor='black', linewidth=0.5)
     
-    ax.set_ylabel('Accuracy (%)')
-    ax.set_title('A. Directional Accuracy by Disease Category', fontweight='bold')
+    ax.set_ylabel('Macro F1 Score (%)')
+    ax.set_title('A. Exact 5-Class Macro F1 by Disease Category', fontweight='bold')
     ax.set_xticks(x)
     ax.set_xticklabels([CATEGORY_SHORT.get(c, c) for c in categories], rotation=45, ha='right')
     ax.legend(loc='upper right', fontsize=8)
     ax.set_ylim(0, 105)
-    ax.axhline(y=80, color='gray', linestyle='--', alpha=0.5, linewidth=0.8)
+    ax.axhline(y=60, color='gray', linestyle='--', alpha=0.5, linewidth=0.8)
     
-    # Plot 2: P/LP Sensitivity
+    # Plot 2: P/LP F1 Score (Directional)
     ax = axes[0, 1]
     for i, tool in enumerate(tools):
-        values = [metrics[cat].get(tool, {}).get('plp_sens', 0) for cat in categories]
+        values = [metrics[cat].get(tool, {}).get('plp_f1', 0) for cat in categories]
         offset = (i - len(tools)/2 + 0.5) * width
         ax.bar(x + offset, values, width, label=get_short_name(tool),
                color=get_tool_color(tool), edgecolor='black', linewidth=0.5)
     
-    ax.set_ylabel('Sensitivity (%)')
-    ax.set_title('B. P/LP Sensitivity by Disease Category', fontweight='bold')
+    ax.set_ylabel('F1 Score (%)')
+    ax.set_title('B. P/LP F1 Score by Disease Category', fontweight='bold')
     ax.set_xticks(x)
     ax.set_xticklabels([CATEGORY_SHORT.get(c, c) for c in categories], rotation=45, ha='right')
     ax.set_ylim(0, 105)
     ax.axhline(y=80, color='gray', linestyle='--', alpha=0.5, linewidth=0.8)
     
-    # Plot 3: VUS Sensitivity
+    # Plot 3: VUS F1 Score (Directional)
     ax = axes[1, 0]
     for i, tool in enumerate(tools):
-        values = [metrics[cat].get(tool, {}).get('vus_sens', 0) for cat in categories]
+        values = [metrics[cat].get(tool, {}).get('vus_f1', 0) for cat in categories]
         offset = (i - len(tools)/2 + 0.5) * width
         ax.bar(x + offset, values, width, label=get_short_name(tool),
                color=get_tool_color(tool), edgecolor='black', linewidth=0.5)
     
-    ax.set_ylabel('Sensitivity (%)')
-    ax.set_title('C. VUS Sensitivity by Disease Category', fontweight='bold')
+    ax.set_ylabel('F1 Score (%)')
+    ax.set_title('C. VUS F1 Score by Disease Category', fontweight='bold')
     ax.set_xticks(x)
     ax.set_xticklabels([CATEGORY_SHORT.get(c, c) for c in categories], rotation=45, ha='right')
     ax.set_ylim(0, 105)
     
-    # Plot 4: B/LB Sensitivity
+    # Plot 4: B/LB F1 Score (Directional)
     ax = axes[1, 1]
     for i, tool in enumerate(tools):
-        values = [metrics[cat].get(tool, {}).get('blb_sens', 0) for cat in categories]
+        values = [metrics[cat].get(tool, {}).get('blb_f1', 0) for cat in categories]
         offset = (i - len(tools)/2 + 0.5) * width
         ax.bar(x + offset, values, width, label=get_short_name(tool),
                color=get_tool_color(tool), edgecolor='black', linewidth=0.5)
     
-    ax.set_ylabel('Sensitivity (%)')
-    ax.set_title('D. B/LB Sensitivity by Disease Category', fontweight='bold')
+    ax.set_ylabel('F1 Score (%)')
+    ax.set_title('D. B/LB F1 Score by Disease Category', fontweight='bold')
     ax.set_xticks(x)
     ax.set_xticklabels([CATEGORY_SHORT.get(c, c) for c in categories], rotation=45, ha='right')
     ax.set_ylim(0, 105)
     
     plt.tight_layout()
     
-    output_path = output_dir / 'figure2_performance_by_category.png'
+    output_path = output_dir / 'figure2_f1_by_category.png'
     plt.savefig(output_path, dpi=300, bbox_inches='tight')
-    plt.savefig(output_dir / 'figure2_performance_by_category.pdf', bbox_inches='tight')
+    plt.savefig(output_dir / 'figure2_f1_by_category.pdf', bbox_inches='tight')
     plt.close()
     
     print(f"Saved: {output_path}")
@@ -410,30 +415,45 @@ def plot_performance_by_category(metrics_tsv: Path, output_dir: Path):
 # =============================================================================
 
 def plot_radar_comparison(aiva_data: Dict, unified_data: Dict, output_dir: Path):
-    """Generate radar plot comparing tools across multiple metrics."""
+    """Generate radar plot comparing tools across F1 scores for each class."""
     
-    # Calculate overall metrics for each tool
-    def calc_metrics(y_true, y_pred, labels=['P/LP', 'VUS', 'B/LB']):
-        from collections import Counter
+    # Calculate F1 scores for each tool (both directional 3-class and exact 5-class)
+    def calc_f1_metrics(y_true_dir, y_pred_dir, y_true_exact, y_pred_exact):
+        metrics_dict = {}
         
-        total = len(y_true)
-        correct = sum(1 for t, p in zip(y_true, y_pred) if t == p)
-        accuracy = correct / total * 100 if total > 0 else 0
-        
-        metrics_dict = {'accuracy': accuracy}
-        
-        for label in labels:
-            tp = sum(1 for t, p in zip(y_true, y_pred) if t == label and p == label)
-            fp = sum(1 for t, p in zip(y_true, y_pred) if t != label and p == label)
-            fn = sum(1 for t, p in zip(y_true, y_pred) if t == label and p != label)
+        # Directional F1 scores (3-class)
+        dir_f1s = []
+        for label in ['P/LP', 'VUS', 'B/LB']:
+            tp = sum(1 for t, p in zip(y_true_dir, y_pred_dir) if t == label and p == label)
+            fp = sum(1 for t, p in zip(y_true_dir, y_pred_dir) if t != label and p == label)
+            fn = sum(1 for t, p in zip(y_true_dir, y_pred_dir) if t == label and p != label)
             
-            sens = tp / (tp + fn) * 100 if (tp + fn) > 0 else 0
             prec = tp / (tp + fp) * 100 if (tp + fp) > 0 else 0
-            f1 = 2 * sens * prec / (sens + prec) if (sens + prec) > 0 else 0
+            rec = tp / (tp + fn) * 100 if (tp + fn) > 0 else 0
+            f1 = 2 * prec * rec / (prec + rec) if (prec + rec) > 0 else 0
             
-            metrics_dict[f'{label}_sens'] = sens
-            metrics_dict[f'{label}_prec'] = prec
             metrics_dict[f'{label}_f1'] = f1
+            dir_f1s.append(f1)
+        
+        metrics_dict['dir_macro_f1'] = np.mean(dir_f1s) if dir_f1s else 0
+        
+        # Exact F1 scores (5-class)
+        exact_classes = ['Pathogenic', 'Likely Pathogenic', 'Uncertain Significance', 'Likely Benign', 'Benign']
+        exact_short = ['P', 'LP', 'VUS', 'LB', 'B']
+        exact_f1s = []
+        for cls, short in zip(exact_classes, exact_short):
+            tp = sum(1 for t, p in zip(y_true_exact, y_pred_exact) if t == cls and p == cls)
+            fp = sum(1 for t, p in zip(y_true_exact, y_pred_exact) if t != cls and p == cls)
+            fn = sum(1 for t, p in zip(y_true_exact, y_pred_exact) if t == cls and p != cls)
+            
+            prec = tp / (tp + fp) * 100 if (tp + fp) > 0 else 0
+            rec = tp / (tp + fn) * 100 if (tp + fn) > 0 else 0
+            f1 = 2 * prec * rec / (prec + rec) if (prec + rec) > 0 else 0
+            
+            metrics_dict[f'{short}_exact_f1'] = f1
+            exact_f1s.append(f1)
+        
+        metrics_dict['exact_macro_f1'] = np.mean(exact_f1s) if exact_f1s else 0
         
         return metrics_dict
     
@@ -441,60 +461,100 @@ def plot_radar_comparison(aiva_data: Dict, unified_data: Dict, output_dir: Path)
     
     # AIVA models
     for model, variants in aiva_data.items():
-        y_true = []
-        y_pred = []
+        y_true_dir, y_pred_dir = [], []
+        y_true_exact, y_pred_exact = [], []
         for v in variants:
-            gt = get_direction(v.get("ground_truth", ""))
-            pred = get_direction(v.get("aiva_classification", ""))
-            if gt != "unknown" and pred != "unknown" and not v.get("error"):
-                y_true.append(gt)
-                y_pred.append(pred)
-        if y_true:
-            tools_metrics[get_short_name(model)] = calc_metrics(y_true, y_pred)
+            gt = v.get("ground_truth", "")
+            pred = v.get("aiva_classification", "")
+            if gt and pred and not v.get("error"):
+                gt_dir = get_direction(gt)
+                pred_dir = get_direction(pred)
+                gt_exact = normalize_classification(gt)
+                pred_exact = normalize_classification(pred)
+                if gt_dir != "unknown" and pred_dir != "unknown":
+                    y_true_dir.append(gt_dir)
+                    y_pred_dir.append(pred_dir)
+                    y_true_exact.append(gt_exact)
+                    y_pred_exact.append(pred_exact)
+        if y_true_dir:
+            tools_metrics[get_short_name(model)] = calc_f1_metrics(y_true_dir, y_pred_dir, y_true_exact, y_pred_exact)
     
     # Baselines
     for tool, pred_field in [("BIAS-2015", "bias_classification"), ("InterVar", "intervar_classification")]:
-        y_true = []
-        y_pred = []
+        y_true_dir, y_pred_dir = [], []
+        y_true_exact, y_pred_exact = [], []
         for vid, v in unified_data.items():
-            gt = get_direction(v.get("classification", ""))
-            pred = get_direction(v.get(pred_field, ""))
-            if gt != "unknown" and pred != "unknown":
-                y_true.append(gt)
-                y_pred.append(pred)
-        if y_true:
-            tools_metrics[tool] = calc_metrics(y_true, y_pred)
+            gt = v.get("classification", "")
+            pred = v.get(pred_field, "")
+            if gt and pred:
+                gt_dir = get_direction(gt)
+                pred_dir = get_direction(pred)
+                gt_exact = normalize_classification(gt)
+                pred_exact = normalize_classification(pred)
+                if gt_dir != "unknown" and pred_dir != "unknown":
+                    y_true_dir.append(gt_dir)
+                    y_pred_dir.append(pred_dir)
+                    y_true_exact.append(gt_exact)
+                    y_pred_exact.append(pred_exact)
+        if y_true_dir:
+            tools_metrics[tool] = calc_f1_metrics(y_true_dir, y_pred_dir, y_true_exact, y_pred_exact)
     
-    # Metrics to plot
-    metric_labels = ['Accuracy', 'P/LP Sens', 'P/LP Prec', 'VUS Sens', 'VUS Prec', 'B/LB Sens', 'B/LB Prec']
-    metric_keys = ['accuracy', 'P/LP_sens', 'P/LP_prec', 'VUS_sens', 'VUS_prec', 'B/LB_sens', 'B/LB_prec']
+    # Create figure with two radar charts side by side
+    fig, axes = plt.subplots(1, 2, figsize=(16, 8), subplot_kw=dict(projection='polar'))
     
-    # Create radar chart
-    fig, ax = plt.subplots(figsize=(10, 10), subplot_kw=dict(projection='polar'))
+    # Left radar: Directional F1 scores (3-class)
+    ax = axes[0]
+    dir_labels = ['P/LP F1', 'VUS F1', 'B/LB F1', 'Macro F1']
+    dir_keys = ['P/LP_f1', 'VUS_f1', 'B/LB_f1', 'dir_macro_f1']
     
-    angles = np.linspace(0, 2 * np.pi, len(metric_labels), endpoint=False).tolist()
-    angles += angles[:1]  # Complete the circle
+    angles = np.linspace(0, 2 * np.pi, len(dir_labels), endpoint=False).tolist()
+    angles += angles[:1]
     
     for tool, metrics in tools_metrics.items():
-        values = [metrics.get(k, 0) for k in metric_keys]
-        values += values[:1]  # Complete the circle
+        values = [metrics.get(k, 0) for k in dir_keys]
+        values += values[:1]
         
         color = get_tool_color(tool)
-        ax.plot(angles, values, 'o-', linewidth=2, label=tool, color=color)
+        ax.plot(angles, values, 'o-', linewidth=2, label=tool, color=color, markersize=6)
         ax.fill(angles, values, alpha=0.15, color=color)
     
     ax.set_xticks(angles[:-1])
-    ax.set_xticklabels(metric_labels, size=10)
+    ax.set_xticklabels(dir_labels, size=11, fontweight='bold')
     ax.set_ylim(0, 100)
     ax.set_yticks([20, 40, 60, 80, 100])
-    ax.set_yticklabels(['20%', '40%', '60%', '80%', '100%'], size=8)
-    ax.legend(loc='upper right', bbox_to_anchor=(1.3, 1.1))
+    ax.set_yticklabels(['20%', '40%', '60%', '80%', '100%'], size=9)
+    ax.set_title('A. Directional F1 Scores (3-Class)', fontsize=12, fontweight='bold', y=1.08)
     
-    plt.title('Multi-Metric Performance Comparison', fontsize=14, fontweight='bold', y=1.08)
+    # Right radar: Exact F1 scores (5-class)
+    ax = axes[1]
+    exact_labels = ['P F1', 'LP F1', 'VUS F1', 'LB F1', 'B F1', 'Macro F1']
+    exact_keys = ['P_exact_f1', 'LP_exact_f1', 'VUS_exact_f1', 'LB_exact_f1', 'B_exact_f1', 'exact_macro_f1']
     
-    output_path = output_dir / 'figure3_radar_comparison.png'
+    angles = np.linspace(0, 2 * np.pi, len(exact_labels), endpoint=False).tolist()
+    angles += angles[:1]
+    
+    for tool, metrics in tools_metrics.items():
+        values = [metrics.get(k, 0) for k in exact_keys]
+        values += values[:1]
+        
+        color = get_tool_color(tool)
+        ax.plot(angles, values, 'o-', linewidth=2, label=tool, color=color, markersize=6)
+        ax.fill(angles, values, alpha=0.15, color=color)
+    
+    ax.set_xticks(angles[:-1])
+    ax.set_xticklabels(exact_labels, size=11, fontweight='bold')
+    ax.set_ylim(0, 100)
+    ax.set_yticks([20, 40, 60, 80, 100])
+    ax.set_yticklabels(['20%', '40%', '60%', '80%', '100%'], size=9)
+    ax.legend(loc='upper right', bbox_to_anchor=(1.35, 1.1), fontsize=10)
+    ax.set_title('B. Exact F1 Scores (5-Class)', fontsize=12, fontweight='bold', y=1.08)
+    
+    plt.suptitle('F1 Score Comparison Across Classification Tools', fontsize=14, fontweight='bold', y=1.02)
+    plt.tight_layout()
+    
+    output_path = output_dir / 'figure3_radar_f1_comparison.png'
     plt.savefig(output_path, dpi=300, bbox_inches='tight')
-    plt.savefig(output_dir / 'figure3_radar_comparison.pdf', bbox_inches='tight')
+    plt.savefig(output_dir / 'figure3_radar_f1_comparison.pdf', bbox_inches='tight')
     plt.close()
     
     print(f"Saved: {output_path}")
@@ -596,68 +656,162 @@ def plot_roc_curves(aiva_data: Dict, unified_data: Dict, output_dir: Path):
 # =============================================================================
 
 def plot_summary_comparison(aiva_data: Dict, unified_data: Dict, output_dir: Path):
-    """Generate summary bar chart comparing AIVA best vs baselines."""
+    """Generate summary bar chart comparing exact accuracy and macro F1 scores."""
     
-    def calc_overall_metrics(y_true, y_pred):
-        total = len(y_true)
-        correct = sum(1 for t, p in zip(y_true, y_pred) if t == p)
-        return correct / total * 100 if total > 0 else 0
+    def calc_metrics(y_true_dir, y_pred_dir, y_true_exact, y_pred_exact):
+        """Calculate both directional and exact metrics."""
+        # Directional accuracy
+        total_dir = len(y_true_dir)
+        correct_dir = sum(1 for t, p in zip(y_true_dir, y_pred_dir) if t == p)
+        dir_acc = correct_dir / total_dir * 100 if total_dir > 0 else 0
+        
+        # Exact accuracy
+        total_exact = len(y_true_exact)
+        correct_exact = sum(1 for t, p in zip(y_true_exact, y_pred_exact) if t == p)
+        exact_acc = correct_exact / total_exact * 100 if total_exact > 0 else 0
+        
+        # Directional F1 (macro)
+        dir_f1s = []
+        for label in ['P/LP', 'VUS', 'B/LB']:
+            tp = sum(1 for t, p in zip(y_true_dir, y_pred_dir) if t == label and p == label)
+            fp = sum(1 for t, p in zip(y_true_dir, y_pred_dir) if t != label and p == label)
+            fn = sum(1 for t, p in zip(y_true_dir, y_pred_dir) if t == label and p != label)
+            prec = tp / (tp + fp) if (tp + fp) > 0 else 0
+            rec = tp / (tp + fn) if (tp + fn) > 0 else 0
+            f1 = 2 * prec * rec / (prec + rec) * 100 if (prec + rec) > 0 else 0
+            dir_f1s.append(f1)
+        dir_macro_f1 = np.mean(dir_f1s) if dir_f1s else 0
+        
+        # Exact F1 (macro over 5 classes)
+        exact_classes = ['Pathogenic', 'Likely Pathogenic', 'Uncertain Significance', 'Likely Benign', 'Benign']
+        exact_f1s = []
+        for cls in exact_classes:
+            tp = sum(1 for t, p in zip(y_true_exact, y_pred_exact) if t == cls and p == cls)
+            fp = sum(1 for t, p in zip(y_true_exact, y_pred_exact) if t != cls and p == cls)
+            fn = sum(1 for t, p in zip(y_true_exact, y_pred_exact) if t == cls and p != cls)
+            prec = tp / (tp + fp) if (tp + fp) > 0 else 0
+            rec = tp / (tp + fn) if (tp + fn) > 0 else 0
+            f1 = 2 * prec * rec / (prec + rec) * 100 if (prec + rec) > 0 else 0
+            exact_f1s.append(f1)
+        exact_macro_f1 = np.mean(exact_f1s) if exact_f1s else 0
+        
+        return {
+            'dir_acc': dir_acc,
+            'exact_acc': exact_acc,
+            'dir_macro_f1': dir_macro_f1,
+            'exact_macro_f1': exact_macro_f1
+        }
     
-    tools_accuracy = {}
+    tools_metrics = {}
     
     # AIVA models
     for model, variants in aiva_data.items():
-        y_true = []
-        y_pred = []
+        y_true_dir, y_pred_dir = [], []
+        y_true_exact, y_pred_exact = [], []
         for v in variants:
-            gt = get_direction(v.get("ground_truth", ""))
-            pred = get_direction(v.get("aiva_classification", ""))
-            if gt != "unknown" and pred != "unknown" and not v.get("error"):
-                y_true.append(gt)
-                y_pred.append(pred)
-        if y_true:
-            tools_accuracy[get_short_name(model)] = calc_overall_metrics(y_true, y_pred)
+            gt = v.get("ground_truth", "")
+            pred = v.get("aiva_classification", "")
+            if gt and pred and not v.get("error"):
+                gt_dir = get_direction(gt)
+                pred_dir = get_direction(pred)
+                gt_exact = normalize_classification(gt)
+                pred_exact = normalize_classification(pred)
+                if gt_dir != "unknown" and pred_dir != "unknown":
+                    y_true_dir.append(gt_dir)
+                    y_pred_dir.append(pred_dir)
+                    y_true_exact.append(gt_exact)
+                    y_pred_exact.append(pred_exact)
+        if y_true_dir:
+            tools_metrics[get_short_name(model)] = calc_metrics(y_true_dir, y_pred_dir, y_true_exact, y_pred_exact)
     
     # Baselines
     for tool, pred_field in [("BIAS-2015", "bias_classification"), ("InterVar", "intervar_classification")]:
-        y_true = []
-        y_pred = []
+        y_true_dir, y_pred_dir = [], []
+        y_true_exact, y_pred_exact = [], []
         for vid, v in unified_data.items():
-            gt = get_direction(v.get("classification", ""))
-            pred = get_direction(v.get(pred_field, ""))
-            if gt != "unknown" and pred != "unknown":
-                y_true.append(gt)
-                y_pred.append(pred)
-        if y_true:
-            tools_accuracy[tool] = calc_overall_metrics(y_true, y_pred)
+            gt = v.get("classification", "")
+            pred = v.get(pred_field, "")
+            if gt and pred:
+                gt_dir = get_direction(gt)
+                pred_dir = get_direction(pred)
+                gt_exact = normalize_classification(gt)
+                pred_exact = normalize_classification(pred)
+                if gt_dir != "unknown" and pred_dir != "unknown":
+                    y_true_dir.append(gt_dir)
+                    y_pred_dir.append(pred_dir)
+                    y_true_exact.append(gt_exact)
+                    y_pred_exact.append(pred_exact)
+        if y_true_dir:
+            tools_metrics[tool] = calc_metrics(y_true_dir, y_pred_dir, y_true_exact, y_pred_exact)
     
-    # Sort by accuracy
-    sorted_tools = sorted(tools_accuracy.items(), key=lambda x: x[1], reverse=True)
+    # Create figure with 2 subplots
+    fig, axes = plt.subplots(1, 2, figsize=(14, 6))
     
-    # Create figure
-    fig, ax = plt.subplots(figsize=(10, 6))
-    
+    # Sort by exact macro F1 (most important metric)
+    sorted_tools = sorted(tools_metrics.items(), key=lambda x: x[1]['exact_macro_f1'], reverse=True)
     tools = [t[0] for t in sorted_tools]
-    accuracies = [t[1] for t in sorted_tools]
+    
+    # Left plot: Accuracy comparison
+    ax = axes[0]
+    x = np.arange(len(tools))
+    width = 0.35
+    
+    exact_accs = [tools_metrics[t]['exact_acc'] for t in tools]
+    dir_accs = [tools_metrics[t]['dir_acc'] for t in tools]
     colors = [get_tool_color(t) for t in tools]
     
-    bars = ax.barh(tools, accuracies, color=colors, edgecolor='black', linewidth=1)
+    bars1 = ax.bar(x - width/2, exact_accs, width, label='Exact (5-class)', 
+                   color=colors, edgecolor='black', linewidth=1)
+    bars2 = ax.bar(x + width/2, dir_accs, width, label='Directional (3-class)',
+                   color=colors, edgecolor='black', linewidth=1, alpha=0.6)
     
     # Add value labels
-    for bar, acc in zip(bars, accuracies):
-        ax.text(bar.get_width() + 1, bar.get_y() + bar.get_height()/2,
-               f'{acc:.1f}%', va='center', fontsize=10, fontweight='bold')
+    for bar, val in zip(bars1, exact_accs):
+        ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 1,
+               f'{val:.1f}', ha='center', va='bottom', fontsize=9, fontweight='bold')
+    for bar, val in zip(bars2, dir_accs):
+        ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 1,
+               f'{val:.1f}', ha='center', va='bottom', fontsize=9)
     
-    # Highlight best AIVA
-    best_aiva = max([t for t in tools_accuracy.items() if 'AIVA' in t[0]], key=lambda x: x[1])
-    ax.axvline(x=best_aiva[1], color='green', linestyle='--', alpha=0.7, linewidth=2)
+    ax.set_ylabel('Accuracy (%)', fontsize=12)
+    ax.set_title('A. Classification Accuracy\n(Exact vs Directional)', fontsize=12, fontweight='bold')
+    ax.set_xticks(x)
+    ax.set_xticklabels(tools, rotation=45, ha='right')
+    ax.legend(loc='upper right')
+    ax.set_ylim(0, 100)
+    ax.axhline(y=60, color='gray', linestyle='--', alpha=0.5, linewidth=0.8)
+    ax.grid(axis='y', alpha=0.3)
     
-    ax.set_xlabel('Directional Accuracy (%)', fontsize=12)
-    ax.set_title('Overall Performance Comparison\n(500-Variant ClinGen Benchmark)', 
-                fontsize=14, fontweight='bold')
-    ax.set_xlim(0, 100)
-    ax.grid(axis='x', alpha=0.3)
+    # Right plot: Macro F1 comparison
+    ax = axes[1]
     
+    exact_f1s = [tools_metrics[t]['exact_macro_f1'] for t in tools]
+    dir_f1s = [tools_metrics[t]['dir_macro_f1'] for t in tools]
+    
+    bars1 = ax.bar(x - width/2, exact_f1s, width, label='Exact (5-class)',
+                   color=colors, edgecolor='black', linewidth=1)
+    bars2 = ax.bar(x + width/2, dir_f1s, width, label='Directional (3-class)',
+                   color=colors, edgecolor='black', linewidth=1, alpha=0.6)
+    
+    # Add value labels
+    for bar, val in zip(bars1, exact_f1s):
+        ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 1,
+               f'{val:.1f}', ha='center', va='bottom', fontsize=9, fontweight='bold')
+    for bar, val in zip(bars2, dir_f1s):
+        ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 1,
+               f'{val:.1f}', ha='center', va='bottom', fontsize=9)
+    
+    ax.set_ylabel('Macro F1 Score (%)', fontsize=12)
+    ax.set_title('B. Macro F1 Score\n(Exact vs Directional)', fontsize=12, fontweight='bold')
+    ax.set_xticks(x)
+    ax.set_xticklabels(tools, rotation=45, ha='right')
+    ax.legend(loc='upper right')
+    ax.set_ylim(0, 100)
+    ax.axhline(y=60, color='gray', linestyle='--', alpha=0.5, linewidth=0.8)
+    ax.grid(axis='y', alpha=0.3)
+    
+    plt.suptitle('Overall Performance Comparison (500-Variant ClinGen Benchmark)', 
+                fontsize=14, fontweight='bold', y=1.02)
     plt.tight_layout()
     
     output_path = output_dir / 'figure5_summary_comparison.png'
@@ -673,11 +827,11 @@ def plot_summary_comparison(aiva_data: Dict, unified_data: Dict, output_dir: Pat
 # =============================================================================
 
 def plot_performance_heatmap(metrics_tsv: Path, output_dir: Path):
-    """Generate heatmap showing AIVA advantage over baselines by category."""
+    """Generate heatmap showing AIVA F1 advantage over baselines by category."""
     
     import csv
     
-    # Load metrics
+    # Load metrics - use exact macro F1 instead of directional accuracy
     metrics = defaultdict(lambda: defaultdict(dict))
     
     with open(metrics_tsv, 'r') as f:
@@ -685,7 +839,11 @@ def plot_performance_heatmap(metrics_tsv: Path, output_dir: Path):
         for row in reader:
             cat = row['category']
             model = row['model']
-            metrics[cat][model] = float(row['directional_accuracy'])
+            metrics[cat][model] = {
+                'exact_acc': float(row.get('exact_accuracy', 0)),
+                'exact_macro_f1': float(row.get('exact_macro_f1', 0)),
+                'dir_acc': float(row['directional_accuracy']),
+            }
     
     categories = [c for c in CATEGORY_ORDER if c in metrics]
     
@@ -693,17 +851,17 @@ def plot_performance_heatmap(metrics_tsv: Path, output_dir: Path):
     aiva_models = [m for m in list(metrics.values())[0].keys() 
                    if 'claude' in m.lower() or 'gemini' in m.lower() or 'gpt' in m.lower()]
     
-    # Calculate differences
+    # Calculate differences for exact macro F1
     diff_data = []
     for cat in categories:
-        best_aiva = max([metrics[cat].get(m, 0) for m in aiva_models])
-        bias_acc = metrics[cat].get('BIAS-2015', 0)
-        intervar_acc = metrics[cat].get('InterVar', 0)
+        best_aiva_f1 = max([metrics[cat].get(m, {}).get('exact_macro_f1', 0) for m in aiva_models])
+        bias_f1 = metrics[cat].get('BIAS-2015', {}).get('exact_macro_f1', 0)
+        intervar_f1 = metrics[cat].get('InterVar', {}).get('exact_macro_f1', 0)
         
         diff_data.append({
             'category': CATEGORY_SHORT.get(cat, cat),
-            'AIVA vs BIAS-2015': best_aiva - bias_acc,
-            'AIVA vs InterVar': best_aiva - intervar_acc,
+            'AIVA vs BIAS-2015': best_aiva_f1 - bias_f1,
+            'AIVA vs InterVar': best_aiva_f1 - intervar_f1,
         })
     
     # Create heatmap data
@@ -720,7 +878,7 @@ def plot_performance_heatmap(metrics_tsv: Path, output_dir: Path):
     
     sns.heatmap(heatmap_data, annot=True, fmt='+.1f', cmap=cmap, center=0,
                 xticklabels=comparison_labels, yticklabels=cat_labels,
-                ax=ax, cbar_kws={'label': 'Accuracy Difference (%)'})
+                ax=ax, cbar_kws={'label': 'Exact Macro F1 Difference (%)'})
     
     # Add annotations for winners
     for i, row in enumerate(heatmap_data):
@@ -729,14 +887,14 @@ def plot_performance_heatmap(metrics_tsv: Path, output_dir: Path):
             ax.text(j + 0.5, i + 0.75, symbol, ha='center', va='center', 
                    fontsize=10, color='white' if abs(val) > 15 else 'black')
     
-    ax.set_title('AIVA Performance Advantage by Disease Category\n(Positive = AIVA Better)', 
-                fontsize=12, fontweight='bold')
+    ax.set_title('AIVA F1 Score Advantage by Disease Category\n(Exact 5-Class Macro F1, Positive = AIVA Better)', 
+                fontsize=11, fontweight='bold')
     
     plt.tight_layout()
     
-    output_path = output_dir / 'figure6_performance_heatmap.png'
+    output_path = output_dir / 'figure6_f1_heatmap.png'
     plt.savefig(output_path, dpi=300, bbox_inches='tight')
-    plt.savefig(output_dir / 'figure6_performance_heatmap.pdf', bbox_inches='tight')
+    plt.savefig(output_dir / 'figure6_f1_heatmap.pdf', bbox_inches='tight')
     plt.close()
     
     print(f"Saved: {output_path}")

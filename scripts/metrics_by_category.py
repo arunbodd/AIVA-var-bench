@@ -564,13 +564,18 @@ def print_category_metrics(all_metrics: Dict[str, Dict[str, Dict]], output_file=
 
 
 def save_metrics_tsv(all_metrics: Dict, output_path: Path):
-    """Save metrics to TSV file."""
+    """Save metrics to TSV file with both directional and exact metrics."""
     with open(output_path, "w", encoding="utf-8") as f:
-        # Header
-        f.write("category\tmodel\tn_variants\tdirectional_accuracy\t")
+        # Header - include both directional and exact metrics
+        f.write("category\tmodel\tn_variants\t")
+        # Directional (3-class) metrics
+        f.write("directional_accuracy\t")
         f.write("plp_sensitivity\tplp_specificity\tplp_precision\tplp_f1\t")
         f.write("vus_sensitivity\tvus_specificity\tvus_precision\tvus_f1\t")
-        f.write("blb_sensitivity\tblb_specificity\tblb_precision\tblb_f1\n")
+        f.write("blb_sensitivity\tblb_specificity\tblb_precision\tblb_f1\t")
+        # Exact (5-class) metrics
+        f.write("exact_accuracy\t")
+        f.write("exact_p_f1\texact_lp_f1\texact_vus_f1\texact_lb_f1\texact_b_f1\texact_macro_f1\n")
         
         for model, model_metrics in sorted(all_metrics.items()):
             model_short = model.split("/")[-1] if "/" in model else model
@@ -581,10 +586,31 @@ def save_metrics_tsv(all_metrics: Dict, output_path: Path):
                 v = m.get("vus", {})
                 b = m.get("benign", {})
                 
+                # Exact 5-class metrics
+                exact_p = m.get("exact_Pathogenic", {})
+                exact_lp = m.get("exact_Likely Pathogenic", {})
+                exact_vus = m.get("exact_Uncertain Significance", {})
+                exact_lb = m.get("exact_Likely Benign", {})
+                exact_b = m.get("exact_Benign", {})
+                
+                # Calculate macro F1 for exact classes
+                exact_f1s = [
+                    exact_p.get('f1', 0),
+                    exact_lp.get('f1', 0),
+                    exact_vus.get('f1', 0),
+                    exact_lb.get('f1', 0),
+                    exact_b.get('f1', 0)
+                ]
+                macro_f1 = sum(exact_f1s) / 5 if exact_f1s else 0
+                
+                # Directional metrics
                 f.write(f"{cat}\t{model_short}\t{m.get('n_variants', 0)}\t{m.get('directional_accuracy', 0)}\t")
                 f.write(f"{p.get('sensitivity', 0)}\t{p.get('specificity', 0)}\t{p.get('precision', 0)}\t{p.get('f1', 0)}\t")
                 f.write(f"{v.get('sensitivity', 0)}\t{v.get('specificity', 0)}\t{v.get('precision', 0)}\t{v.get('f1', 0)}\t")
-                f.write(f"{b.get('sensitivity', 0)}\t{b.get('specificity', 0)}\t{b.get('precision', 0)}\t{b.get('f1', 0)}\n")
+                f.write(f"{b.get('sensitivity', 0)}\t{b.get('specificity', 0)}\t{b.get('precision', 0)}\t{b.get('f1', 0)}\t")
+                # Exact metrics
+                f.write(f"{m.get('exact_accuracy', 0)}\t")
+                f.write(f"{exact_p.get('f1', 0)}\t{exact_lp.get('f1', 0)}\t{exact_vus.get('f1', 0)}\t{exact_lb.get('f1', 0)}\t{exact_b.get('f1', 0)}\t{macro_f1:.2f}\n")
     
     print(f"Saved metrics TSV to {output_path}")
 
