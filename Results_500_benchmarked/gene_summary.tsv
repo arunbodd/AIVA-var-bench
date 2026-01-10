@@ -1,0 +1,78 @@
+gene	variant_count	phenotypes	expert_panels	pathogenic	likely_pathogenic	vus	likely_benign	benign
+RUNX1	78	hereditary thrombocytopenia and hematologic cancer predisposition syndrome; hereditary thrombocytopenia with normal platelets-hematological cancer predisposition syndrome	Myeloid Malignancy VCEP	3	4	49	15	7
+PAH	32	phenylketonuria	Phenylketonuria VCEP	12	8	12	0	0
+LDLR	29	hypercholesterolemia, familial	Familial Hypercholesterolemia VCEP	4	11	11	3	0
+GCK	23	monogenic diabetes	Monogenic Diabetes VCEP	7	10	4	2	0
+HNF1A	21	monogenic diabetes	Monogenic Diabetes VCEP	4	4	9	3	1
+RYR1	21	RYR1-related myopathy; malignant hyperthermia of anesthesia; malignant hyperthermia, susceptibility to, 1	Congenital Myopathies VCEP; Malignant Hyperthermia Susceptibility VCEP	2	3	14	0	2
+MYOC	18	juvenile open angle glaucoma; primary open angle glaucoma	Glaucoma VCEP	2	0	14	1	1
+CDH1	17	CDH1-related diffuse gastric and lobular breast cancer	CDH1 VCEP	5	0	1	6	5
+GAA	15	glycogen storage disease II	Lysosomal Diseases VCEP	8	3	4	0	0
+ITGA2B	14	Glanzmann thrombasthenia; Glanzmann's thrombasthenia	Platelet Disorders VCEP	2	6	4	2	0
+PTEN	13	PTEN hamartoma tumor syndrome	PTEN VCEP	5	2	3	3	0
+MECP2	12	Rett syndrome	Rett and Angelman-like Disorders VCEP	3	2	0	5	2
+ITGB3	12	Glanzmann thrombasthenia; Glanzmann's thrombasthenia	Platelet Disorders VCEP	3	5	4	0	0
+RPE65	11	RPE65-related recessive retinopathy	Leber Congenital Amaurosis/early onset Retinal Dystrophy VCEP	6	2	0	1	2
+ACADVL	9	very long chain acyl-CoA dehydrogenase deficiency	ACADVL VCEP	1	3	5	0	0
+TP53	9	Li-Fraumeni syndrome; Li-Fraumeni syndrome 1	TP53 VCEP	1	0	1	5	2
+MYH7	8	cardiomyopathy; dilated cardiomyopathy; hypertrophic cardiomyopathy	Cardiomyopathy VCEP	0	1	4	0	3
+DCLRE1C	7	severe combined immunodeficiency due to DCLRE1C deficiency	Severe Combined Immunodeficiency Disease  VCEP	0	1	6	0	0
+GAMT	7	guanidinoacetate methyltransferase deficiency	Cerebral Creatine Deficiency Syndromes VCEP	2	3	2	0	0
+FBN1	7	Marfan syndrome	FBN1 VCEP	1	5	1	0	0
+HNF4A	6	monogenic diabetes	Monogenic Diabetes VCEP	3	1	2	0	0
+BMPR2	6	pulmonary arterial hypertension	Pulmonary Hypertension VCEP	0	1	3	2	0
+SLC6A8	5	creatine transporter deficiency	Cerebral Creatine Deficiency Syndromes VCEP	1	3	0	0	1
+VWF	5	von Willebrand disease type 2A; von Willebrand disease type 2N	von Willebrand Disease  VCEP	3	1	1	0	0
+F9	4	hemophilia B	Coagulation Factor Deficiency VCEP	1	1	0	1	1
+MLH1	4	Lynch syndrome 1; colorectal cancer, hereditary nonpolyposis, type 2	InSiGHT Hereditary Colorectal Cancer/Polyposis VCEP	1	1	0	0	2
+IL7R	4	severe combined immunodeficiency, autosomal recessive, T cell-negative, B cell-positive, NK cell-positive	Severe Combined Immunodeficiency Disease  VCEP	0	0	2	0	2
+ADA	4	adenosine deaminase deficiency	Severe Combined Immunodeficiency Disease  VCEP	1	1	2	0	0
+ATM	4	ATM-related cancer predisposition; hereditary breast cancer	Hereditary Breast, Ovarian and Pancreatic Cancer VCEP	2	1	0	0	1
+RAF1	4	RASopathy	RASopathy VCEP	0	0	0	1	3
+SERPINC1	4	antithrombin III deficiency	Thrombosis VCEP	1	1	2	0	0
+GATM	4	AGAT deficiency	Cerebral Creatine Deficiency Syndromes VCEP	0	0	3	1	0
+BRAF	3	RASopathy	RASopathy VCEP	3	0	0	0	0
+RAG1	3	recombinase activating gene 1 deficiency	Severe Combined Immunodeficiency Disease  VCEP	0	1	1	0	1
+FOXN1	3	T-cell immunodeficiency, congenital alopecia, and nail dystrophy	Severe Combined Immunodeficiency Disease  VCEP	0	2	1	0	0
+DICER1	3	DICER1-related tumor predisposition; dicer1 syndrome	DICER1 and miRNA-Processing Gene VCEP	0	0	2	1	0
+IL2RG	3	T-B+ severe combined immunodeficiency due to gamma chain deficiency	Severe Combined Immunodeficiency Disease  VCEP	1	0	0	2	0
+NRAS	3	RASopathy	RASopathy VCEP	1	0	2	0	0
+VHL	3	von Hippel-Lindau disease	VHL VCEP	1	0	0	1	1
+SLC9A6	3	Christianson syndrome	Rett and Angelman-like Disorders VCEP	0	0	0	1	2
+MAP2K2	3	RASopathy	RASopathy VCEP	0	0	1	0	2
+UBE3A	3	Angelman syndrome	Rett and Angelman-like Disorders VCEP	0	1	2	0	0
+PALB2	3	hereditary breast cancer	Hereditary Breast, Ovarian and Pancreatic Cancer VCEP	0	0	2	0	1
+MYO7A	3	Usher syndrome	Hearing Loss VCEP	1	1	1	0	0
+OTOF	2	nonsyndromic genetic deafness	Hearing Loss VCEP	0	0	0	2	0
+TCF4	2	Pitt-Hopkins syndrome	Rett and Angelman-like Disorders VCEP	0	0	0	1	1
+RAG2	2	recombinase activating gene 2 deficiency	Severe Combined Immunodeficiency Disease  VCEP	1	1	0	0	0
+ETHE1	2	ethylmalonic encephalopathy	Mitochondrial Diseases VCEP	1	0	0	0	1
+GJB2	2	nonsyndromic genetic deafness	Hearing Loss VCEP	2	0	0	0	0
+USH2A	2	Usher syndrome	Hearing Loss VCEP	0	0	2	0	0
+IDUA	2	mucopolysaccharidosis type 1	Lysosomal Diseases VCEP	0	0	1	0	1
+CAPN3	2	autosomal recessive limb-girdle muscular dystrophy	Limb Girdle Muscular Dystrophy VCEP	2	0	0	0	0
+F8	2	hemophilia A	Coagulation Factor Deficiency VCEP	2	0	0	0	0
+MTM1	2	centronuclear myopathy	Congenital Myopathies VCEP	2	0	0	0	0
+SLC26A4	2	Pendred syndrome	Hearing Loss VCEP	1	1	0	0	0
+CDKL5	2	CDKL5 disorder	Rett and Angelman-like Disorders VCEP	0	0	0	0	2
+COCH	2	nonsyndromic genetic deafness	Hearing Loss VCEP	0	0	1	0	1
+SHOC2	2	RASopathy	RASopathy VCEP	0	0	2	0	0
+BRCA2	1	BRCA2-related cancer predisposition	ENIGMA BRCA1 and BRCA2 VCEP	0	0	0	0	1
+SOS1	1	RASopathy	RASopathy VCEP	0	0	0	1	0
+PDHA1	1	pyruvate dehydrogenase deficiency	Mitochondrial Diseases VCEP	0	0	0	0	1
+JAK3	1	T-B+ severe combined immunodeficiency due to JAK3 deficiency	Severe Combined Immunodeficiency Disease  VCEP	0	0	0	1	0
+PMS2	1	Lynch syndrome 1	InSiGHT Hereditary Colorectal Cancer/Polyposis VCEP	0	0	1	0	0
+SGCB	1	autosomal recessive limb-girdle muscular dystrophy	Limb Girdle Muscular Dystrophy VCEP	0	0	0	1	0
+ANO5	1	autosomal recessive limb-girdle muscular dystrophy	Limb Girdle Muscular Dystrophy VCEP	0	0	0	1	0
+BRCA1	1	BRCA1-related cancer predisposition	ENIGMA BRCA1 and BRCA2 VCEP	1	0	0	0	0
+ACTA1	1	alpha-actinopathy	Congenital Myopathies VCEP	1	0	0	0	0
+SGCA	1	autosomal recessive limb-girdle muscular dystrophy	Limb Girdle Muscular Dystrophy VCEP	0	1	0	0	0
+NEB	1	nemaline myopathy	Congenital Myopathies VCEP	0	0	0	0	1
+MYO15A	1	nonsyndromic genetic deafness	Hearing Loss VCEP	0	0	0	1	0
+N/A	1	hypercholesterolemia, familial	Familial Hypercholesterolemia VCEP	0	0	0	0	1
+SOS2	1	RASopathy	RASopathy VCEP	0	1	0	0	0
+FOXG1	1	FOXG1 disorder	Rett and Angelman-like Disorders VCEP	0	0	0	0	1
+TECTA	1	nonsyndromic genetic deafness	Hearing Loss VCEP	0	0	0	1	0
+APC	1	familial adenomatous polyposis 1	InSiGHT Hereditary Colorectal Cancer/Polyposis VCEP	0	0	0	0	1
+POLG	1	mitochondrial disease	Mitochondrial Diseases VCEP	0	0	1	0	0
+MAP2K1	1	cardiofaciocutaneous syndrome	RASopathy VCEP	1	0	0	0	0
