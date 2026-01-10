@@ -127,6 +127,39 @@ def calculate_precision_recall_f1(tp: int, fp: int, fn: int) -> tuple[float, flo
     return precision, recall, f1
 
 
+def calculate_specificity(tn: int, fp: int) -> float:
+    """Calculate specificity (true negative rate) from TN/FP counts."""
+    return tn / (tn + fp) if (tn + fp) > 0 else 0
+
+
+def calculate_full_metrics(tp: int, fp: int, fn: int, tn: int) -> dict:
+    """
+    Calculate complete metrics including sensitivity, specificity, precision, and F1.
+    
+    Args:
+        tp: True positives
+        fp: False positives
+        fn: False negatives
+        tn: True negatives
+        
+    Returns:
+        Dict with sensitivity (recall), specificity, precision, and f1
+    """
+    precision, recall, f1 = calculate_precision_recall_f1(tp, fp, fn)
+    specificity = calculate_specificity(tn, fp)
+    
+    return {
+        "sensitivity": round(recall, 4),  # Same as recall
+        "specificity": round(specificity, 4),
+        "precision": round(precision, 4),
+        "f1": round(f1, 4),
+        "true_positives": tp,
+        "false_positives": fp,
+        "false_negatives": fn,
+        "true_negatives": tn
+    }
+
+
 def calculate_class_metrics(
     ground_truth: list[str],
     predictions: list[str],
@@ -170,7 +203,8 @@ def calculate_class_metrics(
 def calculate_direction_metrics(
     ground_truth: list[str],
     predictions: list[str],
-    labels: Optional[list[str]] = None
+    labels: Optional[list[str]] = None,
+    include_specificity: bool = False
 ) -> dict:
     """
     Calculate per-direction precision, recall, and F1 metrics.
@@ -179,26 +213,32 @@ def calculate_direction_metrics(
         ground_truth: List of ground truth direction labels (pathogenic/vus/benign)
         predictions: List of predicted direction labels
         labels: Optional list of direction labels (defaults to DIRECTION_LABELS)
+        include_specificity: If True, include sensitivity/specificity (requires TN calculation)
 
     Returns:
         Dict mapping direction to metrics dict
     """
     labels = labels or DIRECTION_LABELS
     metrics = {}
+    n_total = len(ground_truth)
 
     for d in labels:
         tp = sum(1 for g, p in zip(ground_truth, predictions) if g == d and p == d)
         fp = sum(1 for g, p in zip(ground_truth, predictions) if g != d and p == d)
         fn = sum(1 for g, p in zip(ground_truth, predictions) if g == d and p != d)
+        tn = n_total - tp - fp - fn  # True negatives for this class
 
-        precision, recall, f1 = calculate_precision_recall_f1(tp, fp, fn)
-
-        metrics[d] = {
-            "precision": round(precision, 4),
-            "recall": round(recall, 4),
-            "f1": round(f1, 4),
-            "support": tp + fn
-        }
+        if include_specificity:
+            metrics[d] = calculate_full_metrics(tp, fp, fn, tn)
+            metrics[d]["support"] = tp + fn
+        else:
+            precision, recall, f1 = calculate_precision_recall_f1(tp, fp, fn)
+            metrics[d] = {
+                "precision": round(precision, 4),
+                "recall": round(recall, 4),
+                "f1": round(f1, 4),
+                "support": tp + fn
+            }
 
     return metrics
 
