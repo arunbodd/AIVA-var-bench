@@ -1,0 +1,51 @@
+category	model	n_variants	directional_accuracy	plp_sensitivity	plp_specificity	plp_precision	plp_f1	vus_sensitivity	vus_specificity	vus_precision	vus_f1	blb_sensitivity	blb_specificity	blb_precision	blb_f1
+Cancer Predisposition	BIAS-2015	138	89.13	81.48	99.1	95.65	88.0	94.92	84.81	82.35	88.19	86.54	97.67	95.74	90.91
+Metabolic Disorders	BIAS-2015	158	84.18	96.63	76.81	84.31	90.05	64.81	94.23	85.37	73.68	80.0	97.9	80.0	80.0
+Cardiovascular Disorders	BIAS-2015	21	76.19	75.0	84.62	75.0	75.0	75.0	76.92	66.67	70.59	80.0	100.0	100.0	88.89
+Hematologic Disorders	BIAS-2015	41	80.49	84.62	86.67	91.67	88.0	72.73	86.67	66.67	69.57	75.0	94.59	60.0	66.67
+Immunodeficiency Disorders	BIAS-2015	27	74.07	66.67	94.44	85.71	75.0	83.33	66.67	66.67	74.07	66.67	95.24	80.0	72.73
+Neurodevelopmental Disorders	BIAS-2015	23	78.26	83.33	100.0	100.0	90.91	100.0	76.19	28.57	44.44	73.33	100.0	100.0	84.62
+Neuromuscular Disorders	BIAS-2015	30	70.0	81.82	78.95	69.23	75.0	57.14	87.5	80.0	66.67	80.0	88.0	57.14	66.67
+Ophthalmologic Disorders	BIAS-2015	29	79.31	60.0	100.0	100.0	75.0	85.71	73.33	75.0	80.0	100.0	91.67	71.43	83.33
+Hearing Disorders	BIAS-2015	15	86.67	83.33	88.89	83.33	83.33	75.0	90.91	75.0	75.0	100.0	100.0	100.0	100.0
+RASopathies	BIAS-2015	18	100.0	100.0	100.0	100.0	100.0	100.0	100.0	100.0	100.0	100.0	100.0	100.0	100.0
+Cancer Predisposition	InterVar	138	68.12	74.07	99.1	95.24	83.33	81.36	58.23	59.26	68.57	50.0	88.37	72.22	59.09
+Metabolic Disorders	InterVar	158	68.99	69.66	82.61	83.78	76.07	68.52	69.23	53.62	60.16	66.67	96.5	66.67	66.67
+Cardiovascular Disorders	InterVar	21	28.57	25.0	46.15	22.22	23.53	12.5	38.46	11.11	11.76	60.0	100.0	100.0	75.0
+Hematologic Disorders	InterVar	41	53.66	30.77	100.0	100.0	47.06	100.0	36.67	36.67	53.66	75.0	100.0	100.0	85.71
+Immunodeficiency Disorders	InterVar	27	70.37	44.44	94.44	80.0	57.14	91.67	53.33	61.11	73.33	66.67	100.0	100.0	80.0
+Neurodevelopmental Disorders	InterVar	23	52.17	83.33	100.0	100.0	90.91	100.0	47.62	15.38	26.67	33.33	100.0	100.0	50.0
+Neuromuscular Disorders	InterVar	30	70.0	54.55	84.21	66.67	60.0	78.57	62.5	64.71	70.97	80.0	100.0	100.0	88.89
+Ophthalmologic Disorders	InterVar	29	51.72	30.0	84.21	50.0	37.5	50.0	53.33	50.0	50.0	100.0	83.33	55.56	71.43
+Hearing Disorders	InterVar	15	46.67	33.33	100.0	100.0	50.0	100.0	27.27	33.33	50.0	20.0	100.0	100.0	33.33
+RASopathies	InterVar	18	72.22	83.33	100.0	100.0	90.91	100.0	61.54	50.0	66.67	42.86	100.0	100.0	60.0
+Cancer Predisposition	claude-opus-4-5-20251101	136	76.47	85.19	83.49	56.1	67.65	78.95	91.14	86.54	82.57	69.23	91.67	83.72	75.79
+Metabolic Disorders	claude-opus-4-5-20251101	155	80.65	91.95	75.0	82.47	86.96	67.92	90.2	78.26	72.73	60.0	97.86	75.0	66.67
+Cardiovascular Disorders	claude-opus-4-5-20251101	21	76.19	100.0	61.54	61.54	76.19	62.5	100.0	100.0	76.92	60.0	100.0	100.0	75.0
+Hematologic Disorders	claude-opus-4-5-20251101	40	77.5	80.77	71.43	84.0	82.35	60.0	83.33	54.55	57.14	100.0	100.0	100.0	100.0
+Immunodeficiency Disorders	claude-opus-4-5-20251101	24	87.5	88.89	93.33	88.89	88.89	100.0	86.67	81.82	90.0	66.67	100.0	100.0	80.0
+Neurodevelopmental Disorders	claude-opus-4-5-20251101	23	82.61	100.0	82.35	66.67	80.0	50.0	95.24	50.0	50.0	80.0	100.0	100.0	88.89
+Neuromuscular Disorders	claude-opus-4-5-20251101	27	77.78	90.91	68.75	66.67	76.92	81.82	93.75	90.0	85.71	40.0	100.0	100.0	57.14
+Ophthalmologic Disorders	claude-opus-4-5-20251101	29	68.97	100.0	63.16	58.82	74.07	64.29	100.0	100.0	78.26	20.0	91.67	33.33	25.0
+Hearing Disorders	claude-opus-4-5-20251101	14	78.57	100.0	62.5	66.67	80.0	0.0	100.0	0	0	100.0	100.0	100.0	100.0
+RASopathies	claude-opus-4-5-20251101	16	68.75	100.0	72.73	62.5	76.92	60.0	81.82	60.0	60.0	50.0	100.0	100.0	66.67
+Cancer Predisposition	gemini-3-pro-preview	138	80.43	96.3	95.5	83.87	89.66	84.75	77.22	73.53	78.74	67.31	95.35	89.74	76.92
+Metabolic Disorders	gemini-3-pro-preview	158	84.81	87.64	91.3	92.86	90.17	85.19	84.62	74.19	79.31	66.67	98.6	83.33	74.07
+Cardiovascular Disorders	gemini-3-pro-preview	21	76.19	100.0	69.23	66.67	80.0	50.0	92.31	80.0	61.54	80.0	100.0	100.0	88.89
+Hematologic Disorders	gemini-3-pro-preview	41	95.12	100.0	93.33	96.3	98.11	90.91	96.67	90.91	90.91	75.0	100.0	100.0	85.71
+Immunodeficiency Disorders	gemini-3-pro-preview	27	88.89	100.0	94.44	90.0	94.74	91.67	86.67	84.62	88.0	66.67	100.0	100.0	80.0
+Neurodevelopmental Disorders	gemini-3-pro-preview	23	73.91	100.0	100.0	100.0	100.0	100.0	71.43	25.0	40.0	60.0	100.0	100.0	75.0
+Neuromuscular Disorders	gemini-3-pro-preview	30	83.33	90.91	84.21	76.92	83.33	78.57	87.5	84.62	81.48	80.0	100.0	100.0	88.89
+Ophthalmologic Disorders	gemini-3-pro-preview	29	79.31	70.0	94.74	87.5	77.78	78.57	80.0	78.57	78.57	100.0	91.67	71.43	83.33
+Hearing Disorders	gemini-3-pro-preview	15	66.67	66.67	88.89	80.0	72.73	75.0	63.64	42.86	54.55	60.0	100.0	100.0	75.0
+RASopathies	gemini-3-pro-preview	18	88.89	100.0	100.0	100.0	100.0	80.0	92.31	80.0	80.0	85.71	90.91	85.71	85.71
+Cancer Predisposition	gpt-5.2	138	43.48	3.7	100.0	100.0	7.14	96.61	8.86	44.19	60.64	3.85	93.02	25.0	6.67
+Metabolic Disorders	gpt-5.2	158	35.44	2.25	98.55	66.67	4.35	96.3	3.85	34.21	50.49	13.33	99.3	66.67	22.22
+Cardiovascular Disorders	gpt-5.2	21	38.1	0.0	100.0	0	0	75.0	15.38	35.29	48.0	40.0	87.5	50.0	44.44
+Hematologic Disorders	gpt-5.2	41	29.27	3.85	100.0	100.0	7.41	100.0	3.33	27.5	43.14	0.0	100.0	0	0
+Immunodeficiency Disorders	gpt-5.2	27	37.04	0.0	100.0	0	0	83.33	0.0	40.0	54.05	0.0	90.48	0.0	0
+Neurodevelopmental Disorders	gpt-5.2	23	13.04	16.67	100.0	100.0	28.57	100.0	4.76	9.09	16.67	0.0	100.0	0	0
+Neuromuscular Disorders	gpt-5.2	30	50.0	9.09	100.0	100.0	16.67	100.0	6.25	48.28	65.12	0.0	100.0	0	0
+Ophthalmologic Disorders	gpt-5.2	29	48.28	0.0	100.0	0	0	100.0	6.67	50.0	66.67	0.0	95.83	0.0	0
+Hearing Disorders	gpt-5.2	15	33.33	0.0	100.0	0	0	100.0	9.09	28.57	44.44	20.0	100.0	100.0	33.33
+RASopathies	gpt-5.2	18	33.33	16.67	100.0	100.0	28.57	100.0	7.69	29.41	45.45	0.0	100.0	0	0
