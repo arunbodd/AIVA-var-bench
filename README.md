@@ -376,3 +376,22 @@ If you encounter rate limits, reduce concurrency:
 ```bash
 python scripts/classify.py --concurrency 1
 ```
+
+## Future Directions
+
+The following improvements are planned for future releases:
+
+### Gene-Level Analysis
+- **Stratified sampling by gene**: Ensure more even gene distribution in samples (e.g., max N variants per gene) to avoid over-representation of genes like RUNX1.
+- **Gene-level metrics**: Calculate accuracy broken down by gene to identify genes that are harder to classify.
+- **Balanced resampling**: Create new samples with ~5-10 variants per gene for broader coverage.
+
+### Data Quality
+- **Filter unknown genes**: Option to exclude variants without assigned gene symbols.
+- **Variant type stratification**: Sample by variant type (missense, nonsense, splice, etc.) for more balanced evaluation.
+
+### Extended Benchmarking
+- **Additional models**: Benchmark against more LLM providers as they become available.
+- **Criteria-level analysis**: Deeper analysis of which ACMG criteria each model handles well or poorly.
+- **Confidence calibration**: Evaluate how well model confidence scores correlate with actual accuracy.
+
