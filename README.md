@@ -99,6 +99,31 @@ python scripts/compare_models.py --models google/gemini-3-flash-preview openai/g
 python scripts/compare_models.py --models google/gemini-3-flash-preview --limit 20
 ```
 
+# New Feature: Parallel Execution
+You can use the `--parallel` flag to run multiple models concurrently, significantly speeding up the benchmarking process.
+
+```bash
+python scripts/compare_models.py \
+  --models openai/gpt-5.2 google/gemini-3-pro-preview anthropic/claude-opus-4-5-20251101 \
+  --input data/bias_unified.jsonl \
+  --parallel \
+  --concurrency 5
+```
+
+When using `--parallel`:
+- Progress bars are replaced with periodic status updates to avoid console conflicts.
+- Each model runs in its own concurrent task.
+
+**New Feature: Custom Output Directory**
+You can now specify where to save results using `--output-dir`.
+
+```bash
+python scripts/compare_models.py \
+  --models openai/gpt-5.2 google/gemini-3-pro-preview \
+  --input data/sample_200.jsonl \
+  --output-dir results/my_experiment_v1
+```
+
 #### Step 3: Calculate Detailed Metrics
 
 ```bash
@@ -178,29 +203,50 @@ python scripts/compare_models.py \
 
 #### Step 4: Run 4-Way Comparison
 
+**Updates:**
+- **Individual Model Reporting:** Comparing multiple AIVA models side-by-side instead of averaging them.
+- **Confusion Matrices:** Generates 3-class (Pathogenic / VUS / Benign) directional confusion matrices for all tools.
+- **File Logging:** Automatically saves the console report to a text file (e.g., `tool_comparison_detailed.txt`).
+
 ```bash
+# Run comparison using results from multiple models
 python scripts/compare_tools.py \
-    --aiva-results results/classifications_google_gemini-3-flash-preview_*.jsonl
+    --aiva-results results/experiment_1/classifications_*.jsonl \
+    --output-dir results/experiment_1/
 ```
 
 **Output:**
 ```
-=== FAIR COMPARISON (on N AIVA-predicted variants) ===
+=== FAIR COMPARISON (on 100 AIVA-predicted variants) ===
 
 Tool                  N Valid      Exact     Direct   Macro F1     Dir F1
 ------------------------------------------------------------------------------------------
-AIVA                      100      75.0%      88.0%      68.2%      85.3%
+AIVA (gpt-5.2)            100      82.0%      91.0%      75.0%      88.5%
+AIVA (claude-3)           100      80.0%      89.0%      74.0%      86.0%
 BIAS-2015                 100      58.0%      81.0%      51.4%      81.5%
 InterVar                  100      49.0%      65.0%      43.0%      65.9%
-
-REFERENCE: Full dataset metrics (all 7617 variants)
-Tool                  N Valid      Exact     Direct
-------------------------------------------------------------------------------------------
-InterVar (full)          7617      49.6%      65.3%
-BIAS-2015 (full)         7617      58.2%      81.2%
 ```
 
-The comparison is **fair** - all tools are evaluated on the exact same variants that AIVA classified.
+**Confusion Matrices:**
+The report now includes directional confusion matrices for deeper analysis:
+
+```
+Tool: AIVA (gpt-5.2)
+                  Predicted ->                            
+  Actual ↓        Pathogenic        VUS     Benign
+  --------------------------------------------------
+  Pathogenic              25          2          0
+  VUS                      1         30          2
+  Benign                   0          3         37
+```
+
+**Results Directory Structure:**
+The `Results_500_benchmarked/` folder demonstrates a full run on 500 variants:
+- `classifications_*.jsonl`: Raw output from each model (GPT-5.2, Claude Opus, Gemini 3 Pro).
+- `comparison_*.json`: Summary metrics for the run.
+- `comparison_report_*.txt`: Full text report of the model comparison.
+- `tool_comparison_detailed.txt`: Benchmark report comparing AIVA models against InterVar/BIAS.
+- `tool_comparison_detailed.jsonl`: Detailed unified dataset with all predictions.
 
 ## Metrics Explained
 
@@ -305,6 +351,19 @@ aiva-bench/
 | `compare_models.py` | Run AIVA with multiple models, compare results | Both workflows |
 | `compare_tools.py` | Compare AIVA vs InterVar vs BIAS-2015 | Workflow B, Step 4 |
 | `benchmark.py` | Calculate detailed metrics, confusion matrices | Detailed analysis |
+
+## Utility Scripts
+
+### Retry Failed Classifications
+If a long running batch job encounters intermittent errors (HTTP 429/500), you can use the retry script to process only the failed items without restarting the entire run.
+
+```bash
+python scripts/retry_errors.py results/classifications_incomplete.jsonl --concurrency 2
+```
+This will:
+1. Identify records with `"error"` fields.
+2. Retry classification for those variants.
+3. Update the file in-place (creating a `.bak` backup).
 
 ## Rate Limiting
 
