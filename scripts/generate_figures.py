@@ -63,20 +63,29 @@ plt.rcParams.update({
     'savefig.pad_inches': 0.1,
 })
 
-# Color palette for tools (colorblind-friendly)
+# Color palette for tools (colorblind-friendly, AIVA prominent)
+# AIVA models get vibrant, distinct colors; baselines get muted colors
 TOOL_COLORS = {
-    'AIVA (claude-opus-4-5-20251101)': '#0072B2',  # Blue
-    'AIVA (gemini-3-pro-preview)': '#009E73',      # Green
-    'AIVA (gpt-5.2)': '#D55E00',                   # Orange
-    'BIAS-2015': '#CC79A7',                        # Pink
-    'InterVar': '#F0E442',                         # Yellow
+    # AIVA models - vibrant, primary colors
+    'AIVA-Claude': '#2E86AB',        # Strong Blue
+    'AIVA-Gemini': '#28A745',        # Vibrant Green  
+    'AIVA-GPT': '#E85D04',           # Vibrant Orange
+    'claude-opus-4-5-20251101': '#2E86AB',
+    'gemini-3-pro-preview': '#28A745',
+    'gpt-5.2': '#E85D04',
+    # Baselines - muted/secondary colors
+    'BIAS-2015': '#6C757D',          # Muted Gray
+    'InterVar': '#ADB5BD',           # Light Gray
 }
 
 # Short names for display
 TOOL_SHORT_NAMES = {
     'anthropic/claude-opus-4-5-20251101': 'AIVA-Claude',
-    'google/gemini-3-pro-preview': 'AIVA-Gemini',
+    'google/gemini-3-pro-preview': 'AIVA-Gemini', 
     'openai/gpt-5.2': 'AIVA-GPT',
+    'claude-opus-4-5-20251101': 'AIVA-Claude',
+    'gemini-3-pro-preview': 'AIVA-Gemini',
+    'gpt-5.2': 'AIVA-GPT',
     'BIAS-2015': 'BIAS-2015',
     'InterVar': 'InterVar',
 }
@@ -830,6 +839,532 @@ def plot_exact_vs_directional(aiva_data: Dict, unified_data: Dict, output_dir: P
 
 
 # =============================================================================
+# Figure 8: F1-Score Comparison by Class
+# =============================================================================
+
+def plot_f1_comparison(aiva_data: Dict, unified_data: Dict, output_dir: Path):
+    """Generate grouped bar chart comparing F1-scores across tools and classes."""
+    
+    def calc_f1_scores(y_true, y_pred, labels=['P/LP', 'VUS', 'B/LB']):
+        f1_scores = {}
+        for label in labels:
+            tp = sum(1 for t, p in zip(y_true, y_pred) if t == label and p == label)
+            fp = sum(1 for t, p in zip(y_true, y_pred) if t != label and p == label)
+            fn = sum(1 for t, p in zip(y_true, y_pred) if t == label and p != label)
+            
+            precision = tp / (tp + fp) if (tp + fp) > 0 else 0
+            recall = tp / (tp + fn) if (tp + fn) > 0 else 0
+            f1 = 2 * precision * recall / (precision + recall) if (precision + recall) > 0 else 0
+            f1_scores[label] = f1 * 100
+        
+        # Macro F1
+        f1_scores['Macro'] = np.mean(list(f1_scores.values()))
+        return f1_scores
+    
+    tools_f1 = {}
+    
+    # AIVA models
+    for model, variants in aiva_data.items():
+        y_true, y_pred = [], []
+        for v in variants:
+            gt = get_direction(v.get("ground_truth", ""))
+            pred = get_direction(v.get("aiva_classification", ""))
+            if gt != "unknown" and pred != "unknown" and not v.get("error"):
+                y_true.append(gt)
+                y_pred.append(pred)
+        if y_true:
+            tools_f1[get_short_name(model)] = calc_f1_scores(y_true, y_pred)
+    
+    # Baselines
+    for tool, pred_field in [("BIAS-2015", "bias_classification"), ("InterVar", "intervar_classification")]:
+        y_true, y_pred = [], []
+        for vid, v in unified_data.items():
+            gt = get_direction(v.get("classification", ""))
+            pred = get_direction(v.get(pred_field, ""))
+            if gt != "unknown" and pred != "unknown":
+                y_true.append(gt)
+                y_pred.append(pred)
+        if y_true:
+            tools_f1[tool] = calc_f1_scores(y_true, y_pred)
+    
+    # Create grouped bar chart
+    fig, ax = plt.subplots(figsize=(12, 6))
+    
+    classes = ['P/LP', 'VUS', 'B/LB', 'Macro']
+    x = np.arange(len(classes))
+    width = 0.15
+    
+    # Order tools: AIVA first, then baselines
+    tools_order = [t for t in tools_f1.keys() if 'AIVA' in t] + \
+                  [t for t in tools_f1.keys() if 'AIVA' not in t]
+    
+    for i, tool in enumerate(tools_order):
+        values = [tools_f1[tool].get(c, 0) for c in classes]
+        offset = (i - len(tools_order)/2 + 0.5) * width
+        bars = ax.bar(x + offset, values, width, label=tool,
+                     color=get_tool_color(tool), edgecolor='black', linewidth=0.5)
+        
+        # Add value labels on bars
+        for bar, val in zip(bars, values):
+            if val > 0:
+                ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 1,
+                       f'{val:.0f}', ha='center', va='bottom', fontsize=7, rotation=0)
+    
+    ax.set_ylabel('F1-Score (%)', fontsize=12)
+    ax.set_xlabel('Classification Class', fontsize=12)
+    ax.set_title('F1-Score Comparison by Classification Class', fontsize=14, fontweight='bold')
+    ax.set_xticks(x)
+    ax.set_xticklabels(['Pathogenic/\nLikely Path.', 'VUS', 'Benign/\nLikely Benign', 'Macro\nAverage'])
+    ax.legend(loc='upper right', fontsize=9)
+    ax.set_ylim(0, 105)
+    ax.axhline(y=80, color='gray', linestyle='--', alpha=0.5, linewidth=0.8)
+    ax.grid(axis='y', alpha=0.3)
+    
+    plt.tight_layout()
+    
+    output_path = output_dir / 'figure8_f1_comparison.png'
+    plt.savefig(output_path, dpi=300, bbox_inches='tight')
+    plt.savefig(output_dir / 'figure8_f1_comparison.pdf', bbox_inches='tight')
+    plt.close()
+    
+    print(f"Saved: {output_path}")
+
+
+# =============================================================================
+# Figure 9: Model Agreement Heatmap
+# =============================================================================
+
+def plot_model_agreement(aiva_data: Dict, unified_data: Dict, output_dir: Path):
+    """Generate heatmap showing pairwise agreement between tools."""
+    
+    # Collect predictions per variant
+    variant_preds = defaultdict(dict)
+    
+    # AIVA models
+    for model, variants in aiva_data.items():
+        short_name = get_short_name(model)
+        for v in variants:
+            vid = v.get("variant_id")
+            pred = get_direction(v.get("aiva_classification", ""))
+            if vid and pred != "unknown" and not v.get("error"):
+                variant_preds[vid][short_name] = pred
+    
+    # Baselines
+    for tool, pred_field in [("BIAS-2015", "bias_classification"), ("InterVar", "intervar_classification")]:
+        for vid, v in unified_data.items():
+            pred = get_direction(v.get(pred_field, ""))
+            if pred != "unknown":
+                variant_preds[vid][tool] = pred
+    
+    # Get all tools that have predictions
+    all_tools = set()
+    for preds in variant_preds.values():
+        all_tools.update(preds.keys())
+    
+    tools_list = [t for t in all_tools if 'AIVA' in t] + [t for t in all_tools if 'AIVA' not in t]
+    
+    # Calculate pairwise agreement
+    n_tools = len(tools_list)
+    agreement_matrix = np.zeros((n_tools, n_tools))
+    
+    for i, tool1 in enumerate(tools_list):
+        for j, tool2 in enumerate(tools_list):
+            agree = 0
+            total = 0
+            for vid, preds in variant_preds.items():
+                if tool1 in preds and tool2 in preds:
+                    total += 1
+                    if preds[tool1] == preds[tool2]:
+                        agree += 1
+            agreement_matrix[i, j] = agree / total * 100 if total > 0 else 0
+    
+    # Create heatmap
+    fig, ax = plt.subplots(figsize=(8, 7))
+    
+    mask = np.triu(np.ones_like(agreement_matrix, dtype=bool), k=1)
+    
+    sns.heatmap(agreement_matrix, annot=True, fmt='.1f', cmap='RdYlGn',
+                xticklabels=tools_list, yticklabels=tools_list,
+                ax=ax, vmin=50, vmax=100, cbar_kws={'label': 'Agreement (%)'},
+                mask=mask, square=True)
+    
+    # Fill diagonal with 100%
+    for i in range(n_tools):
+        ax.text(i + 0.5, i + 0.5, '100.0', ha='center', va='center', fontsize=10, fontweight='bold')
+    
+    ax.set_title('Pairwise Agreement Between Classification Tools', fontsize=14, fontweight='bold')
+    
+    plt.tight_layout()
+    
+    output_path = output_dir / 'figure9_model_agreement.png'
+    plt.savefig(output_path, dpi=300, bbox_inches='tight')
+    plt.savefig(output_dir / 'figure9_model_agreement.pdf', bbox_inches='tight')
+    plt.close()
+    
+    print(f"Saved: {output_path}")
+
+
+# =============================================================================
+# Figure 10: Error Analysis - Misclassification Patterns
+# =============================================================================
+
+def plot_error_analysis(aiva_data: Dict, unified_data: Dict, output_dir: Path):
+    """Analyze and visualize misclassification patterns."""
+    
+    # Find best AIVA model
+    best_model = None
+    best_acc = 0
+    
+    for model, variants in aiva_data.items():
+        correct = sum(1 for v in variants 
+                     if get_direction(v.get("ground_truth", "")) == get_direction(v.get("aiva_classification", ""))
+                     and not v.get("error"))
+        total = sum(1 for v in variants if not v.get("error"))
+        acc = correct / total if total > 0 else 0
+        if acc > best_acc:
+            best_acc = acc
+            best_model = model
+    
+    if not best_model:
+        print("No AIVA model found for error analysis")
+        return
+    
+    # Collect misclassifications for best AIVA model
+    misclass_types = defaultdict(int)
+    correct_types = defaultdict(int)
+    
+    for v in aiva_data[best_model]:
+        gt = get_direction(v.get("ground_truth", ""))
+        pred = get_direction(v.get("aiva_classification", ""))
+        
+        if gt == "unknown" or pred == "unknown" or v.get("error"):
+            continue
+        
+        if gt == pred:
+            correct_types[gt] += 1
+        else:
+            misclass_types[(gt, pred)] += 1
+    
+    # Create Sankey-like flow diagram using stacked bars
+    fig, axes = plt.subplots(1, 2, figsize=(14, 6))
+    
+    # Left plot: Confusion flow
+    ax = axes[0]
+    
+    labels = ['P/LP', 'VUS', 'B/LB']
+    colors = {'P/LP': '#d62728', 'VUS': '#ff7f0e', 'B/LB': '#2ca02c'}
+    
+    # For each true class, show where predictions went
+    x = np.arange(len(labels))
+    bottom = np.zeros(len(labels))
+    
+    for pred_class in labels:
+        heights = []
+        for true_class in labels:
+            if true_class == pred_class:
+                heights.append(correct_types.get(true_class, 0))
+            else:
+                heights.append(misclass_types.get((true_class, pred_class), 0))
+        
+        ax.bar(x, heights, bottom=bottom, label=f'Pred: {pred_class}', 
+               color=colors[pred_class], edgecolor='black', linewidth=0.5, alpha=0.8)
+        bottom += heights
+    
+    ax.set_xticks(x)
+    ax.set_xticklabels([f'True:\n{l}' for l in labels])
+    ax.set_ylabel('Number of Variants')
+    ax.set_title(f'Classification Distribution by True Class\n({get_short_name(best_model)})', 
+                fontweight='bold')
+    ax.legend(loc='upper right')
+    
+    # Right plot: Error breakdown pie chart
+    ax = axes[1]
+    
+    error_counts = []
+    error_labels = []
+    error_colors = []
+    
+    cmap = plt.cm.Set3
+    for i, ((true_c, pred_c), count) in enumerate(sorted(misclass_types.items(), key=lambda x: -x[1])):
+        if count > 0:
+            error_counts.append(count)
+            error_labels.append(f'{true_c} → {pred_c}\n(n={count})')
+            error_colors.append(cmap(i % 12))
+    
+    if error_counts:
+        wedges, texts, autotexts = ax.pie(error_counts, labels=error_labels, autopct='%1.1f%%',
+                                          colors=error_colors, explode=[0.02]*len(error_counts))
+        ax.set_title(f'Misclassification Breakdown\n({get_short_name(best_model)})', fontweight='bold')
+    else:
+        ax.text(0.5, 0.5, 'No errors!', ha='center', va='center', fontsize=14)
+        ax.set_title('Misclassification Breakdown', fontweight='bold')
+    
+    plt.tight_layout()
+    
+    output_path = output_dir / 'figure10_error_analysis.png'
+    plt.savefig(output_path, dpi=300, bbox_inches='tight')
+    plt.savefig(output_dir / 'figure10_error_analysis.pdf', bbox_inches='tight')
+    plt.close()
+    
+    print(f"Saved: {output_path}")
+
+
+# =============================================================================
+# Figure 11: Performance vs Sample Size
+# =============================================================================
+
+def plot_performance_vs_sample_size(metrics_tsv: Path, output_dir: Path):
+    """Scatter plot showing relationship between category sample size and accuracy."""
+    
+    import csv
+    
+    # Load metrics
+    data_points = []
+    
+    with open(metrics_tsv, 'r') as f:
+        reader = csv.DictReader(f, delimiter='\t')
+        for row in reader:
+            data_points.append({
+                'category': row['category'],
+                'model': row['model'],
+                'n': int(row['n_variants']),
+                'accuracy': float(row['directional_accuracy'])
+            })
+    
+    # Get unique categories and their sizes
+    cat_sizes = {}
+    for d in data_points:
+        cat_sizes[d['category']] = d['n']
+    
+    # Create figure
+    fig, ax = plt.subplots(figsize=(10, 7))
+    
+    # Plot each tool
+    tools = set(d['model'] for d in data_points)
+    tools_order = [t for t in tools if 'claude' in t.lower() or 'gemini' in t.lower() or 'gpt' in t.lower()]
+    tools_order += [t for t in tools if t in ['BIAS-2015', 'InterVar']]
+    
+    for tool in tools_order:
+        tool_data = [d for d in data_points if d['model'] == tool]
+        x = [d['n'] for d in tool_data]
+        y = [d['accuracy'] for d in tool_data]
+        
+        short_name = get_short_name(tool)
+        ax.scatter(x, y, s=100, label=short_name, color=get_tool_color(short_name),
+                  edgecolors='black', linewidth=0.5, alpha=0.8)
+    
+    # Add category labels for the best performing tool's points
+    best_tool = 'gemini-3-pro-preview'
+    for d in data_points:
+        if best_tool in d['model'].lower():
+            ax.annotate(CATEGORY_SHORT.get(d['category'], d['category'][:8]), 
+                       (d['n'], d['accuracy']), xytext=(5, 5),
+                       textcoords='offset points', fontsize=7, alpha=0.7)
+    
+    ax.set_xlabel('Number of Variants in Category', fontsize=12)
+    ax.set_ylabel('Directional Accuracy (%)', fontsize=12)
+    ax.set_title('Performance vs Sample Size by Disease Category', fontsize=14, fontweight='bold')
+    ax.legend(loc='lower right', fontsize=9)
+    ax.grid(True, alpha=0.3)
+    ax.set_ylim(0, 105)
+    
+    # Add trend line for best AIVA
+    tool_data = [d for d in data_points if 'gemini' in d['model'].lower()]
+    if tool_data:
+        x = np.array([d['n'] for d in tool_data])
+        y = np.array([d['accuracy'] for d in tool_data])
+        z = np.polyfit(x, y, 1)
+        p = np.poly1d(z)
+        ax.plot(sorted(x), p(sorted(x)), '--', color='#28A745', alpha=0.5, linewidth=2)
+    
+    plt.tight_layout()
+    
+    output_path = output_dir / 'figure11_performance_vs_size.png'
+    plt.savefig(output_path, dpi=300, bbox_inches='tight')
+    plt.savefig(output_dir / 'figure11_performance_vs_size.pdf', bbox_inches='tight')
+    plt.close()
+    
+    print(f"Saved: {output_path}")
+
+
+# =============================================================================
+# Figure 12: Combined Summary Figure (for paper main figure)
+# =============================================================================
+
+def plot_main_summary_figure(aiva_data: Dict, unified_data: Dict, metrics_tsv: Path, output_dir: Path):
+    """Create a comprehensive multi-panel summary figure for publication."""
+    
+    import csv
+    
+    fig = plt.figure(figsize=(16, 12))
+    gs = GridSpec(2, 3, figure=fig, hspace=0.3, wspace=0.3)
+    
+    # Helper function for metrics
+    def calc_metrics_for_tool(y_true, y_pred):
+        total = len(y_true)
+        correct = sum(1 for t, p in zip(y_true, y_pred) if t == p)
+        accuracy = correct / total * 100 if total > 0 else 0
+        
+        metrics = {'accuracy': accuracy}
+        for label in ['P/LP', 'VUS', 'B/LB']:
+            tp = sum(1 for t, p in zip(y_true, y_pred) if t == label and p == label)
+            fp = sum(1 for t, p in zip(y_true, y_pred) if t != label and p == label)
+            fn = sum(1 for t, p in zip(y_true, y_pred) if t == label and p != label)
+            
+            sens = tp / (tp + fn) * 100 if (tp + fn) > 0 else 0
+            prec = tp / (tp + fp) * 100 if (tp + fp) > 0 else 0
+            f1 = 2 * sens * prec / (sens + prec) if (sens + prec) > 0 else 0
+            
+            metrics[f'{label}_sens'] = sens
+            metrics[f'{label}_f1'] = f1
+        
+        return metrics
+    
+    # Collect data for all tools
+    tools_metrics = {}
+    
+    for model, variants in aiva_data.items():
+        y_true, y_pred = [], []
+        for v in variants:
+            gt = get_direction(v.get("ground_truth", ""))
+            pred = get_direction(v.get("aiva_classification", ""))
+            if gt != "unknown" and pred != "unknown" and not v.get("error"):
+                y_true.append(gt)
+                y_pred.append(pred)
+        if y_true:
+            tools_metrics[get_short_name(model)] = calc_metrics_for_tool(y_true, y_pred)
+    
+    for tool, pred_field in [("BIAS-2015", "bias_classification"), ("InterVar", "intervar_classification")]:
+        y_true, y_pred = [], []
+        for vid, v in unified_data.items():
+            gt = get_direction(v.get("classification", ""))
+            pred = get_direction(v.get(pred_field, ""))
+            if gt != "unknown" and pred != "unknown":
+                y_true.append(gt)
+                y_pred.append(pred)
+        if y_true:
+            tools_metrics[tool] = calc_metrics_for_tool(y_true, y_pred)
+    
+    # Panel A: Overall accuracy comparison
+    ax_a = fig.add_subplot(gs[0, 0])
+    tools_order = ['AIVA-Gemini', 'AIVA-Claude', 'AIVA-GPT', 'BIAS-2015', 'InterVar']
+    tools_order = [t for t in tools_order if t in tools_metrics]
+    
+    accuracies = [tools_metrics[t]['accuracy'] for t in tools_order]
+    colors = [get_tool_color(t) for t in tools_order]
+    
+    bars = ax_a.bar(tools_order, accuracies, color=colors, edgecolor='black', linewidth=1)
+    ax_a.set_ylabel('Accuracy (%)')
+    ax_a.set_title('A. Overall Directional Accuracy', fontweight='bold')
+    ax_a.set_ylim(0, 100)
+    ax_a.axhline(y=80, color='gray', linestyle='--', alpha=0.5)
+    
+    for bar, acc in zip(bars, accuracies):
+        ax_a.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 1,
+                 f'{acc:.1f}%', ha='center', va='bottom', fontsize=9, fontweight='bold')
+    
+    ax_a.tick_params(axis='x', rotation=45)
+    
+    # Panel B: Sensitivity by class
+    ax_b = fig.add_subplot(gs[0, 1])
+    classes = ['P/LP', 'VUS', 'B/LB']
+    x = np.arange(len(classes))
+    width = 0.15
+    
+    for i, tool in enumerate(tools_order):
+        values = [tools_metrics[tool].get(f'{c}_sens', 0) for c in classes]
+        offset = (i - len(tools_order)/2 + 0.5) * width
+        ax_b.bar(x + offset, values, width, label=tool, color=get_tool_color(tool),
+                edgecolor='black', linewidth=0.5)
+    
+    ax_b.set_ylabel('Sensitivity (%)')
+    ax_b.set_title('B. Sensitivity by Classification Class', fontweight='bold')
+    ax_b.set_xticks(x)
+    ax_b.set_xticklabels(['P/LP', 'VUS', 'B/LB'])
+    ax_b.legend(loc='upper right', fontsize=7)
+    ax_b.set_ylim(0, 105)
+    
+    # Panel C: F1-Score comparison
+    ax_c = fig.add_subplot(gs[0, 2])
+    
+    for i, tool in enumerate(tools_order):
+        values = [tools_metrics[tool].get(f'{c}_f1', 0) for c in classes]
+        offset = (i - len(tools_order)/2 + 0.5) * width
+        ax_c.bar(x + offset, values, width, label=tool, color=get_tool_color(tool),
+                edgecolor='black', linewidth=0.5)
+    
+    ax_c.set_ylabel('F1-Score (%)')
+    ax_c.set_title('C. F1-Score by Classification Class', fontweight='bold')
+    ax_c.set_xticks(x)
+    ax_c.set_xticklabels(['P/LP', 'VUS', 'B/LB'])
+    ax_c.set_ylim(0, 105)
+    
+    # Panel D: Performance by category (load from TSV)
+    ax_d = fig.add_subplot(gs[1, :2])
+    
+    if metrics_tsv and metrics_tsv.exists():
+        cat_metrics = defaultdict(lambda: defaultdict(float))
+        with open(metrics_tsv, 'r') as f:
+            reader = csv.DictReader(f, delimiter='\t')
+            for row in reader:
+                cat = CATEGORY_SHORT.get(row['category'], row['category'][:10])
+                model = get_short_name(row['model'])
+                cat_metrics[cat][model] = float(row['directional_accuracy'])
+        
+        categories = list(cat_metrics.keys())[:10]
+        x = np.arange(len(categories))
+        
+        for i, tool in enumerate(tools_order):
+            values = [cat_metrics[cat].get(tool, 0) for cat in categories]
+            offset = (i - len(tools_order)/2 + 0.5) * width
+            ax_d.bar(x + offset, values, width, label=tool, color=get_tool_color(tool),
+                    edgecolor='black', linewidth=0.5)
+        
+        ax_d.set_ylabel('Accuracy (%)')
+        ax_d.set_title('D. Performance by Disease Category', fontweight='bold')
+        ax_d.set_xticks(x)
+        ax_d.set_xticklabels(categories, rotation=45, ha='right')
+        ax_d.legend(loc='upper right', fontsize=7)
+        ax_d.set_ylim(0, 105)
+        ax_d.axhline(y=80, color='gray', linestyle='--', alpha=0.5)
+    
+    # Panel E: AIVA advantage heatmap
+    ax_e = fig.add_subplot(gs[1, 2])
+    
+    if metrics_tsv and metrics_tsv.exists():
+        # Find best AIVA per category and compare to baselines
+        advantages = []
+        cat_labels = []
+        
+        for cat in categories:
+            best_aiva = max([cat_metrics[cat].get(t, 0) for t in tools_order if 'AIVA' in t])
+            bias_acc = cat_metrics[cat].get('BIAS-2015', 0)
+            intervar_acc = cat_metrics[cat].get('InterVar', 0)
+            
+            advantages.append([best_aiva - bias_acc, best_aiva - intervar_acc])
+            cat_labels.append(cat)
+        
+        advantages = np.array(advantages)
+        
+        cmap = sns.diverging_palette(10, 130, as_cmap=True)
+        sns.heatmap(advantages, annot=True, fmt='+.1f', cmap=cmap, center=0,
+                   xticklabels=['vs BIAS', 'vs InterVar'], yticklabels=cat_labels,
+                   ax=ax_e, cbar_kws={'label': 'Δ Accuracy (%)'})
+        
+        ax_e.set_title('E. AIVA Advantage', fontweight='bold')
+    
+    plt.suptitle('AIVA Variant Classification Performance Summary\n(500-Variant ClinGen Benchmark)', 
+                fontsize=16, fontweight='bold', y=1.02)
+    
+    output_path = output_dir / 'figure_main_summary.png'
+    plt.savefig(output_path, dpi=300, bbox_inches='tight')
+    plt.savefig(output_dir / 'figure_main_summary.pdf', bbox_inches='tight')
+    plt.close()
+    
+    print(f"Saved: {output_path}")
+
+
+# =============================================================================
 # Main
 # =============================================================================
 
@@ -860,7 +1395,7 @@ def main():
     print("\nGenerating figures...")
     
     # Figure 1: Confusion matrices
-    print("  [1/7] Confusion matrices...")
+    print("  [1/13] Confusion matrices...")
     plot_confusion_matrices(aiva_data, unified_data, output_dir)
     
     # Figure 2: Performance by category (requires TSV)
@@ -874,30 +1409,53 @@ def main():
                 break
     
     if metrics_tsv and metrics_tsv.exists():
-        print("  [2/7] Performance by category...")
+        print("  [2/13] Performance by category...")
         plot_performance_by_category(metrics_tsv, output_dir)
         
-        print("  [6/7] Performance heatmap...")
+        print("  [6/13] Performance heatmap...")
         plot_performance_heatmap(metrics_tsv, output_dir)
+        
+        print("  [11/13] Performance vs sample size...")
+        plot_performance_vs_sample_size(metrics_tsv, output_dir)
     else:
-        print("  [2/7] Skipping (metrics_by_category.tsv not found)")
-        print("  [6/7] Skipping (metrics_by_category.tsv not found)")
+        print("  [2/13] Skipping (metrics_by_category.tsv not found)")
+        print("  [6/13] Skipping (metrics_by_category.tsv not found)")
+        print("  [11/13] Skipping (metrics_by_category.tsv not found)")
     
     # Figure 3: Radar plot
-    print("  [3/7] Radar comparison...")
+    print("  [3/13] Radar comparison...")
     plot_radar_comparison(aiva_data, unified_data, output_dir)
     
     # Figure 4: ROC curves
-    print("  [4/7] ROC curves...")
+    print("  [4/13] ROC curves...")
     plot_roc_curves(aiva_data, unified_data, output_dir)
     
     # Figure 5: Summary comparison
-    print("  [5/7] Summary comparison...")
+    print("  [5/13] Summary comparison...")
     plot_summary_comparison(aiva_data, unified_data, output_dir)
     
     # Figure 7: Exact vs Directional
-    print("  [7/7] Exact vs Directional scatter...")
+    print("  [7/13] Exact vs Directional scatter...")
     plot_exact_vs_directional(aiva_data, unified_data, output_dir)
+    
+    # Figure 8: F1-Score comparison
+    print("  [8/13] F1-score comparison...")
+    plot_f1_comparison(aiva_data, unified_data, output_dir)
+    
+    # Figure 9: Model agreement heatmap
+    print("  [9/13] Model agreement heatmap...")
+    plot_model_agreement(aiva_data, unified_data, output_dir)
+    
+    # Figure 10: Error analysis
+    print("  [10/13] Error analysis...")
+    plot_error_analysis(aiva_data, unified_data, output_dir)
+    
+    # Figure 12: Main summary figure (multi-panel)
+    if metrics_tsv and metrics_tsv.exists():
+        print("  [12/13] Main summary figure...")
+        plot_main_summary_figure(aiva_data, unified_data, metrics_tsv, output_dir)
+    else:
+        print("  [12/13] Skipping main summary (metrics_by_category.tsv not found)")
     
     print(f"\n✅ All figures saved to {output_dir}/")
     print("\nGenerated files:")
