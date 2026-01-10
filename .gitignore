@@ -8,3 +8,4 @@ data/bias_2015/
 __pycache__
 venv
 .env
+.DS_Store
