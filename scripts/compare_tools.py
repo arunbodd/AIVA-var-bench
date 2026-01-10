@@ -32,7 +32,8 @@ from metrics import (
     get_direction,
     calculate_class_metrics,
     calculate_direction_metrics,
-    calculate_macro_f1
+    calculate_macro_f1,
+    calculate_full_metrics
 )
 
 
@@ -206,6 +207,75 @@ def print_confusion_matrices(tool_metrics: dict[str, dict], tool_preds: dict[str
             v_val = row.get('vus', 0)
             b_val = row.get('benign', 0)
             print(f"  {label:<15} {p_val:>10} {v_val:>10} {b_val:>10}")
+
+
+def print_bias_style_metrics(tool_metrics: dict[str, dict], tool_preds: dict[str, list[str]], ground_truth: list[str]):
+    """
+    Print metrics in the same format as the BIAS-2015 paper table.
+    Shows Sensitivity, Specificity, Precision, F1 for P/LP, B/LB, VUS categories.
+    """
+    print("\n" + "=" * 100)
+    print("BIAS-2015 STYLE METRICS (Sensitivity, Specificity, Precision, F1)")
+    print("=" * 100)
+    
+    # Category mapping: collapse 5-class to 3 directional categories
+    # P/LP = Pathogenic + Likely Pathogenic
+    # B/LB = Benign + Likely Benign
+    # VUS = Uncertain Significance
+    
+    tools = sorted(tool_metrics.keys())
+    categories = ["P/LP", "B/LB", "VUS"]
+    
+    # Print header
+    print(f"\n{'Tool':<35}", end="")
+    for cat in categories:
+        print(f" | {cat:^36}", end="")
+    print()
+    
+    print(f"{'':<35}", end="")
+    for _ in categories:
+        print(f" | {'Sens':>8} {'Spec':>8} {'Prec':>8} {'F1':>8}", end="")
+    print()
+    print("-" * 150)
+    
+    for tool in tools:
+        preds = tool_preds.get(tool, [])
+        if not preds:
+            continue
+        
+        # Get directions
+        pred_dirs = [get_direction(normalize_classification(p)) for p in preds]
+        gt_dirs = [get_direction(normalize_classification(g)) for g in ground_truth]
+        
+        # Filter valid
+        valid_idx = [i for i, (p, g) in enumerate(zip(pred_dirs, gt_dirs)) if p != "unknown" and g != "unknown"]
+        valid_preds = [pred_dirs[i] for i in valid_idx]
+        valid_gt = [gt_dirs[i] for i in valid_idx]
+        n_total = len(valid_gt)
+        
+        print(f"{tool:<35}", end="")
+        
+        # Calculate metrics for each category
+        cat_map = {"P/LP": "pathogenic", "B/LB": "benign", "VUS": "vus"}
+        
+        for cat in categories:
+            d = cat_map[cat]
+            tp = sum(1 for g, p in zip(valid_gt, valid_preds) if g == d and p == d)
+            fp = sum(1 for g, p in zip(valid_gt, valid_preds) if g != d and p == d)
+            fn = sum(1 for g, p in zip(valid_gt, valid_preds) if g == d and p != d)
+            tn = n_total - tp - fp - fn
+            
+            metrics = calculate_full_metrics(tp, fp, fn, tn)
+            sens = metrics["sensitivity"] * 100
+            spec = metrics["specificity"] * 100
+            prec = metrics["precision"] * 100
+            f1 = metrics["f1"] * 100
+            
+            print(f" | {sens:>7.2f}% {spec:>7.2f}% {prec:>7.2f}% {f1:>7.2f}%", end="")
+        
+        print()
+    
+    print("-" * 150)
 
 
 def print_comparison_table(tool_metrics: dict[str, dict]):
@@ -535,6 +605,9 @@ def main():
 
             # Print confusion matrices
             print_confusion_matrices(tool_metrics_fair, all_tool_preds, ground_truth_fair)
+            
+            # Print BIAS-2015 style metrics table (Sensitivity, Specificity, Precision, F1)
+            print_bias_style_metrics(tool_metrics_fair, all_tool_preds, ground_truth_fair)
 
             # FULL DATASET comparison for reference
             print("\n\n" + "=" * 90)
