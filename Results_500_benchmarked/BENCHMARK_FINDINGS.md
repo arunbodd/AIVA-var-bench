@@ -103,12 +103,19 @@ ROC analysis confirms that LLMs can reliably distinguish pathogenic from benign 
 
 ### 3.1 F1 Scores by Disease Category
 
-![F1 by Category](figures/figure2_f1_by_category.png)
+To provide a comprehensive view of performance across disease categories, we present three complementary visualizations: a lollipop chart for overall ranking, a dumbbell chart for direct model comparisons, and a slope chart for performance trajectories.
 
-**Figure 4: F1 Scores Stratified by Disease Category**
+![Lollipop Chart](figures/figure2a_category_lollipop.png)
+**Figure 4a: Comparative Performance by Disease Category (Lollipop Chart)**
+*Shows the absolute F1 performance of Top 5 Models across all disease categories, clearly highlighting leading models per domain.*
 
-#### Description
-Grouped bar chart showing exact Macro F1 scores for each model stratified by disease phenotype category (Cardiovascular, Cancer, Neurological, Metabolic, etc.). This reveals which disease areas are best served by each model.
+![Dumbbell Chart](figures/figure2b_category_dumbbell.png)
+**Figure 4b: Gemini vs Claude Performance Gap (Dumbbell Chart)**
+*Visualizes the performance gap between Gemini 3 Pro and Claude Opus 4.5. The length of the line represents the magnitude of performance difference.*
+
+![Slope Chart](figures/figure2c_category_slope.png)
+**Figure 4c: Performance Trajectory Across Models (Slope Chart)**
+*Traces performance changes from older methods (BIAS) to modern LLMs, highlighting adaptation trends across categories.*
 
 #### Key Findings
 - **Hematologic disorders**: Gemini achieves highest F1 (85.8%), significantly outperforming Claude (58.5%)

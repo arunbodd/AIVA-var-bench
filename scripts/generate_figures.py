@@ -23,6 +23,7 @@ from pathlib import Path
 from typing import Dict, List, Tuple, Optional
 
 import numpy as np
+import pandas as pd  # Added pandas import
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from matplotlib.gridspec import GridSpec
@@ -1523,6 +1524,172 @@ def plot_main_summary_figure(aiva_data: Dict, unified_data: Dict, metrics_tsv: P
 
 
 # =============================================================================
+# Modern Alternative Category Plots
+# =============================================================================
+
+def plot_category_modern_alternatives(
+    metrics_tsv, 
+    metric_col='exact_macro_f1',
+    metric_name='Exact Macro F1', 
+    output_dir='figures'
+):
+    """
+    Generate modern alternatives for category performance visualization:
+    1. Lollipop chart
+    2. Dumbbell plot (Top 2 comparison)
+    3. Slope chart (Top 2 comparison)
+    """
+    print(f"Generating modern category plots for {metric_name}...")
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Load metrics from TSV
+    try:
+        metrics_df = pd.read_csv(metrics_tsv, sep='\t')
+    except Exception as e:
+        print(f"Error loading metrics TSV: {e}")
+        return
+
+    # Filter for main models
+    plot_df = metrics_df.copy()
+    
+    # Format model names
+    model_map = {
+        'gemini-3-pro-preview': 'AIVA-Gemini',
+        'claude-opus-4-5-20251101': 'AIVA-Claude',
+        'gpt-5.2': 'AIVA-GPT',
+        'BIAS-2015': 'BIAS-2015',
+        'InterVar': 'InterVar'
+    }
+    plot_df['model_display'] = plot_df['model'].map(model_map).fillna(plot_df['model'])
+    
+    # Determine top 2 models overall for comparisons (Gemini vs Claude usually)
+    # Or better: Gemini vs BIAS (since that's the interesting comparison in text)
+    top_models = ['AIVA-Gemini', 'AIVA-Claude', 'BIAS-2015']
+    df_filtered = plot_df[plot_df['model_display'].isin(top_models)].copy()
+    
+    # Pivot for easier plotting
+    pivot_df = df_filtered.pivot(index='category', columns='model_display', values=metric_col)
+    
+    # Sort categories by Gemini performance
+    if 'AIVA-Gemini' in pivot_df.columns:
+        pivot_df = pivot_df.sort_values('AIVA-Gemini', ascending=True)
+    
+    # 1. LOLLIPOP CHART (All Top Models)
+    fig, ax = plt.subplots(figsize=(12, 10))
+    
+    categories = pivot_df.index
+    y = np.arange(len(categories))
+    height = 0.25  # spacing
+    
+    # Plot lollipops for each model
+    models_to_plot = [m for m in top_models if m in pivot_df.columns]
+    offsets = np.linspace(-height, height, len(models_to_plot))
+    
+    for i, model in enumerate(models_to_plot):
+        color = TOOL_COLORS.get(model, '#333333')
+        values = pivot_df[model]
+        offset = offsets[i]
+        
+        # Stems
+        ax.hlines(y=y + offset, xmin=0, xmax=values, color=color, alpha=0.6, linewidth=2)
+        # Heads
+        ax.scatter(values, y + offset, color=color, s=100, label=model, zorder=3, edgecolors='white')
+    
+    ax.set_yticks(y)
+    ax.set_yticklabels(categories)
+    ax.set_xlabel(f'{metric_name} (%)')
+    ax.set_title(f'{metric_name} by Disease Category', fontweight='bold')
+    ax.legend(loc='lower right')
+    ax.grid(axis='x', linestyle='--', alpha=0.3)
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['left'].set_visible(False)
+    
+    plt.tight_layout()
+    plt.savefig(output_dir / 'figure2a_category_lollipop.png', dpi=300)
+    plt.savefig(output_dir / 'figure2a_category_lollipop.pdf')
+    plt.close()
+    
+    # 2. DUMBBELL PLOT (Gemini vs Claude - or Best vs Second Best)
+    # Let's do Gemini vs Claude as primary LLM comparison
+    model1, model2 = 'AIVA-Gemini', 'AIVA-Claude'
+    if model1 in pivot_df.columns and model2 in pivot_df.columns:
+        fig, ax = plt.subplots(figsize=(12, 10))
+        
+        for i, category in enumerate(categories):
+            val1 = pivot_df.loc[category, model1]
+            val2 = pivot_df.loc[category, model2]
+            
+            # Line connecting arrows
+            ax.plot([val1, val2], [i, i], color='gray', alpha=0.5, linewidth=2, zorder=1)
+            
+            # Points
+            ax.scatter(val1, i, color=TOOL_COLORS[model1], s=150, zorder=3, label=model1 if i == 0 else "")
+            ax.scatter(val2, i, color=TOOL_COLORS[model2], s=150, zorder=3, label=model2 if i == 0 else "")
+            
+            # Annotate difference
+            diff = val1 - val2
+            mid = (val1 + val2) / 2
+            color = TOOL_COLORS[model1] if diff > 0 else TOOL_COLORS[model2]
+            sign = "+" if diff > 0 else ""
+            ax.text(mid, i + 0.3, f"{sign}{diff:.1f}", ha='center', va='center', 
+                   fontsize=9, color=color, fontweight='bold')
+
+        ax.set_yticks(y)
+        ax.set_yticklabels(categories)
+        ax.set_xlabel(f'{metric_name} (%)')
+        ax.set_title(f'Performance Gap: {model1} vs {model2}', fontweight='bold')
+        ax.legend(loc='lower right')
+        ax.grid(axis='x', linestyle='--', alpha=0.3)
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        ax.spines['left'].set_visible(False)
+        
+        plt.tight_layout()
+        plt.savefig(output_dir / 'figure2b_category_dumbbell.png', dpi=300)
+        plt.savefig(output_dir / 'figure2b_category_dumbbell.pdf')
+        plt.close()
+
+    # 3. SLOPE CHART (Comparison of Rankings or Values)
+    # Comparing 3 models: Claude -> Gemini -> BIAS
+    fig, ax = plt.subplots(figsize=(10, 8))
+    
+    models_slope = ['AIVA-Claude', 'AIVA-Gemini', 'BIAS-2015']
+    x_pos = np.arange(len(models_slope))
+    
+    # Plot lines for each category
+    # Use a colormap for categories to distinguish them
+    colors = plt.cm.tab10(np.linspace(0, 1, len(categories)))
+    
+    for i, category in enumerate(categories):
+        values = [pivot_df.loc[category, m] for m in models_slope]
+        ax.plot(x_pos, values, marker='o', linewidth=2, label=category, color=colors[i])
+        
+        # Label start and end
+        ax.text(x_pos[0] - 0.1, values[0], f"{category}", ha='right', va='center', fontsize=9, color=colors[i])
+        ax.text(x_pos[-1] + 0.1, values[-1], f"{values[-1]:.1f}", ha='left', va='center', fontsize=9, color=colors[i])
+
+    ax.set_xticks(x_pos)
+    ax.set_xticklabels(models_slope, fontweight='bold', fontsize=11)
+    ax.set_ylabel(f'{metric_name} (%)')
+    ax.set_title(f'Performance Trajectory by Category', fontweight='bold')
+    
+    # Remove spines
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['bottom'].set_visible(False)
+    ax.spines['left'].set_visible(False)
+    ax.grid(axis='y', linestyle='--', alpha=0.3)
+    
+    # Since labels are on lines, no legend needed, or minimal
+    # plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+    
+    plt.tight_layout()
+    plt.savefig(output_dir / 'figure2c_category_slope.png', dpi=300)
+    plt.savefig(output_dir / 'figure2c_category_slope.pdf')
+    plt.close()
+# =============================================================================
 # Main
 # =============================================================================
 
@@ -1614,6 +1781,13 @@ def main():
         plot_main_summary_figure(aiva_data, unified_data, metrics_tsv, output_dir)
     else:
         print("  [12/13] Skipping main summary (metrics_by_category.tsv not found)")
+    
+    # Modern alternative category plots (newly added)
+    if metrics_tsv and metrics_tsv.exists():
+        print("  [13/13] Modern category plots...")
+        plot_category_modern_alternatives(metrics_tsv=metrics_tsv, output_dir=output_dir)
+    else:
+        print("  [13/13] Skipping modern category plots (metrics_by_category.tsv not found)")
     
     print(f"\n✅ All figures saved to {output_dir}/")
     print("\nGenerated files:")
