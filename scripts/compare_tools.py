@@ -27,7 +27,7 @@ class MultiWriter:
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from config import RESULTS_DIR, DATA_DIR, CLASSIFICATION_LABELS, DIRECTION_LABELS
-from metrics import (
+from scripts.generate_results import (
     normalize_classification,
     get_direction,
     calculate_class_metrics,

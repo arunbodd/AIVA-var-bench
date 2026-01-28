@@ -30,7 +30,7 @@ class MultiWriter:
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from config import DATA_DIR, RESULTS_DIR, CONCURRENCY_LIMIT, CLASSIFICATION_LABELS, DIRECTION_LABELS
 from classify import AIVAClient, classify_batch, load_variants
-from metrics import (
+from scripts.generate_results import (
     load_results,
     normalize_classification,
     get_direction,
@@ -308,6 +308,8 @@ async def main():
     parser.add_argument("--limit", type=int, help="Limit number of variants")
     parser.add_argument("--output-dir", help="Directory to save results (default: results/)")
     parser.add_argument("--parallel", action="store_true", help="Run models in parallel (disables progress bars)")
+    parser.add_argument("--skip-existing", action="store_true",
+                        help="Skip variants that have already been classified for the model in the output directory")
 
     args = parser.parse_args()
 
@@ -362,8 +364,12 @@ async def main():
 
                 print(f"Loading variants from {input_path}")
                 variants = load_variants(input_path)
+                print(f"Loaded {len(variants)} total variants")
 
-                if args.limit:
+                # Note: We defer limiting until AFTER filtering if skip-existing is on, 
+                # but since skip-existing is per-model, we have to handle it carefully.
+                # If skip-existing is NOT on, apply limit now to keep behavior consistent.
+                if args.limit and not args.skip_existing:
                     # Shuffle deterministically to ensure we get a random sample of genes
                     # but the SAME sample across different runs/models
                     print(f"Randomly sampling {args.limit} variants (seed=42)...")
@@ -371,7 +377,7 @@ async def main():
                     random.shuffle(variants)
                     variants = variants[:args.limit]
 
-                print(f"Testing {len(variants)} variants across {len(args.models)} models")
+                print(f"Testing across {len(args.models)} models")
                 if args.parallel:
                     print("Parallel mode enabled: running models concurrently")
 
@@ -379,8 +385,46 @@ async def main():
                     
                     async def process_model(model: str):
                         """Helper to run a model and save results instantly."""
+                        
+                        # Handle --skip-existing logic per model
+                        model_variants = variants
+                        if args.skip_existing:
+                            model_slug = model.replace("/", "_")
+                            output_files = list(output_dir.glob(f"classifications_{model_slug}_*.jsonl"))
+                            existing_ids = set()
+                            for f in output_files:
+                                try:
+                                    with open(f, "r") as fh:
+                                        for line in fh:
+                                            if line.strip():
+                                                try:
+                                                    rec = json.loads(line)
+                                                    vid = rec.get("variant_id") or rec.get("id") or rec.get("variant")
+                                                    if vid:
+                                                        existing_ids.add(vid)
+                                                except:
+                                                    pass
+                                except:
+                                    pass
+                            
+                            if existing_ids:
+                                print(f"[{model}] Found {len(existing_ids)} existing classified variants")
+                                model_variants = [v for v in variants if (v.get("id") or v.get("variation")) not in existing_ids]
+                                print(f"[{model}] {len(model_variants)} variants remaining after filtering")
+                            
+                            # Apply limit NOW if it was deferred
+                            if args.limit:
+                                print(f"[{model}] Randomly sampling {args.limit} from remaining {len(model_variants)} variants...")
+                                random.seed(42)
+                                random.shuffle(model_variants)
+                                model_variants = model_variants[:args.limit]
+
+                            if not model_variants:
+                                print(f"[{model}] All variants already classified. Skipping.")
+                                return []
+
                         # Verbose passed as True so progress callback is used; parallel mode is handled inside run_model
-                        results = await run_model(client, variants, model, args.concurrency, verbose=True, parallel=args.parallel)
+                        results = await run_model(client, model_variants, model, args.concurrency, verbose=True, parallel=args.parallel)
                         model_results[model] = results
 
                         # Save individual results immediately
