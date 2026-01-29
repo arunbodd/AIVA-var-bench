@@ -34,7 +34,7 @@ Results_Gemini_Pro_Analysis/figures/*.zip
 !Results_Gemini_Pro_Analysis/figures/png/figure_sankey_flow_matplotlib.png
 !Results_Gemini_Pro_Analysis/figures/png/variant_distribution_by_category.png
 !Results_Gemini_Pro_Analysis/figures/png/figure_combined_summary.png
-
+!Results_Gemini_Pro_Analysis/classification*.jsonl
 
 # Logs and temporary files
 *.log
