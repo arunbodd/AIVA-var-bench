@@ -2,15 +2,17 @@ import csv
 import re
 import json
 import sys
+from pathlib import Path
 
 # Increase CSV field size limit just in case
 csv.field_size_limit(sys.maxsize)
 
-# File Paths
-EREPO_PATH = "/Users/arunbodd/Documents/Work/AIVA_Benchmarking/AIVA-var-bench/data/erepo-tabbed.tsv"
-BIAS_PATH = "/Users/arunbodd/Documents/Work/AIVA_Benchmarking/AIVA-var-bench/bias_v2.0.0_supplementary_files/erepo_feb_2nd_bitscopic_classifications.tsv"
-INTERVAR_PATH = "/Users/arunbodd/Documents/Work/AIVA_Benchmarking/AIVA-var-bench/bias_v2.0.0_supplementary_files/erepo_feb_2nd.hg19_multianno.txt.intervar"
-OUTPUT_PATH = "/Users/arunbodd/Documents/Work/AIVA_Benchmarking/AIVA-var-bench/data/erepo_bias_intervar_merged.jsonl"
+# File Paths - use relative paths from project root
+PROJECT_ROOT = Path(__file__).parent.parent
+EREPO_PATH = str(PROJECT_ROOT / "data" / "erepo-tabbed.tsv")
+BIAS_PATH = str(PROJECT_ROOT / "bias_v2.0.0_supplementary_files" / "erepo_feb_2nd_bitscopic_classifications.tsv")
+INTERVAR_PATH = str(PROJECT_ROOT / "bias_v2.0.0_supplementary_files" / "erepo_feb_2nd.hg19_multianno.txt.intervar")
+OUTPUT_PATH = str(PROJECT_ROOT / "data" / "erepo_bias_intervar_merged.jsonl")
 
 # Mapping NC identifiers to Chromosomes (hg19 / GRCh37)
 NC_TO_CHR = {

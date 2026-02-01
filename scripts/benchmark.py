@@ -48,7 +48,7 @@ def calculate_metrics(results: list[dict]) -> dict:
         if g in confusion_5class and p in CLASSIFICATION_LABELS:
             confusion_5class[g][p] += 1
 
-    per_direction = calculate_direction_metrics(ground_truth, predictions, DIRECTION_LABELS) # Note: Unified script uses gt/pred for this call
+    per_direction = calculate_direction_metrics(ground_directions, pred_directions, DIRECTION_LABELS)
 
     # Confusion matrix (3-class)
     confusion_3class = {g: {p: 0 for p in DIRECTION_LABELS} for g in DIRECTION_LABELS}

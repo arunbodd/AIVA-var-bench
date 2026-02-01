@@ -123,12 +123,23 @@ CATEGORY_ORDER = [
 # =============================================================================
 
 def load_jsonl(filepath: Path) -> list[dict]:
-    """Load JSONL file."""
+    """Load JSONL file with error handling."""
     results = []
-    with open(filepath, "r", encoding="utf-8") as f:
-        for line in f:
-            if line.strip():
-                results.append(json.loads(line))
+    try:
+        with open(filepath, "r", encoding="utf-8") as f:
+            for line_num, line in enumerate(f, 1):
+                if line.strip():
+                    try:
+                        results.append(json.loads(line))
+                    except json.JSONDecodeError as e:
+                        print(f"Warning: Failed to parse JSON on line {line_num} in {filepath}: {e}")
+                        continue
+    except FileNotFoundError:
+        print(f"Error: File not found: {filepath}")
+        raise
+    except Exception as e:
+        print(f"Error reading file {filepath}: {e}")
+        raise
     return results
 
 
