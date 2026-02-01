@@ -15,15 +15,15 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from config import RESULTS_DIR, CLASSIFICATION_LABELS, DIRECTION_LABELS
-
-# Updated import to use consolidated script
-from generate_results import (
+from metrics import (
     load_results,
-    extract_ground_truth_and_predictions,
+    normalize_classification,
+    get_direction,
     calculate_class_metrics,
     calculate_direction_metrics,
     calculate_criteria_metrics,
-    calculate_macro_f1
+    calculate_macro_f1,
+    extract_ground_truth_and_predictions
 )
 
 
@@ -33,6 +33,7 @@ def calculate_metrics(results: list[dict]) -> dict:
     errors = sum(1 for r in results if r.get("error"))
     successful = total - errors
 
+    # Extract ground truth and predictions
     ground_truth, predictions, ground_directions, pred_directions = \
         extract_ground_truth_and_predictions(results)
 
@@ -42,15 +43,17 @@ def calculate_metrics(results: list[dict]) -> dict:
 
     per_class = calculate_class_metrics(ground_truth, predictions, CLASSIFICATION_LABELS)
 
-    # Confusion matrix (5-class) - kept local as it's simple counting
+    # Confusion matrix (5-class)
     confusion_5class = {gt: {pred: 0 for pred in CLASSIFICATION_LABELS} for gt in CLASSIFICATION_LABELS}
     for g, p in zip(ground_truth, predictions):
         if g in confusion_5class and p in CLASSIFICATION_LABELS:
             confusion_5class[g][p] += 1
 
+    # Directional metrics (3-class)
     per_direction = calculate_direction_metrics(ground_directions, pred_directions, DIRECTION_LABELS)
 
-    # Confusion matrix (3-class)
+    # Directional confusion matrix (3-class)
+>>>>>>> origin/main
     confusion_3class = {g: {p: 0 for p in DIRECTION_LABELS} for g in DIRECTION_LABELS}
     for g, p in zip(ground_directions, pred_directions):
         if g in confusion_3class and p in DIRECTION_LABELS:
@@ -58,6 +61,7 @@ def calculate_metrics(results: list[dict]) -> dict:
 
     criteria_metrics = calculate_criteria_metrics(results)
 
+    # Execution time stats
     valid_results = [r for r in results if not r.get("error") and r.get("aiva_classification")]
     exec_times = [r["execution_time_ms"] for r in valid_results if r.get("execution_time_ms")]
     avg_exec_time = sum(exec_times) / len(exec_times) if exec_times else 0
@@ -118,9 +122,16 @@ def print_report(metrics: dict):
         m = metrics["per_class_metrics"].get(cls, {})
         print(f"  {cls:<25} {m.get('precision', 0):>8.3f} {m.get('recall', 0):>8.3f} {m.get('f1', 0):>8.3f} {m.get('support', 0):>8}")
 
+    # Macro averages
     macro_f1 = calculate_macro_f1(metrics["per_class_metrics"])
-    print(f"  {'-'*60}")
-    print(f"  {'Macro F1':<25} {'':>8} {'':>8} {macro_f1:>8.3f}")
+    class_metrics = metrics["per_class_metrics"]
+    valid_classes = [c for c in CLASSIFICATION_LABELS if class_metrics.get(c, {}).get("support", 0) > 0]
+    if valid_classes:
+        macro_p = sum(class_metrics[c]["precision"] for c in valid_classes) / len(valid_classes)
+        macro_r = sum(class_metrics[c]["recall"] for c in valid_classes) / len(valid_classes)
+        print(f"  {'-'*60}")
+        print(f"  {'Macro Average':<25} {macro_p:>8.3f} {macro_r:>8.3f} {macro_f1:>8.3f}")
+>>>>>>> origin/main
 
     print(f"\n{'='*30} DIRECTIONAL METRICS {'='*19}")
     print(f"  {'Direction':<15} {'Prec':>8} {'Recall':>8} {'F1':>8} {'Support':>8}")

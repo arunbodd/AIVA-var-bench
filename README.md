@@ -80,6 +80,7 @@ Edit `config.py` or set environment variables:
 | `AIVA_API_TOKEN` | - | AIVA API token for authentication |
 | `DEFAULT_MODEL` | `google/gemini-3-flash-preview` | LLM model for classification |
 | `DEFAULT_ASSEMBLY` | `GRCh38` | Genome assembly |
+<<<<<<< HEAD
 | `CONCURRENCY_LIMIT` | `5` | Max concurrent API requests |
 
 ## Project Structure
@@ -113,6 +114,9 @@ aiva-var-bench/
     ├── benchmark_analysis.py    # End-to-end analysis pipeline
     └── generate_results.py      # Metrics calculation & figure generation
 ```
+=======
+| `CONCURRENCY_LIMIT` | `5` | Max concurrent API requests (respects AIVA rate limit) |
+>>>>>>> origin/main
 
 ## Usage
 
@@ -146,6 +150,7 @@ python scripts/compare_models.py --models google/gemini-3-flash-preview openai/g
 python scripts/compare_models.py --models google/gemini-3-flash-preview --limit 20
 ```
 
+<<<<<<< HEAD
 # New Feature: Parallel Execution
 You can use the `--parallel` flag to run multiple models concurrently, significantly speeding up the benchmarking process.
 
@@ -180,6 +185,9 @@ python scripts/compare_models.py \
 ### Full Analysis Pipeline
 
 For comprehensive benchmarking with figures and scorecards:
+=======
+#### Step 3: Calculate Detailed Metrics
+>>>>>>> origin/main
 
 ```bash
 # Use most recent results
@@ -210,6 +218,7 @@ aws s3 cp s3://bias-2015/bias_v2.0.0_supplementary_files.zip /tmp/
 ```
 
 Then extract and copy files:
+<<<<<<< HEAD
 ```bash
 unzip /tmp/bias_v2.0.0_supplementary_files.zip -d /tmp/bias_supp/
 cp /tmp/bias_supp/bias_v2.0.0_supplementary_files/*.{tabbed,intervar,tsv,vcf} data/bias_2015/
@@ -226,6 +235,79 @@ cp /tmp/bias_supp/bias_v2.0.0_supplementary_files/*.{tabbed,intervar,tsv,vcf} da
 | `benchmark.py` | Calculate detailed metrics |
 | `benchmark_analysis.py` | End-to-end analysis pipeline with figures |
 | `generate_results.py` | Metrics calculation and figure generation |
+=======
+
+```bash
+unzip /tmp/bias_v2.0.0_supplementary_files.zip -d /tmp/bias_supp/
+
+# Copy required files to project
+cp /tmp/bias_supp/bias_v2.0.0_supplementary_files/erepo_feb_2nd.tabbed data/bias_2015/
+cp /tmp/bias_supp/bias_v2.0.0_supplementary_files/erepo_feb_2nd.hg19_multianno.txt.intervar data/bias_2015/
+cp /tmp/bias_supp/bias_v2.0.0_supplementary_files/erepo_feb_2nd_bitscopic_classifications.tsv data/bias_2015/
+cp /tmp/bias_supp/bias_v2.0.0_supplementary_files/erepo_feb_2nd_sorted.vcf data/bias_2015/
+```
+
+**Files needed:**
+| File | Description |
+|------|-------------|
+| `erepo_feb_2nd.tabbed` | eRepo ground truth (expert classifications) |
+| `erepo_feb_2nd.hg19_multianno.txt.intervar` | InterVar predictions |
+| `erepo_feb_2nd_bitscopic_classifications.tsv` | BIAS-2015 predictions |
+| `erepo_feb_2nd_sorted.vcf` | Authoritative variant list (VCF format) |
+
+#### Step 2: Parse and Unify Data
+
+```bash
+python scripts/parse_bias_data.py
+```
+
+This creates `data/bias_unified.jsonl` containing 7,617 variants with:
+- Ground truth classifications from eRepo
+- InterVar predictions
+- BIAS-2015 predictions
+- All in AIVA-compatible format (hg19/GRCh37)
+
+#### Step 3: Run AIVA Classification
+
+```bash
+# Test with small sample first
+python scripts/compare_models.py \
+    --models google/gemini-3-flash-preview \
+    --input data/bias_unified.jsonl \
+    --limit 100
+
+# Full dataset (takes ~19 hours per model at ~9s/variant)
+python scripts/compare_models.py \
+    --models google/gemini-3-flash-preview \
+    --input data/bias_unified.jsonl
+```
+
+#### Step 4: Run 4-Way Comparison
+
+```bash
+python scripts/compare_tools.py \
+    --aiva-results results/classifications_google_gemini-3-flash-preview_*.jsonl
+```
+
+**Output:**
+```
+=== FAIR COMPARISON (on N AIVA-predicted variants) ===
+
+Tool                  N Valid      Exact     Direct   Macro F1     Dir F1
+------------------------------------------------------------------------------------------
+AIVA                      100      75.0%      88.0%      68.2%      85.3%
+BIAS-2015                 100      58.0%      81.0%      51.4%      81.5%
+InterVar                  100      49.0%      65.0%      43.0%      65.9%
+
+REFERENCE: Full dataset metrics (all 7617 variants)
+Tool                  N Valid      Exact     Direct
+------------------------------------------------------------------------------------------
+InterVar (full)          7617      49.6%      65.3%
+BIAS-2015 (full)         7617      58.2%      81.2%
+```
+
+The comparison is **fair** - all tools are evaluated on the exact same variants that AIVA classified.
+>>>>>>> origin/main
 
 ## Metrics Explained
 
@@ -243,6 +325,97 @@ For each of the 5 ACMG classifications:
 - **Recall**: Of all variants in this class, how many does AIVA identify?
 - **F1**: Harmonic mean of precision and recall
 
+<<<<<<< HEAD
+=======
+### Criteria Analysis
+
+| Metric | Description |
+|--------|-------------|
+| **Avg Jaccard (normalized)** | Overlap of ACMG criteria (after normalizing modifiers like `_Supporting`) |
+| **Direction Agreement** | % where AIVA's evidence leans the same direction (pathogenic vs benign) |
+| **Per-Criterion P/R/F1** | How well AIVA identifies each specific criterion (PM2, PP3, etc.) |
+
+### Evidence Direction
+
+Criteria are grouped by evidence direction:
+- **Pathogenic**: PVS1, PS1-4, PM1-6, PP1-5
+- **Benign**: BA1, BS1-4, BP1-7
+
+## Example Output
+
+```
+======================================================================
+AIVA VARIANT CLASSIFICATION BENCHMARK RESULTS
+======================================================================
+
+Dataset: 200 variants
+  Successful: 195 | Errors: 5 (2.5%)
+  Compared: 195
+
+============================== ACCURACY ==============================
+  EXACT MATCH (5-class):     72.31%  (141/195)
+  DIRECTIONAL (3-class):     89.74%  (175/195)
+
+============================== CRITERIA ANALYSIS =====================
+  Avg Jaccard (normalized): 0.312
+  Evidence Direction Agreement: 85.6%
+
+  Aggregate by Evidence Type:
+    Pathogenic (PVS/PS/PM/PP): P=0.542 R=0.478 F1=0.508
+    Benign (BA/BS/BP):         P=0.234 R=0.189 F1=0.209
+
+  Per-Criterion Metrics (top 15 by support):
+  Criterion  Type     Prec Recall     F1   TP   FP   FN Supp
+  --------------------------------------------------------------
+  PM2        PATH    0.892  0.943  0.917  150   18    9  159
+  PP3        PATH    0.654  0.567  0.607   72   38   55  127
+  ...
+```
+
+## Project Structure
+
+```
+aiva-bench/
+├── config.py              # Configuration settings
+├── metrics.py             # Shared metrics calculations
+├── requirements.txt       # Python dependencies
+├── .env.example           # Environment template
+├── data/
+│   ├── erepo-tabbed.tsv   # Raw eRepo download (Workflow A)
+│   ├── parsed_variants.jsonl
+│   ├── sample_200.jsonl
+│   ├── bias_2015/         # BIAS-2015 supplementary files (Workflow B)
+│   │   ├── erepo_feb_2nd.tabbed
+│   │   ├── erepo_feb_2nd.hg19_multianno.txt.intervar
+│   │   ├── erepo_feb_2nd_bitscopic_classifications.tsv
+│   │   └── erepo_feb_2nd_sorted.vcf
+│   └── bias_unified.jsonl # Unified dataset for 4-way comparison
+├── results/
+│   ├── classifications_*.jsonl
+│   ├── comparison_*.json
+│   ├── metrics_*.json
+│   └── tool_comparison_detailed.jsonl
+└── scripts/
+    ├── parse_erepo.py     # Parse & sample eRepo data (Workflow A)
+    ├── parse_bias_data.py # Parse BIAS-2015 data (Workflow B)
+    ├── classify.py        # Call AIVA API (single model)
+    ├── compare_models.py  # Compare multiple AIVA models
+    ├── compare_tools.py   # 4-way tool comparison
+    └── benchmark.py       # Calculate detailed metrics
+```
+
+## Script Reference
+
+| Script | Purpose | When to Use |
+|--------|---------|-------------|
+| `parse_erepo.py` | Parse ClinGen eRepo TSV, create stratified sample | Workflow A, Step 1 |
+| `parse_bias_data.py` | Parse BIAS-2015 supplementary files, create unified dataset | Workflow B, Step 2 |
+| `classify.py` | Run AIVA classification (single model) | Quick single-model test |
+| `compare_models.py` | Run AIVA with multiple models, compare results | Both workflows |
+| `compare_tools.py` | Compare AIVA vs InterVar vs BIAS-2015 | Workflow B, Step 4 |
+| `benchmark.py` | Calculate detailed metrics, confusion matrices | Detailed analysis |
+
+>>>>>>> origin/main
 ## Rate Limiting
 
 The classify script handles rate limits automatically:
@@ -252,6 +425,7 @@ The classify script handles rate limits automatically:
 
 If you encounter rate limits, reduce concurrency:
 ```bash
+<<<<<<< HEAD
 python scripts/compare_models.py --concurrency 1
 ```
 
@@ -262,3 +436,7 @@ MIT License - see LICENSE file for details.
 ## Contact
 
 Arun Boddapati, MHSPL Research Team
+=======
+python scripts/classify.py --concurrency 1
+```
+>>>>>>> origin/main
