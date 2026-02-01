@@ -726,7 +726,7 @@ def main():
         print("Generating scorecards...")
         df = pd.read_csv(args.metrics_tsv, sep='\t')
         
-        # Summary
+        # Summary - Calculate Macro F1 from plp_f1, vus_f1, blb_f1
         cats = df['category'].unique()
         data = {"Category": cats}
         model_map = {'gemini-3-pro-preview': 'Gemini 3 Pro', 'BIAS-2015': 'BIAS-2015', 'InterVar': 'InterVar'}
@@ -735,8 +735,13 @@ def main():
             scores = []
             for c in cats:
                 row = df[(df['category']==c) & (df['model'].str.contains(m_key) if 'gemini' in m_key else df['model']==m_key)]
-                if not row.empty: scores.append(row.get('dir_macro_f1', row.get('directional_accuracy')).values[0]) # simplified fallback
-                else: scores.append(0)
+                if not row.empty:
+                    # Calculate Macro F1 as average of P/LP, VUS, B/LB F1 scores
+                    r = row.iloc[0]
+                    macro_f1 = (r['plp_f1'] + r['vus_f1'] + r['blb_f1']) / 3
+                    scores.append(macro_f1 * 100)  # Convert to percentage
+                else:
+                    scores.append(0)
             data[m_disp] = scores
         
         generate_category_summary_table(pd.DataFrame(data), out_dir)
