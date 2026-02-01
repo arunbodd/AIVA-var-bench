@@ -1,52 +1,10 @@
-# Python
-*.pyc
-__pycache__/
-venv/
-.env
-
-# OS
-.DS_Store
-
-# Large data files (exclude from git)
-*.jsonl
 *.json
+*.jsonl
 *.csv
-
-# Essential data (include in git)
 !data/bias_unified.jsonl
-!data/erepo-tabbed.tsv
-!data/erepo_bias_intervar_merged.jsonl
-
-# Old/archived result directories
-Results_500_benchmarked/
-Results_7617_benchmarked/
-results/
-_trash/
-
-# Large result directories (keep only essential)
-Results_Gemini_Pro_Analysis/tool_comparison_detailed.jsonl
-Results_Gemini_Pro_Analysis/other_models/
-Results_Gemini_Pro_Analysis/figures/*.html
-Results_Gemini_Pro_Analysis/figures/*.zip
-
-# Include key figures for BENCHMARK_FINDINGS.md
-!Results_Gemini_Pro_Analysis/figures/png/figure11_scorecard.png
-!Results_Gemini_Pro_Analysis/figures/png/figure_sankey_flow_matplotlib.png
-!Results_Gemini_Pro_Analysis/figures/png/variant_distribution_by_category.png
-!Results_Gemini_Pro_Analysis/figures/png/figure_combined_summary.png
-!Results_Gemini_Pro_Analysis/classification*.jsonl
-
-# Logs and temporary files
-*.log
-*.txt
-!requirements.txt
-!README.md
-
-# Archives
-*.zip
-*.tar.gz
-*.docx
-*.sh
-
-# BIAS data directory
 data/bias_2015/
+*.log
+*.pyc
+__pycache__
+venv
+.env
