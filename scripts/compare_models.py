@@ -9,9 +9,23 @@ Usage:
 import argparse
 import asyncio
 import json
+import random   
 import sys
 from datetime import datetime
 from pathlib import Path
+
+# Class for diverting stdout to both console and file
+class MultiWriter:
+    def __init__(self, *files):
+        self.files = files
+
+    def write(self, buf):
+        for f in self.files:
+            f.write(buf)
+
+    def flush(self):
+        for f in self.files:
+            f.flush()
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from config import DATA_DIR, RESULTS_DIR, CONCURRENCY_LIMIT, CLASSIFICATION_LABELS, DIRECTION_LABELS
@@ -56,25 +70,44 @@ async def run_model(
     client: AIVAClient,
     variants: list[dict],
     model: str,
-    concurrency: int
+    concurrency: int,
+    verbose: bool = True,
+    parallel: bool = False
 ) -> list[dict]:
     """Run classification for a single model."""
-    print(f"\n{'='*60}")
-    print(f"Running model: {model}")
-    print(f"{'='*60}")
+    if verbose and not parallel:
+        print(f"\n{'='*60}")
+        print(f"Running model: {model}")
+        print(f"{'='*60}")
+    elif parallel:
+        print(f"Started running model: {model}...")
 
     def show_progress(completed: int, total: int):
         pct = 100 * completed / total
-        print(f"\r  Progress: {completed}/{total} ({pct:.1f}%)", end="", flush=True)
+        if parallel:
+            # For parallel execution, print tagged progress updates occasionally
+            step = max(1, total // 5) # Update every 20% or so
+            if completed == total or completed % step == 0:
+                 short_model = model.split("/")[-1]
+                 print(f"[{short_model}] {completed}/{total} ({pct:.0f}%)")
+        elif verbose:
+            # Standard single-line progress for sequential execution
+            print(f"\r  Progress: {completed}/{total} ({pct:.1f}%)", end="", flush=True)
 
     results = await classify_batch(
         client, variants,
         concurrency=concurrency,
         model=model,
-        progress_callback=show_progress
+        # Always invoke callback if verbose is set (which now includes parallel logging)
+        progress_callback=show_progress if verbose else None
     )
 
-    print()  # Newline after progress
+    if verbose and not parallel:
+        print()  # Newline after progress
+    elif parallel:
+        short_model = model.split("/")[-1]
+        print(f"[{short_model}] Completed")
+
     return results
 
 
@@ -273,79 +306,162 @@ async def main():
     parser.add_argument("--concurrency", type=int, default=CONCURRENCY_LIMIT,
                         help=f"Max concurrent requests (default: {CONCURRENCY_LIMIT})")
     parser.add_argument("--limit", type=int, help="Limit number of variants")
+    parser.add_argument("--output-dir", help="Directory to save results (default: results/)")
+    parser.add_argument("--parallel", action="store_true", help="Run models in parallel (disables progress bars)")
+    parser.add_argument("--skip-existing", action="store_true",
+                        help="Skip variants that have already been classified for the model in the output directory")
 
     args = parser.parse_args()
 
-    model_results = {}
+    # Determine output directory
+    output_dir = Path(args.output_dir) if args.output_dir else RESULTS_DIR
+    output_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Report file path
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    report_path = output_dir / f"comparison_report_{timestamp}.txt"
+    
+    # Start capturing output
+    original_stdout = sys.stdout
+    with open(report_path, "w", encoding="utf-8") as log_file:
+        sys.stdout = MultiWriter(original_stdout, log_file)
+        
+        try:
+            print(f"Report will be saved to: {report_path}")
+            
+            model_results = {}
 
-    if args.results_dir:
-        # Load existing results from directory
-        results_dir = Path(args.results_dir)
-        result_files = list(results_dir.glob("classifications_*.jsonl"))
+            if args.results_dir:
+                # Load existing results from directory
+                results_dir = Path(args.results_dir)
+                result_files = list(results_dir.glob("classifications_*.jsonl"))
 
-        if not result_files:
-            print(f"Error: No classification files found in {results_dir}")
-            sys.exit(1)
+                if not result_files:
+                    print(f"Error: No classification files found in {results_dir}")
+                    sys.exit(1)
 
-        print(f"Found {len(result_files)} result files")
+                print(f"Found {len(result_files)} result files")
 
-        for filepath in result_files:
-            results = load_results(filepath)
-            if results:
-                # Try to get model from first result
-                model = results[0].get("model_used", filepath.stem)
-                if model:
-                    model_results[model] = results
-                    print(f"  Loaded {len(results)} results for {model}")
+                for filepath in result_files:
+                    results = load_results(filepath)
+                    if results:
+                        # Try to get model from first result
+                        model = results[0].get("model_used", filepath.stem)
+                        if model:
+                            model_results[model] = results
+                            print(f"  Loaded {len(results)} results for {model}")
 
-    elif args.models:
-        # Run classification for each model
-        if args.input:
-            input_path = Path(args.input)
-        else:
-            sample_files = list(DATA_DIR.glob("sample_*.jsonl"))
-            if not sample_files:
-                print("Error: No sample files found. Run parse_erepo.py first.")
+            elif args.models:
+                # Run classification for each model
+                if args.input:
+                    input_path = Path(args.input)
+                else:
+                    sample_files = list(DATA_DIR.glob("sample_*.jsonl"))
+                    if not sample_files:
+                        print("Error: No sample files found. Run parse_erepo.py first.")
+                        sys.exit(1)
+                    input_path = max(sample_files, key=lambda p: p.stat().st_mtime)
+
+                print(f"Loading variants from {input_path}")
+                variants = load_variants(input_path)
+                print(f"Loaded {len(variants)} total variants")
+
+                # Note: We defer limiting until AFTER filtering if skip-existing is on, 
+                # but since skip-existing is per-model, we have to handle it carefully.
+                # If skip-existing is NOT on, apply limit now to keep behavior consistent.
+                if args.limit and not args.skip_existing:
+                    # Shuffle deterministically to ensure we get a random sample of genes
+                    # but the SAME sample across different runs/models
+                    print(f"Randomly sampling {args.limit} variants (seed=42)...")
+                    random.seed(42)
+                    random.shuffle(variants)
+                    variants = variants[:args.limit]
+
+                print(f"Testing across {len(args.models)} models")
+                if args.parallel:
+                    print("Parallel mode enabled: running models concurrently")
+
+                async with AIVAClient() as client:
+                    
+                    async def process_model(model: str):
+                        """Helper to run a model and save results instantly."""
+                        
+                        # Handle --skip-existing logic per model
+                        model_variants = variants
+                        if args.skip_existing:
+                            model_slug = model.replace("/", "_")
+                            output_files = list(output_dir.glob(f"classifications_{model_slug}_*.jsonl"))
+                            existing_ids = set()
+                            for f in output_files:
+                                try:
+                                    with open(f, "r") as fh:
+                                        for line in fh:
+                                            if line.strip():
+                                                try:
+                                                    rec = json.loads(line)
+                                                    vid = rec.get("variant_id") or rec.get("id") or rec.get("variant")
+                                                    if vid:
+                                                        existing_ids.add(vid)
+                                                except json.JSONDecodeError:
+                                                    # Skip malformed JSON lines
+                                                    continue
+                                except (FileNotFoundError, IOError):
+                                    # Skip files that can't be read
+                                    continue
+                            
+                            if existing_ids:
+                                print(f"[{model}] Found {len(existing_ids)} existing classified variants")
+                                model_variants = [v for v in variants if (v.get("id") or v.get("variation")) not in existing_ids]
+                                print(f"[{model}] {len(model_variants)} variants remaining after filtering")
+                            
+                            # Apply limit NOW if it was deferred
+                            if args.limit:
+                                print(f"[{model}] Randomly sampling {args.limit} from remaining {len(model_variants)} variants...")
+                                random.seed(42)
+                                random.shuffle(model_variants)
+                                model_variants = model_variants[:args.limit]
+
+                            if not model_variants:
+                                print(f"[{model}] All variants already classified. Skipping.")
+                                return []
+
+                        # Verbose passed as True so progress callback is used; parallel mode is handled inside run_model
+                        results = await run_model(client, model_variants, model, args.concurrency, verbose=True, parallel=args.parallel)
+                        model_results[model] = results
+
+                        # Save individual results immediately
+                        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                        model_slug = model.replace("/", "_")
+                        output_path = output_dir / f"classifications_{model_slug}_{timestamp}.jsonl"
+
+                        with open(output_path, "w") as f:
+                            for r in results:
+                                f.write(json.dumps(r) + "\n")
+                        print(f"  Saved to {output_path}")
+                    
+                    if args.parallel:
+                        await asyncio.gather(*(process_model(m) for m in args.models))
+                    else:
+                        for model in args.models:
+                            await process_model(model)
+
+            else:
+                print("Error: Provide either --models or --results-dir")
+                parser.print_help()
                 sys.exit(1)
-            input_path = max(sample_files, key=lambda p: p.stat().st_mtime)
 
-        print(f"Loading variants from {input_path}")
-        variants = load_variants(input_path)
+            if len(model_results) < 1:
+                print("Error: No results to compare")
+                sys.exit(1)
 
-        if args.limit:
-            variants = variants[:args.limit]
+            # Print comparison report
+            summaries = print_comparison_report(model_results)
 
-        print(f"Testing {len(variants)} variants across {len(args.models)} models")
-
-        async with AIVAClient() as client:
-            for model in args.models:
-                results = await run_model(client, variants, model, args.concurrency)
-                model_results[model] = results
-
-                # Save individual results
-                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-                model_slug = model.replace("/", "_")
-                output_path = RESULTS_DIR / f"classifications_{model_slug}_{timestamp}.jsonl"
-
-                with open(output_path, "w") as f:
-                    for r in results:
-                        f.write(json.dumps(r) + "\n")
-                print(f"  Saved to {output_path}")
-
-    else:
-        print("Error: Provide either --models or --results-dir")
-        parser.print_help()
-        sys.exit(1)
-
-    if len(model_results) < 1:
-        print("Error: No results to compare")
-        sys.exit(1)
-
-    # Print comparison report
-    summaries = print_comparison_report(model_results)
-
-    # Save comparison
-    save_comparison(model_results, summaries, RESULTS_DIR)
+            # Save comparison (JSON)
+            save_comparison(model_results, summaries, output_dir)
+            
+        finally:
+            sys.stdout = original_stdout
 
 
 if __name__ == "__main__":

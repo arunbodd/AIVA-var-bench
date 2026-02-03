@@ -1,0 +1,9 @@
+Report will be saved to: /Users/arunbodd/Documents/Work/AIVA_Benchmarking/AIVA-var-bench/results/comparison_report_20260203_134757.txt
+Loading variants from data/erepo_bias_intervar_merged.jsonl
+Loaded 8387 total variants
+Randomly sampling 5 variants (seed=42)...
+Testing across 1 models
+
+============================================================
+Running model: google/gemini-3-flash-preview
+============================================================
