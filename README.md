@@ -77,7 +77,7 @@ Edit `config.py` or set environment variables:
 |---------|---------|-------------|
 | `AIVA_API_URL` | `http://localhost:8000` | AIVA API endpoint |
 | `AIVA_API_TOKEN` | - | AIVA API token for authentication |
-| `DEFAULT_MODEL` | `google/gemini-3-flash-preview` | LLM model for classification |
+| `DEFAULT_MODEL` | `google/gemini-3-pro-preview` | LLM model for classification |
 | `DEFAULT_ASSEMBLY` | `GRCh38` | Genome assembly |
 | `CONCURRENCY_LIMIT` | `5` | Max concurrent API requests (respects AIVA rate limit) |
 
@@ -139,10 +139,10 @@ python scripts/parse_erepo.py --sample-size 500
 
 ```bash
 # Compare multiple models on the sample
-python scripts/compare_models.py --models google/gemini-3-flash-preview openai/gpt-4o
+python scripts/compare_models.py --models google/gemini-3-pro-preview openai/gpt-4o
 
 # Limit variants for quick testing
-python scripts/compare_models.py --models google/gemini-3-flash-preview --limit 20
+python scripts/compare_models.py --models google/gemini-3-pro-preview --limit 20
 ```
 
 #### New Feature: Parallel Execution
@@ -237,13 +237,13 @@ This creates `data/erepo_bias_intervar_merged.jsonl` containing 8,387 variants w
 ```bash
 # Test with small sample first
 python scripts/compare_models.py \
-    --models google/gemini-3-flash-preview \
+    --models google/gemini-3-pro-preview \
     --input data/erepo_bias_intervar_merged.jsonl \
     --limit 100
 
 # Full dataset (takes ~21 hours per model at ~9s/variant for 8,387 variants)
 python scripts/compare_models.py \
-    --models google/gemini-3-flash-preview \
+    --models google/gemini-3-pro-preview \
     --input data/erepo_bias_intervar_merged.jsonl
 ```
 
@@ -251,7 +251,7 @@ python scripts/compare_models.py \
 
 ```bash
 python scripts/compare_tools.py \
-    --aiva-results results/classifications_google_gemini-3-flash-preview_*.jsonl
+    --aiva-results Results_Gemini_Pro_Analysis/classifications_google_gemini-3-pro-preview_*.jsonl
 ```
 
 **Output:**

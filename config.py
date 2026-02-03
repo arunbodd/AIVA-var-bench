@@ -21,7 +21,7 @@ AIVA_API_TOKEN = os.getenv("AIVA_API_TOKEN", "")
 # Classification settings
 DEFAULT_ASSEMBLY = os.getenv("DEFAULT_ASSEMBLY", "GRCh38")
 CLASSIFICATION_TYPE = "acmg"  # acmg for germline, amp for somatic
-DEFAULT_MODEL = os.getenv("DEFAULT_MODEL", "google/gemini-3-flash-preview")  # None uses AIVA default (gemini-2.5-flash), or set e.g. "openai/gpt-4o"
+DEFAULT_MODEL = os.getenv("DEFAULT_MODEL", "google/gemini-3-pro-preview")  # None uses AIVA default (gemini-2.5-pro), or set e.g. "openai/gpt-4o"
 
 # Request settings
 CONCURRENCY_LIMIT = int(os.getenv("CONCURRENCY_LIMIT", "5"))  # Keep low to avoid rate limits
