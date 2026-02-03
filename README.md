@@ -19,13 +19,13 @@ See [BENCHMARK_FINDINGS.md](Results_Gemini_Pro_Analysis/BENCHMARK_FINDINGS.md) f
 
 ## Overview
 
-This tool measures how well AIVA's variant classification aligns with expert panel (VCEP) curations using ACMG/AMP guidelines. It supports two benchmarking workflows:
+This tool measures how well AIVA's variant classification aligns with expert panel (VCEP) curations using ACMG/AMP guidelines. It supports two primary modes of operation:
 
-### Workflow A: Quick AIVA Model Comparison
-Compare different LLM models within AIVA using a sample of eRepo variants.
+### Option 1: Standard Evaluation (Recommended)
+Directly use the expert-consolidated benchmark dataset (`data/erepo_bias_intervar_merged.jsonl`) containing 8,387 variants to compare AIVA models and external tools.
 
-### Workflow B: 4-Way Tool Comparison
-Compare AIVA against InterVar and BIAS-2015 using pre-computed predictions from the [BIAS-2015 paper](https://github.com/bitscopic/BIAS-2015).
+### Option 2: Full Reproduction
+Re-generate the entire consolidated dataset from raw BIAS-2015 supplementary files and eRepo source data using the reproduction engine.
 
 **Metrics calculated:**
 - **Classification accuracy** (5-class and 3-class directional)
@@ -41,15 +41,14 @@ python3 -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env  # Add your AIVA_API_TOKEN
 
-# Workflow A: Quick model comparison (5 min)
-python scripts/parse_erepo.py --sample-size 50
-python scripts/compare_models.py --models google/gemini-3-flash-preview --limit 10
-python scripts/benchmark.py
+# Option 1: Evaluation using Consolidated Benchmark (Default)
+# Use the high-fidelity 8,387-variant dataset directly
+python scripts/compare_models.py --models google/gemini-3-pro-preview --input data/erepo_bias_intervar_merged.jsonl --limit 100
+python scripts/benchmark_analysis.py --aiva-results Results_Gemini_Pro_Analysis/classifications_*.jsonl
 
-# Workflow B: 4-way tool comparison (requires BIAS-2015 data)
+# Option 2: Full Reproduction from Source
 python scripts/parse_bias_data.py
-python scripts/compare_models.py --models google/gemini-3-flash-preview --input data/erepo_bias_intervar_merged.jsonl --limit 100
-python scripts/compare_tools.py --aiva-results results/classifications_*.jsonl
+# Then proceed with evaluations as above
 ```
 
 ## Setup
