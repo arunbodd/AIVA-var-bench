@@ -22,6 +22,7 @@ Usage:
 import argparse
 import json
 import sys
+import warnings
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -62,11 +63,13 @@ VCEP_TO_CATEGORY = {
     # Cardio
     "Cardiomyopathy VCEP": "Cardiovascular Disorders", "FBN1 VCEP": "Cardiovascular Disorders",
     "Pulmonary Hypertension VCEP": "Cardiovascular Disorders",
+    "Potassium Channel Arrhythmia VCEP": "Cardiovascular Disorders",
     # Heme
     "Platelet Disorders VCEP": "Hematologic Disorders", "von Willebrand Disease  VCEP": "Hematologic Disorders",
     "Coagulation Factor Deficiency VCEP": "Hematologic Disorders", "Thrombosis VCEP": "Hematologic Disorders",
     # Immuno
     "Severe Combined Immunodeficiency Disease  VCEP": "Immunodeficiency Disorders",
+    "Antibody Deficiencies VCEP": "Immunodeficiency Disorders",
     # Neuro
     "Rett and Angelman-like Disorders VCEP": "Neurodevelopmental Disorders",
     # Neuromuscular
@@ -80,13 +83,18 @@ VCEP_TO_CATEGORY = {
     # Hearing
     "Hearing Loss VCEP": "Hearing Disorders",
     # RAS
-    "RASopathy VCEP": "RASopathies",
+    "RASopathy VCEP": "RASopathies", "Brain Malformations VCEP": "RASopathies",
+    # Vascular
+    "Hereditary Hemorrhagic Telangiectasia VCEP": "Vascular Disorders",
+    # Epilepsy / Neurological
+    "Epilepsy Sodium Channel VCEP": "Epilepsy / Neurological",
 }
 
 CATEGORY_ORDER = [
     "Cancer Predisposition", "Metabolic Disorders", "Cardiovascular Disorders", "Hematologic Disorders",
     "Immunodeficiency Disorders", "Neurodevelopmental Disorders", "Neuromuscular Disorders",
-    "Ophthalmologic Disorders", "Hearing Disorders", "RASopathies", "Other"
+    "Ophthalmologic Disorders", "Hearing Disorders", "RASopathies",
+    "Vascular Disorders", "Epilepsy / Neurological", "Other"
 ]
 
 # --- CORE METRIC UTILITIES ---
@@ -98,6 +106,8 @@ def load_results(filepath: Path) -> list[dict]:
             if line.strip(): results.append(json.loads(line))
     return results
 
+_UNMAPPED_CLASSIFICATIONS = set()
+
 def normalize_classification(c: str) -> str:
     if not c: return ""
     c = c.strip()
@@ -107,6 +117,14 @@ def normalize_classification(c: str) -> str:
     if "likely benign" in lower: return "Likely Benign"
     if "pathogenic" in lower: return "Pathogenic"
     if "benign" in lower: return "Benign"
+    # No known pattern matched: surface it instead of silently miscounting it.
+    if c not in _UNMAPPED_CLASSIFICATIONS:
+        _UNMAPPED_CLASSIFICATIONS.add(c)
+        warnings.warn(
+            f"Unrecognized classification {c!r} did not match any known label; "
+            "returning it unchanged (it will not match any ground-truth label).",
+            stacklevel=2,
+        )
     return c
 
 def get_direction(c: str) -> str:
@@ -114,7 +132,19 @@ def get_direction(c: str) -> str:
     return CLASSIFICATION_TO_DIRECTION.get(norm, "unknown")
 
 def get_category(expert_panel: str) -> str:
-    return VCEP_TO_CATEGORY.get(expert_panel.strip(), "Other") if expert_panel else "Other"
+    """Map an Expert Panel (VCEP) to its broader disease category."""
+    if not expert_panel or expert_panel == "N/A":
+        return "Other"
+    stripped = expert_panel.strip()
+    category = VCEP_TO_CATEGORY.get(stripped)
+    if category:
+        return category
+    # Case-insensitive fallback for minor formatting differences.
+    lower = stripped.lower()
+    for vcep, cat in VCEP_TO_CATEGORY.items():
+        if vcep.lower() == lower:
+            return cat
+    return "Other"
 
 def normalize_criterion(criterion: str) -> str:
     if not criterion: return ""
@@ -193,9 +223,14 @@ def calculate_criteria_metrics(results):
         for c in pred - gt: fp_c[c] += 1
         for c in gt - pred: fn_c[c] += 1
         
-        # Direction agreement
-        gt_dir = 'pathogenic' if sum(1 for c in gt if get_criterion_type(c)=='pathogenic') > sum(1 for c in gt if get_criterion_type(c)=='benign') else 'benign'
-        pred_dir = 'pathogenic' if sum(1 for c in pred if get_criterion_type(c)=='pathogenic') > sum(1 for c in pred if get_criterion_type(c)=='benign') else 'benign'
+        # Direction agreement: compare pathogenic vs benign evidence counts.
+        # Ties (incl. no evidence) resolve to 'neutral' to stay consistent with metrics.py.
+        gt_path = sum(1 for c in gt if get_criterion_type(c) == 'pathogenic')
+        gt_benign = sum(1 for c in gt if get_criterion_type(c) == 'benign')
+        pred_path = sum(1 for c in pred if get_criterion_type(c) == 'pathogenic')
+        pred_benign = sum(1 for c in pred if get_criterion_type(c) == 'benign')
+        gt_dir = 'pathogenic' if gt_path > gt_benign else ('benign' if gt_benign > gt_path else 'neutral')
+        pred_dir = 'pathogenic' if pred_path > pred_benign else ('benign' if pred_benign > pred_path else 'neutral')
         if gt_dir == pred_dir: dir_match += 1
         dir_total += 1
 

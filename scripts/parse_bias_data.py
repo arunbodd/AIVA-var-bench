@@ -484,10 +484,10 @@ def create_unified_dataset_reproduce(erepo_path, intervar_path, bias_path, vcf_p
                 'classification': entry.get('Assertion', ''), 
                 'criteria_met': criteria_met, 
                 'expert_panel': entry.get('Expert Panel', ''),
-                'intervar_classification': mapped['intervar']['classification'], 
-                'intervar_criteria': mapped['intervar'].get('criteria', []),
-                'bias_classification': mapped['bias']['classification'], 
-                'bias_criteria': mapped['bias'].get('criteria', []),
+                'intervar_classification': mapped['intervar']['classification'],
+                'intervar_criteria': mapped['intervar'].get('criteria_met', []),
+                'bias_classification': mapped['bias']['classification'],
+                'bias_criteria': mapped['bias'].get('criteria_met', []),
                 'variant_key': mapped['variant_key'],
                 'variation_original': entry.get('#Variation', ''),
                 'match_method': 'vcf_fanout'
@@ -498,8 +498,11 @@ def create_unified_dataset_reproduce(erepo_path, intervar_path, bias_path, vcf_p
     for entry in erepo_entries:
         if entry['line_num'] in processed_lines: continue
         hgvs_str = entry.get('HGVS Expressions', '')
-        
+
         hgvs_expressions = hgvs_str.split(', ') if hgvs_str else []
+        # Ground-truth criteria for THIS entry (avoid leaking stale value from the prior loop)
+        criteria_str = entry.get('Applied Evidence Codes (Met)', '')
+        criteria_met = [c.strip() for c in criteria_str.split(',') if c.strip()]
         found_bias = None
         found_iv = None
         gene_symbol = entry.get('HGNC Gene Symbol', '')

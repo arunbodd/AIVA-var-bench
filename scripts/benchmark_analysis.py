@@ -33,82 +33,11 @@ import scripts.generate_results as gen_results
 # Configuration & Constants
 # =============================================================================
 
-# ClinGen Expert Panel (VCEP) to Disease Category Mapping
-VCEP_TO_CATEGORY = {
-    # Cancer / Cancer Predisposition
-    "Myeloid Malignancy VCEP": "Cancer Predisposition",
-    "CDH1 VCEP": "Cancer Predisposition",
-    "PTEN VCEP": "Cancer Predisposition",
-    "TP53 VCEP": "Cancer Predisposition",
-    "VHL VCEP": "Cancer Predisposition",
-    "Hereditary Breast, Ovarian and Pancreatic Cancer VCEP": "Cancer Predisposition",
-    "ENIGMA BRCA1 and BRCA2 VCEP": "Cancer Predisposition",
-    "InSiGHT Hereditary Colorectal Cancer/Polyposis VCEP": "Cancer Predisposition",
-    "DICER1 and miRNA-Processing Gene VCEP": "Cancer Predisposition",
-    
-    # Metabolic Disorders
-    "Monogenic Diabetes VCEP": "Metabolic Disorders",
-    "Phenylketonuria VCEP": "Metabolic Disorders",
-    "Familial Hypercholesterolemia VCEP": "Metabolic Disorders",
-    "Lysosomal Diseases VCEP": "Metabolic Disorders",
-    "Cerebral Creatine Deficiency Syndromes VCEP": "Metabolic Disorders",
-    "ACADVL VCEP": "Metabolic Disorders",
-    "Mitochondrial Diseases VCEP": "Metabolic Disorders",
-    
-    # Cardiovascular Disorders
-    "Cardiomyopathy VCEP": "Cardiovascular Disorders",
-    "FBN1 VCEP": "Cardiovascular Disorders",
-    "Pulmonary Hypertension VCEP": "Cardiovascular Disorders",
-    "Potassium Channel Arrhythmia VCEP": "Cardiovascular Disorders",
-    
-    # Hematologic Disorders
-    "Platelet Disorders VCEP": "Hematologic Disorders",
-    "von Willebrand Disease  VCEP": "Hematologic Disorders",
-    "Coagulation Factor Deficiency VCEP": "Hematologic Disorders",
-    "Thrombosis VCEP": "Hematologic Disorders",
-    
-    # Immunodeficiency Disorders
-    "Severe Combined Immunodeficiency Disease  VCEP": "Immunodeficiency Disorders",
-    "Antibody Deficiencies VCEP": "Immunodeficiency Disorders",
-    
-    # Neurodevelopmental Disorders
-    "Rett and Angelman-like Disorders VCEP": "Neurodevelopmental Disorders",
-    
-    # Neuromuscular Disorders
-    "Malignant Hyperthermia Susceptibility VCEP": "Neuromuscular Disorders",
-    "Congenital Myopathies VCEP": "Neuromuscular Disorders",
-    "Limb Girdle Muscular Dystrophy VCEP": "Neuromuscular Disorders",
-    
-    # Ophthalmologic Disorders
-    "Glaucoma VCEP": "Ophthalmologic Disorders",
-    "Leber Congenital Amaurosis/early onset Retinal Dystrophy VCEP": "Ophthalmologic Disorders",
-    "X-linked Inherited Retinal Disease VCEP": "Ophthalmologic Disorders",
-    "ABCA4 VCEP": "Ophthalmologic Disorders",
-    
-    # Hearing Disorders
-    "Hearing Loss VCEP": "Hearing Disorders",
-    
-    # RASopathies
-    "RASopathy VCEP": "RASopathies",
-    "Brain Malformations VCEP": "RASopathies",
-    
-    # Other
-    "Hereditary Hemorrhagic Telangiectasia VCEP": "Vascular Disorders",
-    "Epilepsy Sodium Channel VCEP": "Epilepsy / Neurological",
-}
-
-CATEGORY_ORDER = [
-    "Cancer Predisposition",
-    "Metabolic Disorders",
-    "Cardiovascular Disorders",
-    "Hematologic Disorders",
-    "Immunodeficiency Disorders",
-    "Neurodevelopmental Disorders",
-    "Neuromuscular Disorders",
-    "Ophthalmologic Disorders",
-    "Hearing Disorders",
-    "RASopathies",
-]
+# ClinGen Expert Panel (VCEP) to Disease Category Mapping.
+# Single source of truth lives in generate_results.py; re-exported here so both
+# scripts produce identical category-level metrics (see PR #7 review, issue 6).
+VCEP_TO_CATEGORY = gen_results.VCEP_TO_CATEGORY
+CATEGORY_ORDER = gen_results.CATEGORY_ORDER
 
 # =============================================================================
 # Helper Functions
@@ -147,19 +76,7 @@ def get_direction(cls: str) -> str:
 
 def get_category(expert_panel: str) -> str:
     """Map an Expert Panel (VCEP) to its broader disease category."""
-    if not expert_panel or expert_panel == "N/A":
-        return "Other"
-    
-    category = VCEP_TO_CATEGORY.get(expert_panel.strip())
-    if category:
-        return category
-    
-    expert_panel_lower = expert_panel.lower().strip()
-    for vcep, cat in VCEP_TO_CATEGORY.items():
-        if vcep.lower() == expert_panel_lower:
-            return cat
-    
-    return "Other"
+    return gen_results.get_category(expert_panel)
 
 
 # =============================================================================
