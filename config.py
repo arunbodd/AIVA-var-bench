@@ -13,6 +13,7 @@ load_dotenv()
 BASE_DIR = Path(__file__).parent
 DATA_DIR = BASE_DIR / "data"
 RESULTS_DIR = BASE_DIR / "results"
+INPUTS_DIR = BASE_DIR / "inputs"
 
 # AIVA API Configuration
 AIVA_API_URL = os.getenv("AIVA_API_URL", "http://localhost:8000")

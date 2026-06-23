@@ -46,6 +46,25 @@ except ImportError:
         "Likely Benign": "Benign", "Benign": "Benign"
     }
 
+TOOL_SHORT_NAMES = {
+    'anthropic/claude-opus-4-5-20251101': 'AIVA-Claude',
+    'google/gemini-3-pro-preview': 'AIVA-Gemini',
+    'openai/gpt-5.2': 'AIVA-GPT',
+    'claude-opus-4-5-20251101': 'AIVA-Claude',
+    'gemini-3-pro-preview': 'AIVA-Gemini',
+    'gpt-5.2': 'AIVA-GPT',
+    'BIAS-2015': 'BIAS-2015',
+    'InterVar': 'InterVar',
+}
+
+def get_short_name(tool_name: str) -> str:
+    """Get short display name for a tool."""
+    name_str = str(tool_name)
+    for key, short in TOOL_SHORT_NAMES.items():
+        if key in name_str or name_str in key:
+            return short
+    return name_str.split('/')[-1][:15]
+
 VCEP_TO_CATEGORY = {
     # Cancer
     "Myeloid Malignancy VCEP": "Cancer Predisposition", "PTPN11 VCEP": "RASopathies",
@@ -348,6 +367,124 @@ def plot_confusion_matrix(cm, classes, title, output_path):
     plt.savefig(output_path, dpi=300)
     plt.close()
 
+def plot_error_analysis(aiva_data: dict, output_dir: Path):
+    """Analyze and visualize misclassification patterns."""
+    # Find best AIVA model
+    best_model = None
+    best_acc = 0
+
+    for model, variants in aiva_data.items():
+        correct = sum(1 for v in variants
+                     if get_direction(v.get("ground_truth", "")) == get_direction(v.get("aiva_classification", ""))
+                     and not v.get("error"))
+        total = sum(1 for v in variants if not v.get("error"))
+        acc = correct / total if total > 0 else 0
+        if acc > best_acc:
+            best_acc = acc
+            best_model = model
+
+    if not best_model:
+        print("No AIVA model found for error analysis")
+        return
+
+    # Collect misclassifications for best AIVA model
+    misclass_types = defaultdict(int)
+    correct_types = defaultdict(int)
+
+    for v in aiva_data[best_model]:
+        gt = get_direction(v.get("ground_truth", ""))
+        pred = get_direction(v.get("aiva_classification", ""))
+
+        if gt == "unknown" or pred == "unknown" or v.get("error"):
+            continue
+
+        if gt == pred:
+            correct_types[gt] += 1
+        else:
+            misclass_types[(gt, pred)] += 1
+
+    # Create Sankey-like flow diagram using stacked bars
+    fig, axes = plt.subplots(1, 2, figsize=(16, 7))
+
+    # Left plot: Confusion flow
+    ax = axes[0]
+    # Use internal keys matching get_direction() output
+    dir_keys = ['pathogenic', 'vus', 'benign']
+    # Display labels for the plot
+    display_labels = {'pathogenic': 'P/LP', 'vus': 'VUS', 'benign': 'B/LB'}
+    # Colors matched to Sankey flow diagram palette
+    colors = {'pathogenic': '#c44e52', 'vus': '#edc948', 'benign': '#4c72b0'}
+
+    # For each true class, show where predictions went
+    x = np.arange(len(dir_keys))
+    bottom = np.zeros(len(dir_keys))
+
+    for pred_class in dir_keys:
+        heights = []
+        for true_class in dir_keys:
+            if true_class == pred_class:
+                heights.append(correct_types.get(true_class, 0))
+            else:
+                heights.append(misclass_types.get((true_class, pred_class), 0))
+
+        ax.bar(x, heights, bottom=bottom, label=f'Pred: {display_labels[pred_class]}',
+               color=colors[pred_class], edgecolor='black', linewidth=0.5, alpha=0.8)
+        bottom += heights
+
+    ax.set_xticks(x)
+    ax.set_xticklabels([f'True:\n{display_labels[l]}' for l in dir_keys])
+    ax.set_ylabel('Number of Variants')
+    ax.set_title(f'Classification Distribution by True Class\n({get_short_name(best_model)})',
+                fontweight='bold')
+    ax.legend(loc='upper right')
+
+    # Right plot: Error breakdown pie chart
+    ax = axes[1]
+    error_counts = []
+    error_labels = []
+    error_colors = []
+
+    # Derive donut colors from the source (true) class to maintain Sankey consistency
+    # Each misclassification type gets a shade derived from the source class color
+    donut_color_map = {
+        ('benign', 'vus'):        '#6a9fd8',  # lighter blue (B/LB source)
+        ('benign', 'pathogenic'): '#8bb8e8',  # lightest blue (B/LB source, rare)
+        ('vus', 'pathogenic'):    '#f5de78',  # lighter gold (VUS source)
+        ('vus', 'benign'):        '#f0d04a',  # darker gold (VUS source)
+        ('pathogenic', 'vus'):    '#d47a7d',  # lighter red (P/LP source)
+        ('pathogenic', 'benign'): '#e0a3a5',  # lightest red (P/LP source, rare)
+    }
+
+    # Sort errors by count
+    sorted_errors = sorted(misclass_types.items(), key=lambda x: -x[1])
+    for i, ((true_c, pred_c), count) in enumerate(sorted_errors):
+        if count > 0:
+            error_counts.append(count)
+            # Use display names for the legend
+            error_labels.append(f'{display_labels[true_c]} → {display_labels[pred_c]} (n={count})')
+            error_colors.append(donut_color_map.get((true_c, pred_c), '#cccccc'))
+
+    if error_counts:
+        # Use a Key (legend) to avoid overlapping labels on the pie chart.
+        # Keep the wedges flush so the center is fully filled.
+        wedges, texts, autotexts = ax.pie(error_counts, autopct='%1.1f%%',
+                          colors=error_colors, explode=[0.0]*len(error_counts),
+                          startangle=140, pctdistance=0.85)
+        ax.legend(wedges, error_labels, title="Error Types", loc="center left",
+                  bbox_to_anchor=(1, 0, 0.5, 1), fontsize=8)
+        ax.set_title(f'Misclassification Breakdown\n({get_short_name(best_model)})', fontweight='bold')
+    else:
+        ax.text(0.5, 0.5, 'No errors!', ha='center', va='center', fontsize=14)
+        ax.set_title('Misclassification Breakdown', fontweight='bold')
+
+    plt.tight_layout()
+
+    output_path = output_dir / 'figure10_error_analysis.png'
+    plt.savefig(output_path, dpi=300, bbox_inches='tight')
+    plt.savefig(output_dir / 'figure10_error_analysis.pdf', bbox_inches='tight')
+    plt.close()
+    print(f"Saved: {output_path}")
+
 # ... (Include category_summary and scorecard generation logic from previous turn)
 # For brevity, I will assume the previous implementation of generate_category_summary_table and generate_category_scorecard works and include it.
 # ...
@@ -374,7 +511,7 @@ def generate_category_summary_table(summary_df, output_dir):
     # Styles
     header_height = 0.08
     row_height = 0.055
-    aiva_bg_color = "#e8f0fe"
+    aiva_bg_color = "#dbeafe"
     others_bg_color = "#f1f3f4" # Grey for Others
     line_color = "#e0e0e0"
     separator_color = "#9aa0a6" # Darker grey for vertical line
@@ -538,7 +675,7 @@ def generate_combined_summary(metrics_tsv_path, output_dir):
     
     header_height = 0.06
     row_height = 0.05
-    aiva_bg_color = "#e8f0fe"
+    aiva_bg_color = "#dbeafe"
     line_color = "#e0e0e0"
     separator_color = "#9aa0a6"
     
@@ -753,6 +890,16 @@ def main():
             if g in DIRECTION_LABELS and p in DIRECTION_LABELS:
                 cm_3[DIRECTION_LABELS.index(g), DIRECTION_LABELS.index(p)] += 1
         plot_confusion_matrix(cm_3, DIRECTION_LABELS, "3-Class", out_dir/"confusion_matrix_3class.png")
+
+        # Figure 10: Error analysis
+        print("Generating Figure 10: Error analysis...")
+        aiva_data_dict = {}
+        for f in args.input_files:
+            recs = load_results(Path(f))
+            if recs:
+                model = recs[0].get("model_used") or Path(f).stem
+                aiva_data_dict[model] = recs
+        plot_error_analysis(aiva_data_dict, out_dir)
 
     if args.action in ['all', 'scorecards'] and args.metrics_tsv:
         print("Generating scorecards...")
