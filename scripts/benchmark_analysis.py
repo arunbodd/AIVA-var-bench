@@ -24,7 +24,7 @@ from pathlib import Path
 from typing import List, Optional
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from config import DATA_DIR
+from config import BASE_DIR, DATA_DIR
 
 # Import figure generation modules
 import scripts.generate_results as gen_results
@@ -720,8 +720,8 @@ Examples:
 
     # Part 4: Gene Prioritization Benchmark
     if not args.skip_gene:
-        predictions_path = Path(args.gene_predictions) if args.gene_predictions else (Path("gene_prioritization_results") / "aiva_predictions.jsonl")
-        benchmark_path = Path(args.gene_benchmark) if args.gene_benchmark else (Path("Simulated_Datasets") / "data" / "simulated_benchmark.jsonl")
+        predictions_path = Path(args.gene_predictions) if args.gene_predictions else (BASE_DIR / "gene_prioritization_results" / "aiva_predictions.jsonl")
+        benchmark_path = Path(args.gene_benchmark) if args.gene_benchmark else (BASE_DIR / "Simulated_Datasets" / "data" / "simulated_benchmark.jsonl")
 
         benchmark_index = Path(args.benchmark_index) if args.benchmark_index else None
         if predictions_path.exists() and (benchmark_path.exists() or (benchmark_index and benchmark_index.exists())):

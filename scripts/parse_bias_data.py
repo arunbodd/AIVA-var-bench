@@ -16,6 +16,7 @@ import argparse
 import csv
 import json
 import re
+import shutil
 import sys
 from pathlib import Path
 from collections import defaultdict
@@ -607,19 +608,32 @@ def main():
     parser = argparse.ArgumentParser(description="Parse BIAS-2015 supplementary data")
     parser.add_argument("--output", default="erepo_bias_intervar_merged.jsonl", help="Output filename (in data/ directory)")
     parser.add_argument("--max-variants", type=int, default=None, help="Maximum number of variants to output")
+    parser.add_argument("--source-dir", help="Directory holding the unzipped BIAS-2015 supplementary "
+                                             "files; if given, any missing files are copied into data/bias_2015/")
     args = parser.parse_args()
+
     vcf_path = BIAS_DATA_DIR / "erepo_feb_2nd_sorted.vcf"
     erepo_path = BIAS_DATA_DIR / "erepo_feb_2nd.tabbed"
     intervar_path = BIAS_DATA_DIR / "erepo_feb_2nd.hg19_multianno.txt.intervar"
     bias_path = BIAS_DATA_DIR / "erepo_feb_2nd_bitscopic_classifications.tsv"
-    if not vcf_path.exists():
-        src = Path("/tmp/bias_supp/bias_v2.0.0_supplementary_files/erepo_feb_2nd_sorted.vcf")
-        if src.exists(): import shutil; shutil.copy(src, vcf_path)
-    if vcf_path.exists():
-        create_unified_dataset_reproduce(erepo_path, intervar_path, bias_path, vcf_path, DATA_DIR / args.output, args.max_variants)
-    else:
-        print("Error: VCF file not found. Cannot reproduce dataset.")
+    required_paths = (vcf_path, erepo_path, intervar_path, bias_path)
+
+    # Optionally stage missing source files from a user-provided directory.
+    if args.source_dir:
+        src_dir = Path(args.source_dir)
+        BIAS_DATA_DIR.mkdir(parents=True, exist_ok=True)
+        for dest in required_paths:
+            src = src_dir / dest.name
+            if not dest.exists() and src.exists():
+                shutil.copy(src, dest)
+
+    missing = [p.name for p in required_paths if not p.exists()]
+    if missing:
+        print(f"Error: missing required source file(s) in {BIAS_DATA_DIR}: {', '.join(missing)}")
+        print("Provide them with --source-dir <unzipped BIAS supplementary dir> (see README Workflow B).")
         sys.exit(1)
+
+    create_unified_dataset_reproduce(erepo_path, intervar_path, bias_path, vcf_path, DATA_DIR / args.output, args.max_variants)
 
 if __name__ == "__main__":
     main()
