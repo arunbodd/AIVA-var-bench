@@ -1,10 +1,63 @@
-*.json
-*.jsonl
-*.csv
-!data/bias_unified.jsonl
-data/bias_2015/
-*.log
+# ─── Python ───
 *.pyc
 __pycache__
 venv
 .env
+
+# ─── OS / editor junk ───
+.DS_Store
+*.bak
+*.tmp
+
+# ─── Data dumps (keep the curated baselines below) ───
+*.json
+*.jsonl
+*.csv
+!data/bias_unified.jsonl
+!data/erepo_bias_intervar_merged.jsonl
+!data/bias_2015/
+
+# ─── Generated results ───
+results/
+
+# ─── Logs & ad-hoc debug output ───
+*.log
+/nohup.out
+/log*
+/debug_*
+
+# ─── Manuscripts / office docs ───
+*.docx
+
+# ─── Scratch / throwaway directories ───
+_trash/
+Simulated_Datasets/
+
+# ─── Root scratch notes & one-off scripts (not part of repo structure) ───
+/Explaination
+/IMPROVEMENTS_SUMMARY.md
+/METHODS.md
+/NEW_WORKFLOW_README.md
+/REFACTORING_COMPLETE.md
+/analyze_disease_ids.py
+/check_corruption_overlap.py
+/check_keys.txt
+/corruption_overlap_results.txt
+
+# ─── Experimental scripts (not part of the core pipeline) ───
+scripts/build_fixed_prompt_inputs.py
+scripts/classify_final_extracted.py
+scripts/classify_simulated.py
+scripts/compute_final_extracted_metrics.py
+scripts/compute_kg_benchmark.py
+scripts/index_benchmark.py
+scripts/plot_final_extracted_metrics.py
+scripts/recover_from_traces.py
+scripts/sample_by_category.py
+
+# ─── Misplaced / duplicate figure exports under Results_Gemini_Pro_Analysis ───
+Results_Gemini_Pro_Analysis/other_models/
+Results_Gemini_Pro_Analysis/figures/*.png
+Results_Gemini_Pro_Analysis/figures/*.pdf
+Results_Gemini_Pro_Analysis/figures/pdf/*.png
+Results_Gemini_Pro_Analysis/figures/png/*.pdf

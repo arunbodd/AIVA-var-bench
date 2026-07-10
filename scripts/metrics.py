@@ -6,9 +6,13 @@ and result loading used by benchmark.py and compare_models.py.
 """
 
 import json
+import warnings
 from collections import Counter
 from pathlib import Path
 from typing import Optional
+
+# Track unmapped classification strings so each distinct value warns only once.
+_UNMAPPED_CLASSIFICATIONS = set()
 
 import sys
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -59,6 +63,14 @@ def normalize_classification(classification: str) -> str:
     if "benign" in lower:
         return "Benign"
 
+    # No known pattern matched: surface it instead of silently miscounting it.
+    if c not in _UNMAPPED_CLASSIFICATIONS:
+        _UNMAPPED_CLASSIFICATIONS.add(c)
+        warnings.warn(
+            f"Unrecognized classification {c!r} did not match any known label; "
+            "returning it unchanged (it will not match any ground-truth label).",
+            stacklevel=2,
+        )
     return c
 
 

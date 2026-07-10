@@ -2,15 +2,30 @@
 
 Benchmark suite for evaluating AIVA's AI-powered variant classification against expert-curated classifications from the [ClinGen Evidence Repository (eRepo)](https://erepo.clinicalgenome.org/evrepo/).
 
+## Key Results
+
+AIVA (powered by Gemini 3 Pro) achieves **80.5% macro F1** on 8,387 expert-curated variants across 11 disease categories:
+
+| Metric | Score |
+|--------|-------|
+| Overall Macro F1 | 80.5% |
+| Pathogenic/Likely Pathogenic F1 | 87.4% |
+| VUS F1 | 73.3% |
+| Benign/Likely Benign F1 | 80.9% |
+
+**AIVA outperforms BIAS-2015 and InterVar in 9 of 11 disease categories.**
+
+See [BENCHMARK_FINDINGS.md](Results_Gemini_Pro_Analysis/BENCHMARK_FINDINGS.md) for detailed analysis.
+
 ## Overview
 
-This tool measures how well AIVA's variant classification aligns with expert panel (VCEP) curations using ACMG/AMP guidelines. It supports two benchmarking workflows:
+This tool measures how well AIVA's variant classification aligns with expert panel (VCEP) curations using ACMG/AMP guidelines. It supports two primary modes of operation:
 
-### Workflow A: Quick AIVA Model Comparison
-Compare different LLM models within AIVA using a sample of eRepo variants.
+### Option 1: Standard Evaluation (Recommended)
+Directly use the expert-consolidated benchmark dataset (`data/erepo_bias_intervar_merged.jsonl`) containing 8,387 variants to compare AIVA models and external tools.
 
-### Workflow B: 4-Way Tool Comparison
-Compare AIVA against InterVar and BIAS-2015 using pre-computed predictions from the [BIAS-2015 paper](https://github.com/bitscopic/BIAS-2015).
+### Option 2: Full Reproduction
+Re-generate the entire consolidated dataset from raw BIAS-2015 supplementary files and eRepo source data using the reproduction engine.
 
 **Metrics calculated:**
 - **Classification accuracy** (5-class and 3-class directional)
@@ -20,21 +35,51 @@ Compare AIVA against InterVar and BIAS-2015 using pre-computed predictions from 
 
 ## Quick Start
 
+**Requirements:** Python 3.10+ and (for the classification step only) an AIVA API token.
+
 ```bash
-# Setup
+# 1. Setup (always)
 python3 -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env  # Add your AIVA_API_TOKEN
+```
 
-# Workflow A: Quick model comparison (5 min)
-python scripts/parse_erepo.py --sample-size 50
-python scripts/compare_models.py --models google/gemini-3-flash-preview --limit 10
-python scripts/benchmark.py
+#### Path A — Reproduce the analysis (no API token needed)
 
-# Workflow B: 4-way tool comparison (requires BIAS-2015 data)
+Regenerate all metrics and figures from the classification results bundled in
+this repo. This is the fastest way to verify the pipeline works end-to-end:
+
+```bash
+python scripts/benchmark_analysis.py \
+  Results_Gemini_Pro_Analysis/classifications_google_gemini-3-pro-preview_combined.jsonl \
+  --output-dir results/my_run
+```
+
+Outputs metrics TSVs, scorecards, and figures under `results/my_run/`. The
+BIAS-2015 / InterVar baselines are read from the bundled
+`data/erepo_bias_intervar_merged.jsonl`.
+
+#### Path B — Run AIVA classification yourself (requires your API token)
+
+```bash
+cp .env.example .env        # then edit .env and set AIVA_API_TOKEN
+
+# Quick test on 100 variants of the 8,387-variant benchmark
+python scripts/compare_models.py \
+  --models google/gemini-3-pro-preview \
+  --input data/erepo_bias_intervar_merged.jsonl \
+  --limit 100 \
+  --output-dir results/my_run
+
+# Then analyze your own results (no API needed for this step)
+python scripts/benchmark_analysis.py results/my_run/classifications_*.jsonl --output-dir results/my_run
+```
+
+#### Path C — Rebuild the benchmark dataset from source
+
+```bash
+# Regenerates data/erepo_bias_intervar_merged.jsonl from the raw
+# eRepo / BIAS-2015 / InterVar files in data/bias_2015/
 python scripts/parse_bias_data.py
-python scripts/compare_models.py --models google/gemini-3-flash-preview --input data/bias_unified.jsonl --limit 100
-python scripts/compare_tools.py --aiva-results results/classifications_*.jsonl
 ```
 
 ## Setup
@@ -63,43 +108,91 @@ Edit `config.py` or set environment variables:
 |---------|---------|-------------|
 | `AIVA_API_URL` | `http://localhost:8000` | AIVA API endpoint |
 | `AIVA_API_TOKEN` | - | AIVA API token for authentication |
-| `DEFAULT_MODEL` | `google/gemini-3-flash-preview` | LLM model for classification |
-| `DEFAULT_ASSEMBLY` | `GRCh38` | Genome assembly |
+| `DEFAULT_MODEL` | `google/gemini-3-pro-preview` | LLM model for classification |
+| `DEFAULT_ASSEMBLY` | `GRCh37` | Genome assembly (eRepo baseline is GRCh37/hg19) |
 | `CONCURRENCY_LIMIT` | `5` | Max concurrent API requests (respects AIVA rate limit) |
+
+## Project Structure
+
+```
+aiva-var-bench/
+├── config.py                    # Configuration settings
+├── requirements.txt             # Python dependencies
+├── .env.example                 # Environment template
+├── data/
+│   ├── erepo-tabbed.tsv         # Raw eRepo download
+│   ├── erepo_bias_intervar_merged.jsonl  # Merged dataset (8,387 variants) - PRIMARY BASELINE
+│   └── bias_unified.jsonl       # Legacy BIAS-2015 dataset (7,617 variants, deprecated)
+├── Results_Gemini_Pro_Analysis/ # Main benchmark results
+│   ├── BENCHMARK_FINDINGS.md    # Comprehensive benchmark report
+│   ├── classifications_*.jsonl  # Raw classification results
+│   ├── metrics_by_category.tsv  # Performance metrics by disease category
+│   ├── category_summary.tsv     # Dataset composition summary
+│   └── figures/                 # Publication-quality visualizations
+│       └── png/
+│           ├── figure11_scorecard.png
+│           ├── figure_sankey_flow_matplotlib.png
+│           ├── figure_combined_summary.png
+│           └── variant_distribution_by_category.png
+└── scripts/
+    ├── parse_bias_data.py       # Rebuild the merged dataset from raw source
+    ├── classify.py              # AIVA API client (single variant)
+    ├── compare_models.py        # Run/compare multiple AIVA models
+    ├── compare_tools.py         # 4-way tool comparison (AIVA/BIAS/InterVar)
+    ├── benchmark.py             # Calculate detailed metrics
+    ├── benchmark_analysis.py    # End-to-end analysis pipeline (metrics + figures)
+    ├── generate_results.py      # Metrics calculation & figure generation
+    ├── metrics.py               # Shared metric utilities
+    └── retry_errors.py          # Re-run failed classifications
+```
 
 ## Usage
 
 ### Workflow A: Quick AIVA Model Comparison
 
-Use this to compare different LLM models within AIVA on a sample of eRepo variants.
+Use this to compare different LLM models within AIVA on a subset of the
+benchmark. Requires an AIVA API token in `.env`.
 
-#### Step 1: Parse eRepo Data
+#### Step 1: Run Classification & Compare Models
 
-Download the eRepo TSV from [ClinGen](https://erepo.clinicalgenome.org/evrepo/) and parse it:
-
-```bash
-# Parse and create stratified sample (default: 200 variants)
-python scripts/parse_erepo.py
-
-# Custom sample size
-python scripts/parse_erepo.py --sample-size 500
-```
-
-**Output:**
-- `data/parsed_variants.jsonl` - All parsed variants
-- `data/sample_200.jsonl` - Stratified sample
-
-#### Step 2: Run Classification & Compare Models
+The bundled `data/erepo_bias_intervar_merged.jsonl` (8,387 variants) is the
+input; use `--limit` to take a quick subset for testing.
 
 ```bash
-# Compare multiple models on the sample
-python scripts/compare_models.py --models google/gemini-3-flash-preview openai/gpt-4o
-
-# Limit variants for quick testing
-python scripts/compare_models.py --models google/gemini-3-flash-preview --limit 20
+# Compare multiple models on the first 20 variants (quick test)
+python scripts/compare_models.py \
+  --models google/gemini-3-pro-preview openai/gpt-4o \
+  --input data/erepo_bias_intervar_merged.jsonl \
+  --limit 20
 ```
 
-#### Step 3: Calculate Detailed Metrics
+#### New Feature: Parallel Execution
+You can use the `--parallel` flag to run multiple models concurrently, significantly speeding up the benchmarking process.
+
+```bash
+python scripts/compare_models.py \
+  --models openai/gpt-5.2 google/gemini-3-pro-preview anthropic/claude-opus-4-5-20251101 \
+  --input data/erepo_bias_intervar_merged.jsonl \
+  --parallel \
+  --concurrency 5
+```
+
+When using `--parallel`:
+- Progress bars are replaced with periodic status updates to avoid console conflicts.
+- Each model runs in its own concurrent task.
+
+#### New Feature: Custom Output Directory
+You can now specify where to save results using `--output-dir`.
+
+```bash
+python scripts/compare_models.py \
+  --models openai/gpt-5.2 google/gemini-3-pro-preview \
+  --input data/erepo_bias_intervar_merged.jsonl \
+  --limit 100 \
+  --output-dir results/my_experiment_v1
+```
+
+#### Step 2: Calculate Detailed Metrics
 
 ```bash
 # Use most recent results
@@ -113,7 +206,7 @@ python scripts/benchmark.py --input results/classifications_*.jsonl
 
 ### Workflow B: 4-Way Tool Comparison (AIVA vs InterVar vs BIAS-2015)
 
-Use this to compare AIVA against InterVar and BIAS-2015 on 7,617 variants from the BIAS-2015 paper.
+Use this to compare AIVA against InterVar and BIAS-2015 on 8,387 variants from the unified baseline.
 
 #### Step 1: Download BIAS-2015 Supplementary Data
 
@@ -155,7 +248,7 @@ cp /tmp/bias_supp/bias_v2.0.0_supplementary_files/erepo_feb_2nd_sorted.vcf data/
 python scripts/parse_bias_data.py
 ```
 
-This creates `data/bias_unified.jsonl` containing 7,617 variants with:
+This creates `data/erepo_bias_intervar_merged.jsonl` containing 8,387 variants with:
 - Ground truth classifications from eRepo
 - InterVar predictions
 - BIAS-2015 predictions
@@ -166,21 +259,21 @@ This creates `data/bias_unified.jsonl` containing 7,617 variants with:
 ```bash
 # Test with small sample first
 python scripts/compare_models.py \
-    --models google/gemini-3-flash-preview \
-    --input data/bias_unified.jsonl \
+    --models google/gemini-3-pro-preview \
+    --input data/erepo_bias_intervar_merged.jsonl \
     --limit 100
 
-# Full dataset (takes ~19 hours per model at ~9s/variant)
+# Full dataset (takes ~21 hours per model at ~9s/variant for 8,387 variants)
 python scripts/compare_models.py \
-    --models google/gemini-3-flash-preview \
-    --input data/bias_unified.jsonl
+    --models google/gemini-3-pro-preview \
+    --input data/erepo_bias_intervar_merged.jsonl
 ```
 
 #### Step 4: Run 4-Way Comparison
 
 ```bash
 python scripts/compare_tools.py \
-    --aiva-results results/classifications_google_gemini-3-flash-preview_*.jsonl
+    --aiva-results Results_Gemini_Pro_Analysis/classifications_google_gemini-3-pro-preview_*.jsonl
 ```
 
 **Output:**
@@ -193,14 +286,28 @@ AIVA                      100      75.0%      88.0%      68.2%      85.3%
 BIAS-2015                 100      58.0%      81.0%      51.4%      81.5%
 InterVar                  100      49.0%      65.0%      43.0%      65.9%
 
-REFERENCE: Full dataset metrics (all 7617 variants)
+REFERENCE: Full dataset metrics (all 8387 variants)
 Tool                  N Valid      Exact     Direct
 ------------------------------------------------------------------------------------------
-InterVar (full)          7617      49.6%      65.3%
-BIAS-2015 (full)         7617      58.2%      81.2%
+InterVar (full)          8387      49.6%      65.3%
+BIAS-2015 (full)         8387      58.2%      81.2%
 ```
 
 The comparison is **fair** - all tools are evaluated on the exact same variants that AIVA classified.
+
+## Script Reference
+
+| Script | Purpose |
+|--------|---------|
+| `parse_bias_data.py` | Parse raw eRepo/BIAS-2015/InterVar files, create the unified dataset |
+| `classify.py` | AIVA API client (classify a single variant) |
+| `compare_models.py` | Run AIVA with multiple models, compare results |
+| `compare_tools.py` | Compare AIVA vs InterVar vs BIAS-2015 |
+| `benchmark.py` | Calculate detailed metrics |
+| `benchmark_analysis.py` | End-to-end analysis pipeline with figures |
+| `generate_results.py` | Metrics calculation and figure generation |
+| `metrics.py` | Shared metric utilities |
+| `retry_errors.py` | Re-run failed classifications in a results file |
 
 ## Metrics Explained
 
@@ -263,49 +370,6 @@ Dataset: 200 variants
   ...
 ```
 
-## Project Structure
-
-```
-aiva-bench/
-├── config.py              # Configuration settings
-├── metrics.py             # Shared metrics calculations
-├── requirements.txt       # Python dependencies
-├── .env.example           # Environment template
-├── data/
-│   ├── erepo-tabbed.tsv   # Raw eRepo download (Workflow A)
-│   ├── parsed_variants.jsonl
-│   ├── sample_200.jsonl
-│   ├── bias_2015/         # BIAS-2015 supplementary files (Workflow B)
-│   │   ├── erepo_feb_2nd.tabbed
-│   │   ├── erepo_feb_2nd.hg19_multianno.txt.intervar
-│   │   ├── erepo_feb_2nd_bitscopic_classifications.tsv
-│   │   └── erepo_feb_2nd_sorted.vcf
-│   └── bias_unified.jsonl # Unified dataset for 4-way comparison
-├── results/
-│   ├── classifications_*.jsonl
-│   ├── comparison_*.json
-│   ├── metrics_*.json
-│   └── tool_comparison_detailed.jsonl
-└── scripts/
-    ├── parse_erepo.py     # Parse & sample eRepo data (Workflow A)
-    ├── parse_bias_data.py # Parse BIAS-2015 data (Workflow B)
-    ├── classify.py        # Call AIVA API (single model)
-    ├── compare_models.py  # Compare multiple AIVA models
-    ├── compare_tools.py   # 4-way tool comparison
-    └── benchmark.py       # Calculate detailed metrics
-```
-
-## Script Reference
-
-| Script | Purpose | When to Use |
-|--------|---------|-------------|
-| `parse_erepo.py` | Parse ClinGen eRepo TSV, create stratified sample | Workflow A, Step 1 |
-| `parse_bias_data.py` | Parse BIAS-2015 supplementary files, create unified dataset | Workflow B, Step 2 |
-| `classify.py` | Run AIVA classification (single model) | Quick single-model test |
-| `compare_models.py` | Run AIVA with multiple models, compare results | Both workflows |
-| `compare_tools.py` | Compare AIVA vs InterVar vs BIAS-2015 | Workflow B, Step 4 |
-| `benchmark.py` | Calculate detailed metrics, confusion matrices | Detailed analysis |
-
 ## Rate Limiting
 
 The classify script handles rate limits automatically:
@@ -315,5 +379,13 @@ The classify script handles rate limits automatically:
 
 If you encounter rate limits, reduce concurrency:
 ```bash
-python scripts/classify.py --concurrency 1
+python scripts/compare_models.py --concurrency 1
 ```
+
+## License
+
+MIT License - see LICENSE file for details.
+
+## Contact
+
+Arun Boddapati, MHSPL Research Team
