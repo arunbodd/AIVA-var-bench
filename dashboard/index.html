@@ -419,8 +419,6 @@ tr.lbt-sec td { font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-
 .sc-axis { stroke: var(--axis); stroke-width: 1; }
 .sc-tick { fill: var(--muted); font-size: 11px; }
 .sc-axl { fill: var(--text); font-size: 12px; font-weight: 600; }
-.sc-best { fill: var(--good); fill-opacity: 0.05; stroke: var(--good); stroke-opacity: 0.35; stroke-width: 1; }
-.sc-best-t { fill: var(--good); font-size: 11px; }
 .sc-lbl { fill: var(--text); font-size: 12px; font-weight: 500; paint-order: stroke; stroke: var(--surface); stroke-width: 4px; stroke-linejoin: round; }
 .sc-key { margin-bottom: 10px; }
 .sc-pt { cursor: pointer; transition: opacity 0.12s; }
@@ -1672,7 +1670,7 @@ window.BENCHMARK_DATA = {"metadata":{"title":"AIVA Variant Benchmark","subtitle"
     seg("scSeg", state.scatterScale, (v) => { state.scatterScale = v; renderLeaderboard(); });
     const ax = SCATTER_X[state.scatterScale];
     $("scTitle").textContent = `Accuracy against safety: ${ax.label}`;
-    $("scSub").innerHTML = `Right is a higher ${ax.label.replace("Macro", "macro").replace("Directional", "directional")}; up is fewer cross-direction errors per 1,000 variants. The shaded corner holds models above the median score and below the median error rate of the ranked models. Hollow dots were scored on part of the cohort.<span class="ui-hint"> Hover a dot for its values; select it to open the model.</span>`;
+    $("scSub").innerHTML = `Right is a higher ${ax.label.replace("Macro", "macro").replace("Directional", "directional")}; up is fewer cross-direction errors per 1,000 variants. Hollow dots were scored on part of the cohort.<span class="ui-hint"> Hover a dot for its values; select it to open the model.</span>`;
     const box = $("lbScatter");
     if (!models.length) { box.innerHTML = `<p class="empty">No models for this filter.</p>`; return; }
     const W = Math.max(300, box.clientWidth || 1000);
@@ -1685,14 +1683,7 @@ window.BENCHMARK_DATA = {"metadata":{"title":"AIVA Variant Benchmark","subtitle"
     const xPad = (hi - lo) * 0.04, yPad = ymax * 0.08;
     const x = (v) => left + ((v - (lo - xPad)) / Math.max(1, hi - lo + 2 * xPad)) * (W - left - right);
     const y = (v) => top + ((v + yPad) / (ymax + yPad)) * (H - top - bottom);
-    const ranked = models.filter(isFull);
-    const mx = median(ranked.map((m) => m[ax.key])), my = median(ranked.map(per1k));
     const out = [];
-    if (ranked.length >= 3) {
-      const bx = x(mx), by = y(0) - 8, bw = W - right - bx, bh = y(my) - by;
-      out.push(`<rect class="sc-best" x="${n2(bx)}" y="${n2(by)}" width="${n2(bw)}" height="${n2(bh)}" rx="6"/>`);
-      if (!narrow) out.push(`<text class="sc-best-t" x="${n2(W - right - 8)}" y="${n2(y(my) + 15)}" text-anchor="end">Above median score, below median errors</text>`);
-    }
     for (let t = lo; t <= hi; t += 10) out.push(`<line class="sc-grid" x1="${n2(x(t))}" x2="${n2(x(t))}" y1="${top}" y2="${H - bottom}"/><text class="sc-tick" x="${n2(x(t))}" y="${H - bottom + 16}" text-anchor="middle">${t}%</text>`);
     const ystep = ymax > 6 ? 2 : 1;
     for (let t = 0; t <= ymax; t += ystep) out.push(`<line class="sc-grid" x1="${left}" x2="${W - right}" y1="${n2(y(t))}" y2="${n2(y(t))}"/><text class="sc-tick" x="${left - 8}" y="${n2(y(t) + 4)}" text-anchor="end">${t}</text>`);
@@ -1704,14 +1695,7 @@ window.BENCHMARK_DATA = {"metadata":{"title":"AIVA Variant Benchmark","subtitle"
     // Labels: try eight positions around each dot, keep the first that collides with nothing
     measureCtx.font = `500 12px ${getComputedStyle(document.body).fontFamily}`;
     const pts = models.map((m) => ({ m, cx: x(m[ax.key] ?? 0), cy: y(per1k(m)) }));
-    const boxes = pts.map((p) => [p.cx - 8, p.cy - 8, p.cx + 8, p.cy + 8]), edges = [];
-    if (ranked.length >= 3) {
-      const cw = measureCtx.measureText("Above median score, below median errors").width;
-      boxes.push([W - right - 8 - cw, y(my) + 3, W - right - 8, y(my) + 19]);
-      // Band edges: a label sits fully inside or fully outside the shaded corner
-      const bx = x(mx), by = y(0) - 8, ey = y(my);
-      edges.push([bx - 1, by, bx + 1, ey], [bx, by - 1, W - right, by + 1], [bx, ey - 1, W - right, ey + 1]);
-    }
+    const boxes = pts.map((p) => [p.cx - 8, p.cy - 8, p.cx + 8, p.cy + 8]);
     const overlaps = (b, list) => list.some((o) => !(b[2] < o[0] || b[0] > o[2] || b[3] < o[1] || b[1] > o[3]));
     // On narrow screens the colour key above the chart names the models instead.
     if (!narrow) pts.slice().sort((a, b) => a.cy - b.cy || b.cx - a.cx).forEach((p) => {
@@ -1720,15 +1704,11 @@ window.BENCHMARK_DATA = {"metadata":{"title":"AIVA Variant Benchmark","subtitle"
       const cands = [[12, 4, "start"], [-12, 4, "end"], [0, -14, "middle"], [0, 22, "middle"], [12, -12, "start"], [12, 20, "start"], [-12, -12, "end"], [-12, 20, "end"]];
       p.text = text;
       p.lab = null;
-      // Second pass lets a label cross the band edge rather than go unlabelled
-      for (const strict of [true, false]) {
-        for (const [dx, dy, a] of cands) {
-          const lx = p.cx + dx, ly = p.cy + dy;
-          const x0 = a === "start" ? lx : a === "end" ? lx - w : lx - w / 2;
-          const b = [x0, ly - h + 3, x0 + w, ly + 3];
-          if (!overlaps(b, boxes) && !(strict && overlaps(b, edges)) && b[0] > left && b[2] < W - 2 && b[1] > 0 && b[3] < H - bottom) { boxes.push(b); p.lab = [lx, ly, a]; break; }
-        }
-        if (p.lab) break;
+      for (const [dx, dy, a] of cands) {
+        const lx = p.cx + dx, ly = p.cy + dy;
+        const x0 = a === "start" ? lx : a === "end" ? lx - w : lx - w / 2;
+        const b = [x0, ly - h + 3, x0 + w, ly + 3];
+        if (!overlaps(b, boxes) && b[0] > left && b[2] < W - 2 && b[1] > 0 && b[3] < H - bottom) { boxes.push(b); p.lab = [lx, ly, a]; break; }
       }
     });
     pts.forEach((p) => {
