@@ -1,0 +1,1271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AIVA Variant Benchmark</title>
+<style>
+:root {
+  color-scheme: light;
+  --page: #f6f6f4;
+  --surface: #fcfcfb;
+  --surface-2: #f1f0ec;
+  --text: #0b0b0b;
+  --text-2: #52514e;
+  --muted: #6f6d68;
+  --grid: #e7e6e0;
+  --axis: #c3c2b7;
+  --border: rgba(11, 11, 11, 0.10);
+  --border-strong: rgba(11, 11, 11, 0.18);
+  --s1: #2a78d6;
+  --s2: #eb6834;
+  --seq-lo: #eef4fc;
+  --seq-hi: #104281;
+  --good: #006300;
+  --critical: #c23333;
+  --focus: #2a78d6;
+  --shadow: 0 1px 2px rgba(11, 11, 11, 0.04), 0 4px 16px rgba(11, 11, 11, 0.04);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --page: #0d0d0d;
+    --surface: #1a1a19;
+    --surface-2: #232321;
+    --text: #f0efec;
+    --text-2: #c3c2b7;
+    --muted: #9a9890;
+    --grid: #2c2c2a;
+    --axis: #383835;
+    --border: rgba(255, 255, 255, 0.10);
+    --border-strong: rgba(255, 255, 255, 0.18);
+    --s1: #3987e5;
+    --s2: #d95926;
+    --seq-lo: #1e2229;
+    --seq-hi: #4a90e8;
+    --good: #2fb52f;
+    --critical: #e66767;
+    --focus: #6da7ec;
+    --shadow: none;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #0d0d0d;
+  --surface: #1a1a19;
+  --surface-2: #232321;
+  --text: #f0efec;
+  --text-2: #c3c2b7;
+  --muted: #9a9890;
+  --grid: #2c2c2a;
+  --axis: #383835;
+  --border: rgba(255, 255, 255, 0.10);
+  --border-strong: rgba(255, 255, 255, 0.18);
+  --s1: #3987e5;
+  --s2: #d95926;
+  --seq-lo: #1e2229;
+  --seq-hi: #4a90e8;
+  --good: #2fb52f;
+  --critical: #e66767;
+  --focus: #6da7ec;
+  --shadow: none;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--page);
+  color: var(--text);
+  font: 14px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 12px; }
+.num { font-variant-numeric: tabular-nums; }
+button, input, select { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 4px; }
+[hidden] { display: none !important; }
+
+.wrap { max-width: 1280px; margin: 0 auto; padding: 0 16px; }
+@media (min-width: 768px) { .wrap { padding: 0 32px; } }
+
+/* Header */
+.app-header { background: var(--surface); border-bottom: 1px solid var(--border); }
+.app-header .wrap { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding-top: 18px; padding-bottom: 14px; }
+.brand h1 { margin: 0; font-size: 18px; font-weight: 650; letter-spacing: -0.01em; }
+.brand p { margin: 2px 0 0; color: var(--text-2); font-size: 13px; }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn {
+  appearance: none; border: 1px solid var(--border-strong); background: var(--surface);
+  border-radius: 6px; padding: 6px 12px; font-size: 13px; font-weight: 500; cursor: pointer;
+  line-height: 20px; white-space: nowrap;
+}
+.btn:hover { background: var(--surface-2); }
+.btn-primary { background: var(--text); color: var(--surface); border-color: var(--text); }
+.btn-primary:hover { background: var(--text-2); border-color: var(--text-2); }
+
+.tabs { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; margin-bottom: -1px; }
+.tabs::-webkit-scrollbar { display: none; }
+.tab {
+  appearance: none; background: none; border: 0; border-bottom: 2px solid transparent;
+  padding: 10px 10px 9px; font-size: 13px; font-weight: 500; color: var(--text-2);
+  cursor: pointer; white-space: nowrap;
+}
+.tab:hover { color: var(--text); }
+.tab[aria-selected="true"] { color: var(--text); border-bottom-color: var(--text); }
+.tab-bar { background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 20; }
+
+main.wrap { padding-top: 24px; padding-bottom: 48px; }
+.view { display: grid; gap: 20px; }
+.view-head h2 { margin: 0; font-size: 20px; font-weight: 650; letter-spacing: -0.01em; }
+.view-head p { margin: 4px 0 0; color: var(--text-2); max-width: 78ch; }
+
+/* Cards */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px; box-shadow: var(--shadow); min-width: 0; }
+.card-head { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-start; justify-content: space-between; margin-bottom: 16px; }
+.card-head h3 { margin: 0; font-size: 15px; font-weight: 600; }
+.card-head p { margin: 2px 0 0; color: var(--text-2); font-size: 13px; max-width: 70ch; }
+.controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.grid-2 { display: grid; gap: 20px; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 1024px) { .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.note { color: var(--muted); font-size: 12px; margin: 12px 0 0; }
+
+/* Stat tiles */
+.tiles { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+.tile { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; box-shadow: var(--shadow); }
+.tile-label { font-size: 12px; color: var(--text-2); font-weight: 500; }
+.tile-value { font-size: 28px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.2; margin-top: 6px; }
+.tile-value small { font-size: 14px; font-weight: 500; color: var(--text-2); letter-spacing: 0; margin-left: 4px; }
+.tile-sub { font-size: 13px; color: var(--text-2); margin-top: 4px; }
+.tile-sub strong { color: var(--text); font-weight: 600; }
+
+/* Form controls */
+.seg { display: inline-flex; border: 1px solid var(--border-strong); border-radius: 6px; padding: 2px; gap: 2px; background: var(--surface); }
+.seg button { appearance: none; border: 0; background: none; padding: 3px 10px; border-radius: 4px; font-size: 12px; font-weight: 500; color: var(--text-2); cursor: pointer; white-space: nowrap; }
+.seg button:hover { color: var(--text); }
+.seg button[aria-pressed="true"] { background: var(--surface-2); color: var(--text); box-shadow: inset 0 0 0 1px var(--border); }
+.field { display: grid; gap: 4px; font-size: 12px; color: var(--text-2); }
+select, input[type="search"], input[type="text"] {
+  border: 1px solid var(--border-strong); background: var(--surface); border-radius: 6px;
+  padding: 5px 8px; font-size: 13px; min-height: 32px; max-width: 100%;
+}
+input[type="search"] { width: 260px; }
+.swatch { display: inline-block; width: 10px; height: 10px; border-radius: 50%; vertical-align: -1px; margin-right: 6px; }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12px; color: var(--text-2); }
+
+/* Tables */
+.table-wrap { overflow-x: auto; margin: 0 -20px; padding: 0 20px; }
+table { border-collapse: collapse; width: 100%; font-size: 13px; }
+th { text-align: left; font-weight: 500; color: var(--text-2); font-size: 12px; padding: 8px 10px; border-bottom: 1px solid var(--axis); white-space: nowrap; vertical-align: bottom; }
+td { padding: 9px 10px; border-bottom: 1px solid var(--grid); vertical-align: middle; }
+tbody tr:last-child td { border-bottom: 0; }
+th.r, td.r { text-align: right; }
+th.c, td.c { text-align: center; }
+td.num, th.num { font-variant-numeric: tabular-nums; }
+tbody tr.row-link { cursor: pointer; }
+tbody tr.row-link:hover td { background: var(--surface-2); }
+.th-sort { appearance: none; background: none; border: 0; padding: 0; color: inherit; font: inherit; cursor: pointer; text-align: inherit; display: inline-flex; flex-direction: column; align-items: inherit; }
+.th-sort:hover { color: var(--text); }
+th[aria-sort] .th-sort { color: var(--text); }
+.th-sub { font-size: 11px; color: var(--muted); font-weight: 400; }
+.sort-ind { font-size: 10px; margin-left: 2px; }
+.model-cell { display: flex; flex-direction: column; min-width: 180px; }
+.model-name { font-weight: 600; }
+.model-meta { font-size: 12px; color: var(--text-2); }
+.rank { color: var(--muted); width: 28px; font-variant-numeric: tabular-nums; }
+.pill { display: inline-block; font-size: 11px; font-weight: 500; padding: 0 6px; border-radius: 4px; border: 1px solid var(--border-strong); color: var(--text-2); margin-left: 6px; line-height: 18px; white-space: nowrap; }
+.inline-bar { display: inline-flex; align-items: center; gap: 8px; justify-content: flex-end; }
+.inline-bar .track { width: 72px; height: 6px; border-radius: 3px; background: var(--grid); overflow: hidden; }
+.inline-bar .fill { display: block; height: 100%; background: var(--s1); border-radius: 0 3px 3px 0; }
+.pos { color: var(--good); }
+.neg { color: var(--critical); }
+
+/* Heatmap tables */
+table.heat td.h { text-align: center; font-variant-numeric: tabular-nums; border: 2px solid var(--surface); border-radius: 4px; padding: 7px 6px; min-width: 56px; font-size: 12px; }
+table.heat th.colh { text-align: center; white-space: normal; min-width: 64px; max-width: 96px; line-height: 1.3; }
+table.heat td.rowh { white-space: nowrap; font-weight: 500; border-bottom: 0; }
+table.heat td { border-bottom: 0; }
+table.heat tr.group td { font-size: 12px; font-weight: 600; color: var(--text-2); padding-top: 14px; }
+.scale { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-2); }
+.scale .ramp { width: 120px; height: 8px; border-radius: 4px; background: linear-gradient(90deg, var(--seq-lo), var(--seq-hi)); border: 1px solid var(--border); }
+
+/* Confusion matrix */
+table.cm { table-layout: fixed; }
+table.cm td.h { position: relative; }
+table.cm td.diag { font-weight: 650; }
+table.cm td.xdir { box-shadow: inset 0 0 0 2px var(--critical); }
+.cm-axis { font-size: 11px; color: var(--muted); }
+.cm-title { font-size: 13px; font-weight: 600; margin: 0 0 8px; display: flex; align-items: center; }
+
+/* Row charts (HTML) */
+.rows { display: grid; gap: 6px; }
+.rrow { display: grid; grid-template-columns: minmax(96px, 150px) minmax(0, 1fr) 52px; gap: 12px; align-items: center; min-height: 26px; }
+.rrow .lbl { font-size: 12px; color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rrow .val { font-size: 12px; text-align: right; font-variant-numeric: tabular-nums; color: var(--text); }
+.plot { position: relative; height: 22px; }
+.plot .gl { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--grid); }
+.plot .gl.base { background: var(--axis); }
+.axis-row .plot { height: 16px; }
+.axis-row .tick { position: absolute; transform: translateX(-50%); font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.axis-row .tick.first { transform: none; }
+.axis-row .tick.last { transform: translateX(-100%); }
+.dot { position: absolute; top: 50%; width: 11px; height: 11px; margin: -5.5px 0 0 -5.5px; border-radius: 50%; box-shadow: 0 0 0 2px var(--surface); }
+.dot::after { content: ""; position: absolute; inset: -8px; }
+.span { position: absolute; top: 50%; height: 2px; margin-top: -1px; background: var(--axis); }
+.bar { position: absolute; height: 8px; border-radius: 0 4px 4px 0; }
+.bar::after { content: ""; position: absolute; inset: -5px 0; }
+.bars-2 .rrow { min-height: 34px; }
+.bars-2 .plot { height: 32px; }
+.bars-2 .bar.a { top: 4px; background: var(--s1); }
+.bars-2 .bar.b { top: 20px; background: var(--s2); }
+.bar-lbl { position: absolute; font-size: 11px; line-height: 12px; color: var(--text-2); font-variant-numeric: tabular-nums; padding-left: 6px; white-space: nowrap; }
+
+/* Back-to-back chart */
+.b2b { display: grid; gap: 6px; }
+.b2b-row { display: grid; grid-template-columns: minmax(96px, 150px) minmax(0, 1fr) minmax(0, 1fr); gap: 0 12px; align-items: center; min-height: 26px; }
+.b2b-row .lbl { font-size: 12px; color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.b2b-side { position: relative; height: 22px; }
+.b2b-side.left { border-right: 1px solid var(--axis); }
+.b2b-side .bar { top: 7px; }
+.b2b-side.left .bar { right: 0; border-radius: 4px 0 0 4px; background: var(--s2); }
+.b2b-side.right .bar { left: 0; background: var(--s1); }
+.b2b-side .cnt { position: absolute; top: 2px; font-size: 11px; font-variant-numeric: tabular-nums; color: var(--text-2); }
+.b2b-head { font-size: 12px; color: var(--text-2); }
+.b2b-head .left { text-align: right; padding-right: 8px; }
+.b2b-head .right { padding-left: 8px; }
+
+/* Variant explorer chips */
+.chip { display: inline-block; min-width: 38px; text-align: center; font-size: 11px; font-weight: 600; padding: 1px 6px; border-radius: 4px; line-height: 18px; }
+.chip.truth { background: var(--surface-2); color: var(--text); box-shadow: inset 0 0 0 1px var(--border-strong); }
+.chip.m-exact { background: color-mix(in oklab, var(--good) 16%, transparent); color: var(--good); }
+.chip.m-dir { background: var(--surface-2); color: var(--text); }
+.chip.m-off { color: var(--text-2); box-shadow: inset 0 0 0 1px var(--border); }
+.chip.m-cross { background: color-mix(in oklab, var(--critical) 16%, transparent); color: var(--critical); box-shadow: inset 0 0 0 1px var(--critical); }
+.chip.m-none { color: var(--muted); }
+.pager { display: flex; align-items: center; gap: 8px; justify-content: flex-end; margin-top: 12px; font-size: 12px; color: var(--text-2); }
+.empty { color: var(--muted); padding: 24px 0; text-align: center; }
+.disease { max-width: 240px; }
+#varTable th.colh { min-width: 0; max-width: 76px; white-space: normal; text-align: center; line-height: 1.3; }
+#varTable td.mono { min-width: 170px; max-width: 220px; word-break: break-all; }
+.disease .d { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.disease .c { font-size: 12px; color: var(--text-2); }
+
+/* Tooltip */
+#tip {
+  position: fixed; z-index: 100; pointer-events: none; max-width: 300px;
+  background: var(--text); color: var(--surface); font-size: 12px; line-height: 1.45;
+  padding: 7px 9px; border-radius: 6px; white-space: pre-line; font-variant-numeric: tabular-nums;
+}
+
+/* Dialog */
+dialog { border: 1px solid var(--border); border-radius: 12px; padding: 0; background: var(--surface); color: var(--text); width: min(520px, calc(100vw - 32px)); box-shadow: 0 12px 48px rgba(0, 0, 0, 0.25); }
+dialog::backdrop { background: rgba(0, 0, 0, 0.45); }
+.dlg-body { padding: 20px; display: grid; gap: 16px; }
+.dlg-body h3 { margin: 0; font-size: 16px; font-weight: 600; }
+.dlg-body p { margin: 4px 0 0; color: var(--text-2); font-size: 13px; }
+.drop { border: 1px dashed var(--border-strong); border-radius: 8px; padding: 22px; text-align: center; color: var(--text-2); font-size: 13px; cursor: pointer; }
+.drop.over, .drop:hover { border-color: var(--s1); background: var(--surface-2); }
+.drop strong { color: var(--text); }
+.dlg-foot { display: flex; justify-content: flex-end; gap: 8px; padding: 14px 20px; border-top: 1px solid var(--border); }
+.dlg-error { color: var(--critical); font-size: 13px; }
+
+.toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--text); color: var(--surface); padding: 9px 14px; border-radius: 8px; font-size: 13px; z-index: 110; max-width: calc(100vw - 32px); }
+
+footer { color: var(--muted); font-size: 12px; padding-top: 24px; }
+footer code { font-size: 12px; }
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="wrap">
+    <div class="brand">
+      <h1>AIVA Variant Benchmark</h1>
+      <p id="subtitle"></p>
+    </div>
+    <div class="actions">
+      <button class="btn" id="themeBtn" type="button">Theme: System</button>
+      <button class="btn" id="refreshBtn" type="button" hidden>Rebuild data</button>
+      <button class="btn btn-primary" id="importBtn" type="button">Import results</button>
+    </div>
+  </div>
+</header>
+
+<div class="tab-bar">
+  <div class="wrap">
+    <nav class="tabs" role="tablist" aria-label="Dashboard sections">
+      <button class="tab" role="tab" data-tab="overview">Overview</button>
+      <button class="tab" role="tab" data-tab="compare">Compare</button>
+      <button class="tab" role="tab" data-tab="categories">Disease categories</button>
+      <button class="tab" role="tab" data-tab="safety">Cross-direction errors</button>
+      <button class="tab" role="tab" data-tab="criteria">ACMG criteria</button>
+      <button class="tab" role="tab" data-tab="agreement">Agreement</button>
+      <button class="tab" role="tab" data-tab="variants">Variants</button>
+    </nav>
+  </div>
+</div>
+
+<main class="wrap">
+
+  <!-- OVERVIEW -->
+  <section class="view" id="view-overview" role="tabpanel">
+    <div class="tiles" id="tiles"></div>
+
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <h3>Leaderboard</h3>
+          <p>Each classifier scored against ClinGen expert-panel classifications. Select a column to sort; select a model to compare it.</p>
+        </div>
+        <div class="seg" id="familySeg" role="group" aria-label="Filter by family"></div>
+      </div>
+      <div class="table-wrap">
+        <table id="leaderboard"></table>
+      </div>
+      <p class="note" id="lbNote"></p>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <h3>Exact vs directional accuracy</h3>
+            <p>The gap is the share of calls that land on the right side (P/LP, VUS, B/LB) but in the wrong tier.</p>
+          </div>
+          <div class="legend">
+            <span><span class="swatch" style="background:var(--s1)"></span>Exact, 5-class</span>
+            <span><span class="swatch" style="background:var(--s2)"></span>Directional, 3-class</span>
+          </div>
+        </div>
+        <div id="accDots"></div>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <h3>F1 by ACMG class</h3>
+            <p>5-class F1 per classification tier. Darker is higher.</p>
+          </div>
+        </div>
+        <div class="table-wrap"><table class="heat" id="perClassHeat"></table></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- COMPARE -->
+  <section class="view" id="view-compare" role="tabpanel" hidden>
+    <div class="view-head">
+      <h2>Compare two classifiers</h2>
+      <p>Differences are percentage points, A minus B.</p>
+    </div>
+    <div class="card">
+      <div class="controls">
+        <label class="field"><span><span class="swatch" style="background:var(--s1)"></span>Model A</span><select id="cmpA"></select></label>
+        <button class="btn" id="swapBtn" type="button" style="align-self:flex-end">Swap</button>
+        <label class="field"><span><span class="swatch" style="background:var(--s2)"></span>Model B</span><select id="cmpB"></select></label>
+      </div>
+    </div>
+    <div class="tiles" id="cmpTiles"></div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-head">
+          <div><h3>F1 by ACMG class</h3><p>5-class F1 for each tier.</p></div>
+          <div class="legend" id="cmpLegend"></div>
+        </div>
+        <div id="cmpBars"></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><div><h3>Precision and recall</h3><p>Per class, 5-class labels.</p></div></div>
+        <div class="table-wrap"><table id="cmpTable"></table></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <h3>Confusion matrices</h3>
+          <p>Rows are the expert classification, columns the model's call. Shading is the share of the row. Outlined cells are cross-direction errors.</p>
+        </div>
+        <div class="controls">
+          <div class="seg" id="cmScaleSeg" role="group" aria-label="Class granularity">
+            <button data-v="5" type="button">5-class</button><button data-v="3" type="button">3-class</button>
+          </div>
+          <div class="seg" id="cmModeSeg" role="group" aria-label="Cell values">
+            <button data-v="count" type="button">Counts</button><button data-v="pct" type="button">Row %</button>
+          </div>
+        </div>
+      </div>
+      <div class="grid-2" id="cmPair"></div>
+    </div>
+  </section>
+
+  <!-- CATEGORIES -->
+  <section class="view" id="view-categories" role="tabpanel" hidden>
+    <div class="view-head">
+      <h2>Performance by disease category</h2>
+      <p>Variants are grouped by the ClinGen expert panel (VCEP) that curated them. Select a model column to sort categories by it.</p>
+    </div>
+    <div class="card">
+      <div class="card-head">
+        <div><h3 id="catTitle"></h3><p id="catSub"></p></div>
+        <div class="controls">
+          <label class="field">Metric
+            <select id="catMetric">
+              <option value="macro_f1">Macro F1</option>
+              <option value="exact_accuracy">Exact accuracy</option>
+              <option value="directional_accuracy">Directional accuracy</option>
+              <option value="plp_f1">F1, P/LP</option>
+              <option value="vus_f1">F1, VUS</option>
+              <option value="blb_f1">F1, B/LB</option>
+            </select>
+          </label>
+          <div class="scale"><span>0</span><span class="ramp"></span><span>100</span></div>
+        </div>
+      </div>
+      <div class="table-wrap"><table class="heat" id="catHeat"></table></div>
+    </div>
+  </section>
+
+  <!-- SAFETY -->
+  <section class="view" id="view-safety" role="tabpanel" hidden>
+    <div class="view-head">
+      <h2>Cross-direction errors</h2>
+      <p>A cross-direction error places a variant on the opposite side of VUS from the expert call: a benign or likely benign variant called pathogenic or likely pathogenic, or the reverse. These are the misclassifications most likely to change clinical management.</p>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-head">
+          <div><h3>Errors by direction</h3><p>Variant counts, ordered from fewest total errors.</p></div>
+        </div>
+        <div id="b2b"></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><div><h3>Rates</h3><p>Per 1,000 evaluated variants.</p></div></div>
+        <div class="table-wrap"><table id="safetyTable"></table></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head">
+        <div><h3>Error cases</h3><p>Up to 10 cases per direction are stored for each model, with the ACMG criteria the model cited.</p></div>
+        <label class="field">Model <select id="safetyModel"></select></label>
+      </div>
+      <div class="table-wrap"><table id="caseTable"></table></div>
+    </div>
+  </section>
+
+  <!-- CRITERIA -->
+  <section class="view" id="view-criteria" role="tabpanel" hidden>
+    <div class="view-head">
+      <h2>ACMG/AMP criteria invoked</h2>
+      <p>Share of evaluated variants for which each model cited a criterion, with strength modifiers collapsed (PM2_Supporting counts as PM2). Hover a code for its definition.</p>
+    </div>
+    <div class="card">
+      <div class="card-head">
+        <div><h3>Criterion usage</h3><p>Shading uses a square-root scale so rarely used criteria stay visible.</p></div>
+        <div class="scale"><span>0%</span><span class="ramp"></span><span id="critMax"></span></div>
+      </div>
+      <div class="table-wrap"><table class="heat" id="critHeat"></table></div>
+    </div>
+  </section>
+
+  <!-- AGREEMENT -->
+  <section class="view" id="view-agreement" role="tabpanel" hidden>
+    <div class="view-head">
+      <h2>Agreement between classifiers</h2>
+      <p>Share of shared variants on which two classifiers return the same call, independent of the expert classification.</p>
+    </div>
+    <div class="card">
+      <div class="card-head">
+        <div><h3 id="agreeTitle"></h3><p id="agreeSub"></p></div>
+        <div class="controls">
+          <div class="seg" id="agreeSeg" role="group" aria-label="Agreement level">
+            <button data-v="exact_pct" type="button">Exact, 5-class</button><button data-v="dir_pct" type="button">Directional, 3-class</button>
+          </div>
+          <div class="scale"><span id="agreeMin"></span><span class="ramp"></span><span id="agreeMax"></span></div>
+        </div>
+      </div>
+      <div class="table-wrap"><table class="heat" id="agreeHeat"></table></div>
+    </div>
+  </section>
+
+  <!-- VARIANTS -->
+  <section class="view" id="view-variants" role="tabpanel" hidden>
+    <div class="view-head">
+      <h2>Variants</h2>
+      <p id="varIntro"></p>
+    </div>
+    <div class="card">
+      <div class="card-head">
+        <div class="controls">
+          <input type="search" id="vq" placeholder="Gene, variant or disease" aria-label="Search variants">
+          <select id="vcat" aria-label="Category"></select>
+          <select id="vgt" aria-label="Expert classification"></select>
+          <div class="seg" id="vonlySeg" role="group" aria-label="Show">
+            <button data-v="all" type="button">All</button>
+            <button data-v="disagree" type="button">Models disagree</button>
+            <button data-v="cross" type="button">Any cross-direction error</button>
+          </div>
+        </div>
+        <div class="legend">
+          <span><span class="chip m-exact">LP</span> Exact match</span>
+          <span><span class="chip m-dir">P</span> Same direction</span>
+          <span><span class="chip m-off">VUS</span> Adjacent to VUS</span>
+          <span><span class="chip m-cross">B</span> Cross-direction</span>
+        </div>
+      </div>
+      <div class="table-wrap"><table id="varTable"></table></div>
+      <div class="pager" id="pager"></div>
+    </div>
+  </section>
+
+  <footer id="footer"></footer>
+</main>
+
+<dialog id="importDlg">
+  <form method="dialog" id="importForm">
+    <div class="dlg-body">
+      <div>
+        <h3>Import model results</h3>
+        <p>A JSONL file (one record per line) or a JSON array. Each record needs a variant id (<code>variant_id</code> or <code>id</code>) and a call (<code>aiva_classification</code>, <code>classification</code> or <code>prediction</code>). Scoring runs in this browser against the full cohort; nothing is uploaded.</p>
+      </div>
+      <div class="drop" id="drop" tabindex="0" role="button">
+        <input type="file" id="fileInput" accept=".jsonl,.json,.ndjson" hidden>
+        <span id="dropText"><strong>Choose a file</strong> or drop it here</span>
+      </div>
+      <label class="field">Display name <input type="text" id="impName" placeholder="e.g. Claude Sonnet 5.5 (AIVA re-run)"></label>
+      <label class="field">Family
+        <select id="impFamily">
+          <option>Anthropic Claude</option>
+          <option>Google Gemini</option>
+          <option>OpenAI GPT</option>
+          <option>Classical ACMG Tools</option>
+          <option>Other</option>
+        </select>
+      </label>
+      <div class="dlg-error" id="impError" hidden></div>
+    </div>
+    <div class="dlg-foot">
+      <button class="btn" value="cancel" type="submit">Cancel</button>
+      <button class="btn btn-primary" id="impGo" type="button">Score and add</button>
+    </div>
+  </form>
+</dialog>
+
+<div id="tip" hidden></div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+window.BENCHMARK_DATA = __BENCHMARK_DATA__;
+</script>
+<script>
+(function () {
+  "use strict";
+
+  let D = window.BENCHMARK_DATA;
+  const GT = D.ground_truth_index || {};
+  const LABELS = ["Pathogenic", "Likely Pathogenic", "Uncertain Significance", "Likely Benign", "Benign"];
+  const ABBR = { "Pathogenic": "P", "Likely Pathogenic": "LP", "Uncertain Significance": "VUS", "Likely Benign": "LB", "Benign": "B" };
+  const DIR = { "Pathogenic": "pathogenic", "Likely Pathogenic": "pathogenic", "Uncertain Significance": "vus", "Likely Benign": "benign", "Benign": "benign" };
+  const DIR_LABEL = { pathogenic: "P/LP", vus: "VUS", benign: "B/LB" };
+  const FAMILY_SHORT = { "Anthropic Claude": "Claude", "Google Gemini": "Gemini", "Classical ACMG Tools": "Rule-based", "OpenAI GPT": "GPT" };
+  const CRITERIA = {
+    pathogenic: [
+      ["PVS1", "Null variant in a gene where loss of function is a known mechanism"],
+      ["PS1", "Same amino-acid change as an established pathogenic variant"],
+      ["PS2", "De novo, maternity and paternity confirmed"],
+      ["PS3", "Well-established functional studies show a damaging effect"],
+      ["PS4", "Prevalence in affected individuals significantly above controls"],
+      ["PM1", "Located in a mutational hot spot or critical functional domain"],
+      ["PM2", "Absent or at extremely low frequency in population databases"],
+      ["PM3", "Detected in trans with a pathogenic variant (recessive disorders)"],
+      ["PM4", "Protein length change from an in-frame indel or stop-loss"],
+      ["PM5", "Novel missense at a residue where another pathogenic missense is known"],
+      ["PM6", "Assumed de novo, without confirmation of parentage"],
+      ["PP1", "Cosegregation with disease in multiple affected family members"],
+      ["PP2", "Missense in a gene with a low rate of benign missense variation"],
+      ["PP3", "Computational evidence supports a deleterious effect"],
+      ["PP4", "Patient phenotype or family history highly specific for the gene"],
+      ["PP5", "Reputable source reports the variant as pathogenic"]
+    ],
+    benign: [
+      ["BA1", "Allele frequency above 5% in population databases"],
+      ["BS1", "Allele frequency greater than expected for the disorder"],
+      ["BS2", "Observed in a healthy adult where full penetrance is expected"],
+      ["BS3", "Well-established functional studies show no damaging effect"],
+      ["BS4", "Lack of segregation in affected family members"],
+      ["BP1", "Missense in a gene where truncating variants cause disease"],
+      ["BP2", "Observed in trans or in cis with a pathogenic variant"],
+      ["BP3", "In-frame indel in a repetitive region without known function"],
+      ["BP4", "Computational evidence suggests no impact"],
+      ["BP5", "Variant found in a case with an alternate molecular basis"],
+      ["BP7", "Synonymous variant with no predicted splice impact"]
+    ]
+  };
+
+  const state = {
+    tab: "overview",
+    lbSort: { key: "macro_f1_5", desc: true },
+    family: "all",
+    cmpA: null, cmpB: null,
+    cmScale: "5", cmMode: "count",
+    catMetric: "macro_f1", catSortKey: "count",
+    safetyModel: null,
+    agree: "exact_pct",
+    vq: "", vcat: "all", vgt: "all", vonly: "all", vpage: 0
+  };
+  const PAGE = 25;
+
+  // ---------- helpers ----------
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const f1 = (v) => (v == null || isNaN(v) ? "—" : Number(v).toFixed(1));
+  const pct = (v) => (v == null || isNaN(v) ? "—" : Number(v).toFixed(1) + "%");
+  const int = (v) => Number(v || 0).toLocaleString("en-US");
+  const signed = (v, d = 1) => (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v).toFixed(d);
+  const byKey = (k) => D.models.find((m) => m.key === k);
+  const isFull = (m) => m.evaluated_count >= m.total_cohort;
+  const shortFam = (f) => FAMILY_SHORT[f] || f;
+  const tipAttr = (s) => ` data-tip="${esc(s)}"`;
+
+  function heatStyle(t) {
+    t = Math.max(0, Math.min(1, t || 0));
+    const p = Math.round(t * 100);
+    const ink = t > 0.55 ? "#ffffff" : "var(--text)";
+    return `background:color-mix(in oklab, var(--seq-hi) ${p}%, var(--seq-lo));color:${ink}`;
+  }
+
+  function normalizeClass(raw) {
+    if (!raw) return "";
+    const s = String(raw).trim().toLowerCase();
+    if (s.startsWith("vus") || s.includes("uncertain significance")) return "Uncertain Significance";
+    if (s.includes("likely pathogenic")) return "Likely Pathogenic";
+    if (s.includes("likely benign")) return "Likely Benign";
+    if (s.includes("pathogenic")) return "Pathogenic";
+    if (s.includes("benign")) return "Benign";
+    return "";
+  }
+
+  function seg(id, value, onPick) {
+    const el = $(id);
+    el.querySelectorAll("button").forEach((b) => {
+      b.setAttribute("aria-pressed", String(b.dataset.v === value));
+      b.onclick = () => onPick(b.dataset.v);
+    });
+  }
+
+  function toast(msg) {
+    const t = $("toast");
+    t.textContent = msg;
+    t.hidden = false;
+    clearTimeout(toast._t);
+    toast._t = setTimeout(() => (t.hidden = true), 4000);
+  }
+
+  function axisRow(ticks) {
+    return `<div class="rrow axis-row"><span></span><div class="plot">${ticks.map((v, i) =>
+      `<span class="tick${i === 0 ? " first" : ""}${i === ticks.length - 1 ? " last" : ""}" style="left:${v}%">${v}</span>`).join("")}</div><span></span></div>`;
+  }
+  const gridlines = (ticks) => ticks.map((v) => `<span class="gl${v === 0 ? " base" : ""}" style="left:${v}%"></span>`).join("");
+
+  // ---------- tooltip ----------
+  const tip = $("tip");
+  function placeTip(e) {
+    const pad = 14, w = tip.offsetWidth, h = tip.offsetHeight;
+    let x = e.clientX + pad, y = e.clientY + pad;
+    if (x + w > window.innerWidth - 8) x = e.clientX - w - pad;
+    if (y + h > window.innerHeight - 8) y = e.clientY - h - pad;
+    tip.style.left = Math.max(8, x) + "px";
+    tip.style.top = Math.max(8, y) + "px";
+  }
+  document.addEventListener("pointerover", (e) => {
+    const t = e.target.closest && e.target.closest("[data-tip]");
+    if (!t) { tip.hidden = true; return; }
+    tip.textContent = t.dataset.tip;
+    tip.hidden = false;
+    placeTip(e);
+  });
+  document.addEventListener("pointermove", (e) => { if (!tip.hidden) placeTip(e); });
+  document.addEventListener("pointerout", (e) => { if (!e.relatedTarget) tip.hidden = true; });
+  window.addEventListener("scroll", () => (tip.hidden = true), { passive: true });
+
+  // ---------- header / footer ----------
+  function renderChrome() {
+    const md = D.metadata;
+    const nModels = D.models.length;
+    $("subtitle").textContent = `ACMG classification against ClinGen expert curations · ${int(md.total_variants)} variants · ${nModels} classifiers`;
+    $("footer").innerHTML = `Dataset built ${esc(md.evaluation_date)}. Ground truth: ClinGen Evidence Repository expert-panel classifications. ` +
+      `Rebuild with <code>python scripts/update_dashboard.py</code>.`;
+  }
+
+  // ---------- overview ----------
+  function renderTiles() {
+    const full = D.models.filter((m) => isFull(m) && !m.imported);
+    if (!full.length) { $("tiles").innerHTML = ""; return; }
+    const best = full.reduce((a, b) => (b.macro_f1_5 > a.macro_f1_5 ? b : a));
+    const claude = full.filter((m) => m.is_anthropic);
+    const bestClaude = claude.length ? claude.reduce((a, b) => (b.macro_f1_5 > a.macro_f1_5 ? b : a)) : null;
+    const fewest = full.reduce((a, b) => (b.critical_error_count < a.critical_error_count ? b : a));
+    const most = full.reduce((a, b) => (b.critical_error_count > a.critical_error_count ? b : a));
+    const nCats = categoriesWithData().length;
+
+    const tiles = [
+      { label: "Highest macro F1, full cohort", value: pct(best.macro_f1_5), sub: `<strong>${esc(best.name)}</strong><br>Exact ${pct(best.exact_accuracy)} · directional ${pct(best.directional_accuracy)}` }
+    ];
+    if (bestClaude && bestClaude !== best) {
+      tiles.push({ label: "Highest macro F1, Claude", value: pct(bestClaude.macro_f1_5), sub: `<strong>${esc(bestClaude.name)}</strong><br>${signed(bestClaude.macro_f1_5 - best.macro_f1_5)} pp vs ${esc(best.short_name)}` });
+    }
+    tiles.push({
+      label: "Fewest cross-direction errors",
+      value: `${int(fewest.critical_error_count)}<small>of ${int(fewest.evaluated_count)}</small>`,
+      sub: `<strong>${esc(fewest.name)}</strong><br>Most: ${esc(most.short_name)}, ${int(most.critical_error_count)}`
+    });
+    tiles.push({
+      label: "Cohort",
+      value: int(D.metadata.total_variants),
+      sub: `ClinGen expert-curated variants<br>${nCats} disease categories · 5 ACMG classes`
+    });
+    $("tiles").innerHTML = tiles.map((t) => `<div class="tile"><div class="tile-label">${t.label}</div><div class="tile-value">${t.value}</div><div class="tile-sub">${t.sub}</div></div>`).join("");
+  }
+
+  const LB_COLS = [
+    { key: "macro_f1_5", label: "Macro F1", sub: "5-class" },
+    { key: "exact_accuracy", label: "Exact acc.", sub: "5-class" },
+    { key: "directional_accuracy", label: "Directional acc.", sub: "3-class" },
+    { key: "macro_f1_3", label: "Macro F1", sub: "3-class" },
+    { key: "critical_error_count", label: "Cross-direction", sub: "errors", low: true },
+    { key: "coverage_pct", label: "Coverage", sub: "of cohort" },
+    { key: "avg_latency_sec", label: "Latency", sub: "s / variant", low: true }
+  ];
+
+  function renderFamilySeg() {
+    const fams = [...new Set(D.models.map((m) => m.family))];
+    const el = $("familySeg");
+    el.innerHTML = `<button data-v="all" type="button">All</button>` + fams.map((f) => `<button data-v="${esc(f)}" type="button">${esc(shortFam(f))}</button>`).join("");
+    seg("familySeg", state.family, (v) => { state.family = v; renderFamilySeg(); renderLeaderboard(); });
+  }
+
+  function renderLeaderboard() {
+    const { key, desc } = state.lbSort;
+    let rows = D.models.filter((m) => state.family === "all" || m.family === state.family);
+    rows = rows.slice().sort((a, b) => {
+      let va = a[key] ?? 0, vb = b[key] ?? 0;
+      if (key === "avg_latency_sec") { va = va || Infinity; vb = vb || Infinity; }
+      return (isFull(b) - isFull(a)) || (desc ? vb - va : va - vb);
+    });
+    const maxF1 = 100;
+    const head = `<thead><tr><th class="rank">#</th><th>Model</th>${LB_COLS.map((c) => {
+      const active = c.key === key;
+      const ind = active ? `<span class="sort-ind" aria-hidden="true">${desc ? "▼" : "▲"}</span>` : "";
+      return `<th class="r"${active ? ` aria-sort="${desc ? "descending" : "ascending"}"` : ""}><button class="th-sort" data-sort="${c.key}" style="align-items:flex-end"><span>${c.label}${ind}</span><span class="th-sub">${c.sub}</span></button></th>`;
+    }).join("")}</tr></thead>`;
+
+    const body = rows.map((m, i) => {
+      const partial = !isFull(m);
+      const cov = partial
+        ? `<span${tipAttr(`Scored on ${int(m.evaluated_count)} of ${int(m.total_cohort)} variants. Not directly comparable with full-cohort rows.`)}>${pct(m.coverage_pct)}<span class="pill">subset</span></span>`
+        : pct(m.coverage_pct);
+      return `<tr class="row-link" data-key="${esc(m.key)}">
+        <td class="rank">${partial ? "—" : i + 1}</td>
+        <td><div class="model-cell"><span class="model-name">${esc(m.name)}${m.imported ? '<span class="pill">imported</span>' : ""}</span><span class="model-meta">${esc(m.type)}</span></div></td>
+        <td class="r num"><span class="inline-bar"><span>${f1(m.macro_f1_5)}</span><span class="track"><span class="fill" style="width:${(m.macro_f1_5 / maxF1) * 100}%"></span></span></span></td>
+        <td class="r num">${f1(m.exact_accuracy)}</td>
+        <td class="r num">${f1(m.directional_accuracy)}</td>
+        <td class="r num">${f1(m.macro_f1_3)}</td>
+        <td class="r num"${tipAttr(`${int(m.false_pathogenic_count)} benign truth called P/LP\n${int(m.false_benign_count)} pathogenic truth called B/LB\n${Number(m.critical_error_rate).toFixed(2)}% of evaluated variants`)}>${int(m.critical_error_count)}</td>
+        <td class="r num">${cov}</td>
+        <td class="r num">${m.avg_latency_sec ? Number(m.avg_latency_sec).toFixed(1) : "—"}</td>
+      </tr>`;
+    }).join("");
+    $("leaderboard").innerHTML = head + `<tbody>${body}</tbody>`;
+
+    $("leaderboard").querySelectorAll(".th-sort").forEach((b) => b.onclick = () => {
+      const k = b.dataset.sort;
+      const col = LB_COLS.find((c) => c.key === k);
+      if (state.lbSort.key === k) state.lbSort.desc = !state.lbSort.desc;
+      else state.lbSort = { key: k, desc: !col.low };
+      renderLeaderboard();
+    });
+    $("leaderboard").querySelectorAll("tr.row-link").forEach((tr) => tr.onclick = () => openCompare(tr.dataset.key));
+
+    const partial = D.models.filter((m) => !isFull(m));
+    $("lbNote").textContent = "Accuracy and F1 values are percentages. Cross-direction errors: B/LB truth called P/LP, or P/LP truth called B/LB." +
+      (partial.length ? ` ${partial.map((m) => m.short_name).join(", ")} ${partial.length > 1 ? "were" : "was"} scored on a subset of the cohort and ${partial.length > 1 ? "are" : "is"} listed after the full-cohort ranking.` : "");
+  }
+
+  function renderAccDots() {
+    const rows = D.models.slice().sort((a, b) => b.directional_accuracy - a.directional_accuracy);
+    const ticks = [0, 25, 50, 75, 100];
+    $("accDots").innerHTML = `<div class="rows">${rows.map((m) => {
+      const lo = Math.min(m.exact_accuracy, m.directional_accuracy), hi = Math.max(m.exact_accuracy, m.directional_accuracy);
+      return `<div class="rrow"><span class="lbl" title="${esc(m.name)}">${esc(m.short_name)}${isFull(m) ? "" : " *"}</span>
+        <div class="plot">${gridlines(ticks)}
+          <span class="span" style="left:${lo}%;width:${hi - lo}%"></span>
+          <span class="dot" style="left:${m.exact_accuracy}%;background:var(--s1)"${tipAttr(`${m.name}\nExact (5-class): ${pct(m.exact_accuracy)}`)}></span>
+          <span class="dot" style="left:${m.directional_accuracy}%;background:var(--s2)"${tipAttr(`${m.name}\nDirectional (3-class): ${pct(m.directional_accuracy)}\nGap: ${(m.directional_accuracy - m.exact_accuracy).toFixed(1)} pp`)}></span>
+        </div><span class="val">${f1(m.directional_accuracy)}</span></div>`;
+    }).join("")}${axisRow(ticks)}</div>` +
+      (D.models.some((m) => !isFull(m)) ? `<p class="note">* Scored on a subset of the cohort.</p>` : "");
+  }
+
+  function renderPerClassHeat() {
+    const rows = D.models.filter((m) => m.per_class_5 && Object.keys(m.per_class_5).length).sort((a, b) => b.macro_f1_5 - a.macro_f1_5);
+    const head = `<thead><tr><th>Model</th>${LABELS.map((l) => `<th class="colh"${tipAttr(l)}>${ABBR[l]}</th>`).join("")}</tr></thead>`;
+    const body = rows.map((m) => `<tr><td class="rowh">${esc(m.short_name)}</td>${LABELS.map((l) => {
+      const c = m.per_class_5[l] || {};
+      const v = c.f1 ?? 0;
+      return `<td class="h" style="${heatStyle(v / 100)}"${tipAttr(`${m.name}\n${l}\nF1 ${pct(v)} · precision ${pct(c.precision)} · recall ${pct(c.recall)}\nSupport ${int(c.support)}`)}>${f1(v)}</td>`;
+    }).join("")}</tr>`).join("");
+    $("perClassHeat").innerHTML = head + `<tbody>${body}</tbody>`;
+  }
+
+  // ---------- compare ----------
+  function populateCompareSelects() {
+    const opts = D.models.map((m) => `<option value="${esc(m.key)}">${esc(m.name)}</option>`).join("");
+    $("cmpA").innerHTML = opts;
+    $("cmpB").innerHTML = opts;
+    if (!byKey(state.cmpA)) state.cmpA = (byKey("claude_code_haiku") || D.models[0]).key;
+    if (!byKey(state.cmpB)) state.cmpB = (byKey("aiva_haiku_rerun") || D.models[1] || D.models[0]).key;
+    $("cmpA").value = state.cmpA;
+    $("cmpB").value = state.cmpB;
+  }
+
+  function openCompare(key) {
+    if (key === state.cmpB) state.cmpB = state.cmpA;
+    state.cmpA = key;
+    populateCompareSelects();
+    setTab("compare");
+  }
+
+  function renderCompare() {
+    const A = byKey(state.cmpA), B = byKey(state.cmpB);
+    if (!A || !B) return;
+    $("cmpLegend").innerHTML = `<span><span class="swatch" style="background:var(--s1)"></span>${esc(A.short_name)}</span><span><span class="swatch" style="background:var(--s2)"></span>${esc(B.short_name)}</span>`;
+
+    const metrics = [
+      { k: "macro_f1_5", label: "Macro F1, 5-class", unit: "pp" },
+      { k: "exact_accuracy", label: "Exact accuracy", unit: "pp" },
+      { k: "directional_accuracy", label: "Directional accuracy", unit: "pp" },
+      { k: "critical_error_count", label: "Cross-direction errors", low: true, count: true }
+    ];
+    $("cmpTiles").innerHTML = metrics.map((x) => {
+      const a = A[x.k] ?? 0, b = B[x.k] ?? 0, d = a - b;
+      const better = x.low ? d < 0 : d > 0;
+      const cls = d === 0 ? "" : better ? "pos" : "neg";
+      const fmt = x.count ? int : f1;
+      const dtxt = x.count ? signed(d, 0) : `${signed(d)} pp`;
+      return `<div class="tile"><div class="tile-label">${x.label}</div>
+        <div class="tile-value"><span class="${cls}">${dtxt}</span></div>
+        <div class="tile-sub"><span class="swatch" style="background:var(--s1)"></span>${fmt(a)} &nbsp; <span class="swatch" style="background:var(--s2)"></span>${fmt(b)}</div></div>`;
+    }).join("");
+
+    const ticks = [0, 25, 50, 75, 100];
+    $("cmpBars").innerHTML = `<div class="rows bars-2">${LABELS.map((l) => {
+      const a = (A.per_class_5 || {})[l]?.f1, b = (B.per_class_5 || {})[l]?.f1;
+      return `<div class="rrow"><span class="lbl">${l}</span><div class="plot">${gridlines(ticks)}
+        ${a != null ? `<span class="bar a" style="left:0;width:${a}%"${tipAttr(`${A.name}\n${l} F1: ${pct(a)}`)}></span><span class="bar-lbl" style="left:${a}%;top:2px">${f1(a)}</span>` : ""}
+        ${b != null ? `<span class="bar b" style="left:0;width:${b}%"${tipAttr(`${B.name}\n${l} F1: ${pct(b)}`)}></span><span class="bar-lbl" style="left:${b}%;top:18px">${f1(b)}</span>` : ""}
+      </div><span class="val ${a != null && b != null ? (a - b >= 0 ? "pos" : "neg") : ""}">${a != null && b != null ? signed(a - b) : ""}</span></div>`;
+    }).join("")}${axisRow(ticks)}</div><p class="note">Right column: difference in F1, A minus B.</p>`;
+
+    const head = `<thead><tr><th>Class</th><th class="r">Support</th>
+      <th class="r"><span class="swatch" style="background:var(--s1)"></span>Precision</th><th class="r">Recall</th>
+      <th class="r"><span class="swatch" style="background:var(--s2)"></span>Precision</th><th class="r">Recall</th></tr></thead>`;
+    const body = LABELS.map((l) => {
+      const a = (A.per_class_5 || {})[l] || {}, b = (B.per_class_5 || {})[l] || {};
+      return `<tr><td>${ABBR[l]}</td><td class="r num">${int(a.support ?? b.support)}</td>
+        <td class="r num">${f1(a.precision)}</td><td class="r num">${f1(a.recall)}</td>
+        <td class="r num">${f1(b.precision)}</td><td class="r num">${f1(b.recall)}</td></tr>`;
+    }).join("");
+    $("cmpTable").innerHTML = head + `<tbody>${body}</tbody>`;
+
+    seg("cmScaleSeg", state.cmScale, (v) => { state.cmScale = v; renderCompare(); });
+    seg("cmModeSeg", state.cmMode, (v) => { state.cmMode = v; renderCompare(); });
+    $("cmPair").innerHTML = [[A, "var(--s1)"], [B, "var(--s2)"]].map(([m, c]) => `<div><p class="cm-title"><span class="swatch" style="background:${c}"></span>${esc(m.name)}</p>${confusionTable(m)}</div>`).join("");
+  }
+
+  function confusionTable(m) {
+    const cm = D.confusion_matrices[m.key];
+    if (!cm) return `<p class="empty">No confusion matrix for this model.</p>`;
+    const five = state.cmScale === "5";
+    const mat = five ? cm.matrix_5 : cm.matrix_3;
+    const labels = five ? LABELS.map((l) => ABBR[l]) : ["P/LP", "VUS", "B/LB"];
+    const full = five ? LABELS : ["Pathogenic or likely pathogenic", "Uncertain significance", "Benign or likely benign"];
+    const dirOf = (i) => five ? ["p", "p", "v", "b", "b"][i] : ["p", "v", "b"][i];
+    const head = `<thead><tr><th class="cm-axis">Expert \\ Model</th>${labels.map((l) => `<th class="colh">${l}</th>`).join("")}</tr></thead>`;
+    const body = mat.map((row, i) => {
+      const sum = row.reduce((a, b) => a + b, 0);
+      return `<tr><td class="rowh">${labels[i]}</td>${row.map((v, j) => {
+        const share = sum ? v / sum : 0;
+        const x = (dirOf(i) === "p" && dirOf(j) === "b") || (dirOf(i) === "b" && dirOf(j) === "p");
+        const shown = state.cmMode === "count" ? int(v) : (share * 100).toFixed(1);
+        return `<td class="h${i === j ? " diag" : ""}${x && v > 0 ? " xdir" : ""}" style="${heatStyle(share)}"${tipAttr(`Expert: ${full[i]}\nModel: ${full[j]}\n${int(v)} variants, ${(share * 100).toFixed(1)}% of row`)}>${shown}</td>`;
+      }).join("")}</tr>`;
+    }).join("");
+    return `<div class="table-wrap"><table class="heat cm">${head}<tbody>${body}</tbody></table></div>`;
+  }
+
+  // ---------- categories ----------
+  function categoriesWithData() {
+    const cats = D.metadata.categories || [];
+    return cats.filter((c) => D.models.some((m) => (D.categories_data[m.key] || {})[c]?.count));
+  }
+
+  function renderCategories() {
+    const metric = state.catMetric;
+    const metricLabel = $("catMetric").selectedOptions[0].textContent;
+    const models = D.models.filter((m) => D.categories_data[m.key]);
+    const cats = categoriesWithData();
+    const countOf = (c) => Math.max(0, ...models.map((m) => (D.categories_data[m.key][c] || {}).count || 0));
+    const sk = state.catSortKey;
+    cats.sort((a, b) => {
+      if (sk === "count") return countOf(b) - countOf(a);
+      if (sk === "name") return a.localeCompare(b);
+      return ((D.categories_data[sk] || {})[b]?.[metric] ?? -1) - ((D.categories_data[sk] || {})[a]?.[metric] ?? -1);
+    });
+    $("catTitle").textContent = metricLabel + " by category";
+    $("catSub").textContent = `${cats.length} categories × ${models.length} classifiers. Values are percentages.`;
+
+    const sortBtn = (k, label, extra = "") => `<button class="th-sort" data-sort="${esc(k)}" ${extra}>${label}${sk === k ? '<span class="sort-ind" aria-hidden="true"> ▼</span>' : ""}</button>`;
+    const head = `<thead><tr><th>${sortBtn("name", "Category")}</th><th class="r">${sortBtn("count", "Variants", 'style="align-items:flex-end"')}</th>${models.map((m) =>
+      `<th class="colh"${sk === m.key ? ' aria-sort="descending"' : ""}>${sortBtn(m.key, esc(m.short_name), 'style="align-items:center;text-align:center"')}</th>`).join("")}</tr></thead>`;
+    const body = cats.map((c) => `<tr><td class="rowh">${esc(c)}</td><td class="r num">${int(countOf(c))}</td>${models.map((m) => {
+      const r = (D.categories_data[m.key] || {})[c];
+      if (!r || !r.count) return `<td class="h" style="color:var(--muted)">—</td>`;
+      const v = r[metric];
+      return `<td class="h" style="${heatStyle(v / 100)}"${tipAttr(`${m.name}\n${c}\n${metricLabel}: ${pct(v)}\nEvaluated: ${int(r.count)} variants`)}>${f1(v)}</td>`;
+    }).join("")}</tr>`).join("");
+    $("catHeat").innerHTML = head + `<tbody>${body}</tbody>`;
+    $("catHeat").querySelectorAll(".th-sort").forEach((b) => b.onclick = () => { state.catSortKey = b.dataset.sort; renderCategories(); });
+  }
+
+  // ---------- safety ----------
+  function renderSafety() {
+    const rows = D.models.slice().sort((a, b) => a.critical_error_count - b.critical_error_count || a.name.localeCompare(b.name));
+    const max = Math.max(1, ...rows.map((m) => Math.max(m.false_pathogenic_count, m.false_benign_count)));
+    $("b2b").innerHTML = `<div class="b2b">
+      <div class="b2b-row b2b-head"><span></span><span class="left"><span class="swatch" style="background:var(--s2)"></span>B/LB truth called P/LP</span><span class="right"><span class="swatch" style="background:var(--s1)"></span>P/LP truth called B/LB</span></div>
+      ${rows.map((m) => {
+        const fp = m.false_pathogenic_count, fb = m.false_benign_count;
+        const wp = (fp / max) * 88, wb = (fb / max) * 88;
+        return `<div class="b2b-row"><span class="lbl" title="${esc(m.name)}">${esc(m.short_name)}</span>
+          <div class="b2b-side left">${fp ? `<span class="bar" style="width:${wp}%"${tipAttr(`${m.name}\n${fp} benign or likely benign variants called P/LP`)}></span>` : ""}<span class="cnt" style="right:${wp}%;padding-right:6px">${fp}</span></div>
+          <div class="b2b-side right">${fb ? `<span class="bar" style="width:${wb}%"${tipAttr(`${m.name}\n${fb} pathogenic or likely pathogenic variants called B/LB`)}></span>` : ""}<span class="cnt" style="left:${wb}%;padding-left:6px">${fb}</span></div>
+        </div>`;
+      }).join("")}</div>`;
+
+    const per1k = (n, m) => (m.evaluated_count ? (n / m.evaluated_count) * 1000 : 0).toFixed(2);
+    $("safetyTable").innerHTML = `<thead><tr><th>Model</th><th class="r">B/LB called P/LP</th><th class="r">P/LP called B/LB</th><th class="r">Total</th><th class="r">Evaluated</th></tr></thead><tbody>${rows.map((m) =>
+      `<tr><td>${esc(m.short_name)}</td><td class="r num">${per1k(m.false_pathogenic_count, m)}</td><td class="r num">${per1k(m.false_benign_count, m)}</td><td class="r num"><strong>${per1k(m.critical_error_count, m)}</strong></td><td class="r num">${int(m.evaluated_count)}</td></tr>`).join("")}</tbody>`;
+
+    const withCases = D.models.filter((m) => D.safety_data && D.safety_data[m.key]);
+    if (!withCases.find((m) => m.key === state.safetyModel)) {
+      const first = withCases.find((m) => m.is_anthropic) || withCases[0];
+      state.safetyModel = first ? first.key : null;
+    }
+    $("safetyModel").innerHTML = withCases.map((m) => `<option value="${esc(m.key)}">${esc(m.name)} (${m.critical_error_count})</option>`).join("");
+    if (state.safetyModel) $("safetyModel").value = state.safetyModel;
+    renderCases();
+  }
+
+  function renderCases() {
+    const s = (D.safety_data || {})[state.safetyModel];
+    if (!s) { $("caseTable").innerHTML = `<tbody><tr><td class="empty">No cases stored.</td></tr></tbody>`; return; }
+    const cases = [
+      ...(s.top_false_pathogenic || []).map((c) => ({ ...c, kind: "B/LB → P/LP" })),
+      ...(s.top_false_benign || []).map((c) => ({ ...c, kind: "P/LP → B/LB" }))
+    ];
+    if (!cases.length) { $("caseTable").innerHTML = `<tbody><tr><td class="empty">This model made no cross-direction errors.</td></tr></tbody>`; return; }
+    $("caseTable").innerHTML = `<thead><tr><th>Error</th><th>Gene</th><th>Variant</th><th>Disease</th><th class="c">Expert</th><th class="c">Model</th><th>Criteria cited</th></tr></thead><tbody>${cases.map((c) =>
+      `<tr><td style="white-space:nowrap">${c.kind}</td><td><strong>${esc(c.gene)}</strong></td><td class="mono">${esc(c.variant)}</td>
+        <td class="disease"><span class="d" title="${esc(c.disease)}">${esc(c.disease)}</span></td>
+        <td class="c"><span class="chip truth">${ABBR[c.ground_truth] || esc(c.ground_truth)}</span></td>
+        <td class="c"><span class="chip m-cross">${ABBR[c.predicted] || esc(c.predicted)}</span></td>
+        <td class="mono">${(c.criteria || []).map(esc).join(", ") || "—"}</td></tr>`).join("")}</tbody>`;
+  }
+
+  // ---------- criteria ----------
+  function renderCriteria() {
+    const models = D.models.filter((m) => D.criteria_data[m.key]);
+    const share = (m, c) => ((D.criteria_data[m.key][c] || 0) / (m.evaluated_count || 1)) * 100;
+    let max = 0;
+    models.forEach((m) => [...CRITERIA.pathogenic, ...CRITERIA.benign].forEach(([c]) => (max = Math.max(max, share(m, c)))));
+    max = max || 1;
+    $("critMax").textContent = pct(max);
+    const head = `<thead><tr><th>Criterion</th>${models.map((m) => `<th class="colh"${tipAttr(m.name)}>${esc(m.short_name)}</th>`).join("")}</tr></thead>`;
+    const group = (title, list) => `<tr class="group"><td colspan="${models.length + 1}">${title}</td></tr>` + list.map(([c, def]) =>
+      `<tr><td class="rowh mono"${tipAttr(`${c}: ${def}`)}>${c}</td>${models.map((m) => {
+        const n = D.criteria_data[m.key][c] || 0, v = share(m, c);
+        return `<td class="h" style="${heatStyle(Math.sqrt(v / max))}"${tipAttr(`${c} · ${m.name}\n${int(n)} variants, ${v.toFixed(1)}% of evaluated\n${def}`)}>${n ? (v < 0.1 ? "<0.1" : v.toFixed(1)) : "0"}</td>`;
+      }).join("")}</tr>`).join("");
+    $("critHeat").innerHTML = head + `<tbody>${group("Pathogenic evidence", CRITERIA.pathogenic)}${group("Benign evidence", CRITERIA.benign)}</tbody>`;
+  }
+
+  // ---------- agreement ----------
+  function renderAgreement() {
+    seg("agreeSeg", state.agree, (v) => { state.agree = v; renderAgreement(); });
+    const models = D.models.filter((m) => D.concordance[m.key]);
+    const vals = [];
+    models.forEach((a) => models.forEach((b) => { if (a !== b) { const v = D.concordance[a.key]?.[b.key]?.[state.agree]; if (v != null) vals.push(v); } }));
+    const lo = vals.length ? Math.floor(Math.min(...vals)) : 0, hi = vals.length ? Math.ceil(Math.max(...vals)) : 100;
+    $("agreeMin").textContent = lo + "%";
+    $("agreeMax").textContent = hi + "%";
+    $("agreeTitle").textContent = state.agree === "exact_pct" ? "Same 5-class call" : "Same direction (P/LP, VUS, B/LB)";
+    $("agreeSub").textContent = "Shading is scaled to the observed range.";
+    const head = `<thead><tr><th></th>${models.map((m) => `<th class="colh"${tipAttr(m.name)}>${esc(m.short_name)}</th>`).join("")}</tr></thead>`;
+    const body = models.map((a) => `<tr><td class="rowh">${esc(a.short_name)}</td>${models.map((b) => {
+      if (a === b) return `<td class="h" style="color:var(--muted)">—</td>`;
+      const r = D.concordance[a.key]?.[b.key];
+      if (!r || !r.overlap) return `<td class="h" style="color:var(--muted)">—</td>`;
+      const v = r[state.agree];
+      return `<td class="h" style="${heatStyle((v - lo) / Math.max(1, hi - lo))}"${tipAttr(`${a.short_name} vs ${b.short_name}\n${pct(v)} agreement\n${int(r.overlap)} shared variants`)}>${f1(v)}</td>`;
+    }).join("")}</tr>`).join("");
+    $("agreeHeat").innerHTML = head + `<tbody>${body}</tbody>`;
+  }
+
+  // ---------- variants ----------
+  function matchClass(gt, p) {
+    if (!p || p === "Pending" || !ABBR[p]) return "m-none";
+    if (p === gt) return "m-exact";
+    const g = DIR[gt], d = DIR[p];
+    if (g === d) return "m-dir";
+    if (g === "vus" || d === "vus") return "m-off";
+    return "m-cross";
+  }
+
+  function renderVariantFilters() {
+    const vs = D.explorer_variants || [];
+    const cats = [...new Set(vs.map((v) => v.category))].sort();
+    $("vcat").innerHTML = `<option value="all">All categories</option>` + cats.map((c) => `<option value="${esc(c)}">${esc(c)}</option>`).join("");
+    $("vgt").innerHTML = `<option value="all">Any expert call</option>` + LABELS.map((l) => `<option value="${esc(l)}">${l}</option>`).join("");
+    $("vcat").value = state.vcat;
+    $("vgt").value = state.vgt;
+    const n = vs.length, total = D.metadata.total_variants;
+    $("varIntro").textContent = `${int(n)} of ${int(total)} cohort variants are embedded for inspection. Each cell is a classifier's call, shaded by how it relates to the expert classification.`;
+  }
+
+  function renderVariants() {
+    seg("vonlySeg", state.vonly, (v) => { state.vonly = v; state.vpage = 0; renderVariants(); });
+    const models = D.models.filter((m) => (D.explorer_variants || []).some((v) => v.predictions && m.key in v.predictions));
+    const q = state.vq.trim().toLowerCase();
+    let list = (D.explorer_variants || []).filter((v) => {
+      if (state.vcat !== "all" && v.category !== state.vcat) return false;
+      if (state.vgt !== "all" && v.ground_truth !== state.vgt) return false;
+      if (q && !(`${v.gene} ${v.variation} ${v.disease} ${v.category}`.toLowerCase().includes(q))) return false;
+      const calls = models.map((m) => v.predictions[m.key]).filter((p) => ABBR[p]);
+      if (state.vonly === "disagree" && new Set(calls).size < 2) return false;
+      if (state.vonly === "cross" && !calls.some((p) => matchClass(v.ground_truth, p) === "m-cross")) return false;
+      return true;
+    });
+    const pages = Math.max(1, Math.ceil(list.length / PAGE));
+    state.vpage = Math.min(state.vpage, pages - 1);
+    const slice = list.slice(state.vpage * PAGE, state.vpage * PAGE + PAGE);
+    const head = `<thead><tr><th>Gene</th><th>Variant</th><th>Disease</th><th class="c">Expert</th>${models.map((m) => `<th class="colh"${tipAttr(m.name)}>${esc(m.short_name)}</th>`).join("")}</tr></thead>`;
+    const body = slice.length ? slice.map((v) => `<tr>
+      <td><strong>${esc(v.gene)}</strong></td>
+      <td class="mono">${esc(v.variation)}</td>
+      <td class="disease"><span class="d" title="${esc(v.disease)}">${esc(v.disease)}</span><span class="c">${esc(v.category)}${v.expert_panel ? " · " + esc(v.expert_panel) : ""}</span></td>
+      <td class="c"><span class="chip truth"${tipAttr(`${v.ground_truth}${(v.ground_truth_criteria || []).length ? "\nExpert criteria: " + v.ground_truth_criteria.join(", ") : ""}`)}>${ABBR[v.ground_truth] || "—"}</span></td>
+      ${models.map((m) => {
+        const p = v.predictions[m.key];
+        return `<td class="c"><span class="chip ${matchClass(v.ground_truth, p)}"${tipAttr(`${m.name}\n${p || "No call"}`)}>${ABBR[p] || "—"}</span></td>`;
+      }).join("")}</tr>`).join("")
+      : `<tr><td colspan="${models.length + 4}" class="empty">No variants match these filters.</td></tr>`;
+    $("varTable").innerHTML = head + `<tbody>${body}</tbody>`;
+    const from = list.length ? state.vpage * PAGE + 1 : 0, to = Math.min(list.length, (state.vpage + 1) * PAGE);
+    $("pager").innerHTML = `<span>${from}–${to} of ${int(list.length)}</span>
+      <button class="btn" id="pgPrev" type="button" ${state.vpage === 0 ? "disabled" : ""}>Previous</button>
+      <button class="btn" id="pgNext" type="button" ${state.vpage >= pages - 1 ? "disabled" : ""}>Next</button>`;
+    $("pgPrev").onclick = () => { state.vpage--; renderVariants(); };
+    $("pgNext").onclick = () => { state.vpage++; renderVariants(); };
+  }
+
+  // ---------- tabs ----------
+  const RENDER = {
+    overview: () => { renderTiles(); renderFamilySeg(); renderLeaderboard(); renderAccDots(); renderPerClassHeat(); },
+    compare: renderCompare,
+    categories: renderCategories,
+    safety: renderSafety,
+    criteria: renderCriteria,
+    agreement: renderAgreement,
+    variants: () => { renderVariantFilters(); renderVariants(); }
+  };
+
+  function setTab(tab, push = true) {
+    if (!RENDER[tab]) tab = "overview";
+    state.tab = tab;
+    document.querySelectorAll(".tab").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.tab === tab)));
+    document.querySelectorAll(".view").forEach((v) => (v.hidden = v.id !== "view-" + tab));
+    RENDER[tab]();
+    if (push && location.hash !== "#" + tab) history.replaceState(null, "", "#" + tab);
+  }
+
+  function renderAll() {
+    renderChrome();
+    populateCompareSelects();
+    setTab(state.tab, false);
+  }
+
+  // ---------- import ----------
+  let pendingFile = null;
+
+  function parseRecords(text) {
+    const t = text.trim();
+    if (t.startsWith("[")) return JSON.parse(t);
+    if (t.startsWith("{") && !t.includes("\n")) return [JSON.parse(t)];
+    const out = [];
+    t.split(/\r?\n/).forEach((line) => { if (line.trim()) { try { out.push(JSON.parse(line)); } catch (_) { /* skip malformed line */ } } });
+    return out;
+  }
+
+  function scoreImport(name, family, records) {
+    const preds = {};
+    records.forEach((r) => {
+      const id = r.variant_id || r.id;
+      const cls = normalizeClass(r.aiva_classification || r.classification || r.prediction);
+      if (id && cls && GT[id] != null) preds[id] = cls;
+    });
+    const ids = Object.keys(preds);
+    const n = ids.length;
+    if (!n) throw new Error("No records matched cohort variant ids with a recognisable classification.");
+
+    const m5 = LABELS.map(() => LABELS.map(() => 0));
+    const D3 = ["pathogenic", "vus", "benign"];
+    const m3 = D3.map(() => D3.map(() => 0));
+    let fp = 0, fb = 0;
+    ids.forEach((id) => {
+      const g = LABELS[GT[id]], p = preds[id];
+      m5[GT[id]][LABELS.indexOf(p)]++;
+      m3[D3.indexOf(DIR[g])][D3.indexOf(DIR[p])]++;
+      if (DIR[g] === "benign" && DIR[p] === "pathogenic") fp++;
+      if (DIR[g] === "pathogenic" && DIR[p] === "benign") fb++;
+    });
+    const perClass = (mat, labels) => {
+      const res = {};
+      labels.forEach((l, i) => {
+        const tp = mat[i][i];
+        const sup = mat[i].reduce((a, b) => a + b, 0);
+        const predN = mat.reduce((a, row) => a + row[i], 0);
+        const p = predN ? tp / predN : 0, r = sup ? tp / sup : 0;
+        const f = p + r ? (2 * p * r) / (p + r) : 0;
+        res[l] = { precision: +(p * 100).toFixed(2), recall: +(r * 100).toFixed(2), f1: +(f * 100).toFixed(2), support: sup };
+      });
+      return res;
+    };
+    const macro = (pc) => { const v = Object.values(pc).filter((c) => c.support > 0); return v.length ? +(v.reduce((a, c) => a + c.f1, 0) / v.length).toFixed(2) : 0; };
+    const pc5 = perClass(m5, LABELS), pc3 = perClass(m3, D3);
+    const diag = (mat) => mat.reduce((a, row, i) => a + row[i], 0);
+    const total = D.metadata.total_variants;
+    const key = "imported_" + Date.now();
+
+    D.models.push({
+      key, name, short_name: name.length > 22 ? name.slice(0, 21) + "…" : name, family,
+      is_anthropic: family === "Anthropic Claude", type: "Imported results", imported: true,
+      evaluated_count: n, total_cohort: total, coverage_pct: +((n / total) * 100).toFixed(1),
+      exact_accuracy: +((diag(m5) / n) * 100).toFixed(2), directional_accuracy: +((diag(m3) / n) * 100).toFixed(2),
+      macro_f1_5: macro(pc5), macro_f1_3: macro(pc3),
+      critical_error_count: fp + fb, critical_error_rate: +(((fp + fb) / n) * 100).toFixed(2),
+      false_pathogenic_count: fp, false_benign_count: fb, avg_latency_sec: 0,
+      per_class_5: pc5, per_class_3: pc3
+    });
+    D.confusion_matrices[key] = { matrix_5: m5, matrix_3: m3 };
+    (D.explorer_variants || []).forEach((v) => { if (preds[v.id]) v.predictions[key] = preds[v.id]; });
+    return { key, n };
+  }
+
+  function setupImport() {
+    const dlg = $("importDlg"), drop = $("drop"), input = $("fileInput"), err = $("impError");
+    const pick = (file) => {
+      pendingFile = file;
+      $("dropText").innerHTML = `<strong>${esc(file.name)}</strong> · ${(file.size / 1024).toFixed(0)} KB`;
+      if (!$("impName").value) $("impName").value = file.name.replace(/\.[^.]+$/, "").replace(/[_-]+/g, " ");
+      err.hidden = true;
+    };
+    $("importBtn").onclick = () => {
+      if (!Object.keys(GT).length) { toast("Ground-truth index is missing from this build; regenerate the page to enable import."); return; }
+      pendingFile = null; $("impName").value = ""; $("dropText").innerHTML = "<strong>Choose a file</strong> or drop it here"; err.hidden = true;
+      dlg.showModal();
+    };
+    drop.onclick = () => input.click();
+    drop.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); input.click(); } };
+    input.onchange = () => { if (input.files[0]) pick(input.files[0]); };
+    drop.ondragover = (e) => { e.preventDefault(); drop.classList.add("over"); };
+    drop.ondragleave = () => drop.classList.remove("over");
+    drop.ondrop = (e) => { e.preventDefault(); drop.classList.remove("over"); if (e.dataTransfer.files[0]) pick(e.dataTransfer.files[0]); };
+    $("impGo").onclick = () => {
+      if (!pendingFile) { err.textContent = "Choose a file first."; err.hidden = false; return; }
+      const name = $("impName").value.trim() || pendingFile.name;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const res = scoreImport(name, $("impFamily").value, parseRecords(String(reader.result)));
+          dlg.close();
+          state.tab = "overview";
+          renderAll();
+          toast(`${name}: scored ${int(res.n)} of ${int(D.metadata.total_variants)} variants.`);
+        } catch (e) {
+          err.textContent = e.message; err.hidden = false;
+        }
+      };
+      reader.readAsText(pendingFile);
+    };
+  }
+
+  // ---------- theme & refresh ----------
+  function setupTheme() {
+    const order = ["system", "light", "dark"];
+    let cur = "system";
+    try { cur = localStorage.getItem("aiva-theme") || "system"; } catch (_) { /* storage unavailable */ }
+    const apply = () => {
+      if (cur === "system") delete document.documentElement.dataset.theme;
+      else document.documentElement.dataset.theme = cur;
+      $("themeBtn").textContent = "Theme: " + cur[0].toUpperCase() + cur.slice(1);
+    };
+    $("themeBtn").onclick = () => {
+      cur = order[(order.indexOf(cur) + 1) % order.length];
+      try { localStorage.setItem("aiva-theme", cur); } catch (_) { /* storage unavailable */ }
+      apply();
+    };
+    apply();
+  }
+
+  function setupRefresh() {
+    if (!location.protocol.startsWith("http")) return;
+    const btn = $("refreshBtn");
+    btn.hidden = false;
+    btn.onclick = async () => {
+      btn.disabled = true; btn.textContent = "Rebuilding…";
+      try {
+        const res = await fetch("/api/refresh");
+        const data = await res.json();
+        if (!data.models) throw new Error(data.log || "Rebuild failed");
+        data.ground_truth_index = GT;
+        D = data;
+        renderAll();
+        toast("Dataset rebuilt from result files.");
+      } catch (e) {
+        toast("Rebuild failed: " + e.message);
+      } finally {
+        btn.disabled = false; btn.textContent = "Rebuild data";
+      }
+    };
+  }
+
+  // ---------- wiring ----------
+  document.querySelectorAll(".tab").forEach((b) => (b.onclick = () => setTab(b.dataset.tab)));
+  $("cmpA").onchange = (e) => { state.cmpA = e.target.value; renderCompare(); };
+  $("cmpB").onchange = (e) => { state.cmpB = e.target.value; renderCompare(); };
+  $("swapBtn").onclick = () => { [state.cmpA, state.cmpB] = [state.cmpB, state.cmpA]; populateCompareSelects(); renderCompare(); };
+  $("catMetric").onchange = (e) => { state.catMetric = e.target.value; renderCategories(); };
+  $("safetyModel").onchange = (e) => { state.safetyModel = e.target.value; renderCases(); };
+  $("vq").oninput = (e) => { state.vq = e.target.value; state.vpage = 0; renderVariants(); };
+  $("vcat").onchange = (e) => { state.vcat = e.target.value; state.vpage = 0; renderVariants(); };
+  $("vgt").onchange = (e) => { state.vgt = e.target.value; state.vpage = 0; renderVariants(); };
+  window.addEventListener("hashchange", () => setTab(location.hash.slice(1), false));
+
+  setupTheme();
+  setupRefresh();
+  setupImport();
+  state.tab = location.hash.slice(1) || "overview";
+  renderAll();
+})();
+</script>
+</body>
+</html>

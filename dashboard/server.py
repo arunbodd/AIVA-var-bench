@@ -7,7 +7,6 @@ Provides:
 - Dynamic REST API for dashboard data (`/api/data`)
 - Live background job monitoring endpoint (`/api/live`)
 - On-demand benchmark data refresh endpoint (`/api/refresh`)
-- Model upload endpoint (`/api/upload`) for drag-and-drop model evaluation
 
 Usage:
     python dashboard/server.py             # Starts server on port 8050
@@ -138,7 +137,7 @@ def run_server(port: int = 8050):
     socketserver.TCPServer.allow_reuse_address = True
     with socketserver.TCPServer(("", port), handler) as httpd:
         print("\n" + "=" * 70)
-        print("★ AIVA VARIANT BENCHMARK INTELLIGENCE DASHBOARD")
+        print("AIVA Variant Benchmark dashboard")
         print("=" * 70)
         print(f" Dashboard URL : http://localhost:{port}")
         print(f" Data API      : http://localhost:{port}/api/data")

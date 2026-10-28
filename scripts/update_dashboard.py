@@ -28,7 +28,7 @@ if res.returncode != 0:
 print("[Dashboard Updater] Re-generating standalone dashboard HTML (index.html)...")
 res2 = subprocess.run([python_bin, str(GEN_HTML_SCRIPT)], cwd=str(REPO_ROOT), env=env)
 if res2.returncode == 0:
-    print("[Dashboard Updater] Dashboard successfully updated! Refresh your browser or visit http://localhost:8050")
+    print("[Dashboard Updater] Dashboard updated. Reload the page, or serve it with: python dashboard/server.py")
 else:
     print(f"[Dashboard Updater] Failed during HTML generation with exit code {res2.returncode}", file=sys.stderr)
     sys.exit(res2.returncode)

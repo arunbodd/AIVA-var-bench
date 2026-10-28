@@ -5,7 +5,7 @@ Dashboard Data Builder for AIVA Variant Benchmarking.
 Scans all model results across AIVA-var-bench, computes comprehensive
 metrics, confusion matrices, disease category breakdowns, safety audits,
 ACMG criteria frequencies, and pairwise concordance, and outputs a single
-optimized JSON dataset for the world-class Anthropic Fellowship dashboard.
+JSON dataset consumed by dashboard/generate_html.py.
 
 Dynamic & Extensible: Re-running this script or adding any new result file
 instantly refreshes the dashboard.
@@ -604,8 +604,16 @@ def build_dashboard_dataset():
     # CURATED REPRESENTATIVE VARIANTS FOR INTERACTIVE EXPLORER
     # -------------------------------------------------------------------------
     explorer_variants = []
-    # Sample up to 200 diverse variants across categories and outcome types
-    sample_vids = list(unified_dict.keys())[:250]
+    # Round-robin across categories so every category is represented
+    by_category = defaultdict(list)
+    for vid, u in unified_dict.items():
+        by_category[u["category"]].append(vid)
+    queues = [by_category[c] for c in CATEGORY_ORDER if by_category.get(c)]
+    sample_vids = []
+    while len(sample_vids) < 250 and any(queues):
+        for q in queues:
+            if q and len(sample_vids) < 250:
+                sample_vids.append(q.pop(0))
     for vid in sample_vids:
         u = unified_dict[vid]
         preds_for_var = {}
@@ -678,7 +686,7 @@ def build_dashboard_dataset():
     # -------------------------------------------------------------------------
     payload = {
         "metadata": {
-            "title": "AIVA Variant Benchmark Intelligence Dashboard",
+            "title": "AIVA Variant Benchmark",
             "subtitle": "Anthropic Claude vs Frontiers & Classical Baselines on ClinGen Curated Variant Classification",
             "evaluation_date": datetime.now().strftime("%B %d, %Y"),
             "total_variants": total_cohort,
@@ -701,7 +709,7 @@ def build_dashboard_dataset():
     with open(out_file, "w", encoding="utf-8") as f:
         json.dump(payload, f, indent=2)
 
-    print(f"[{datetime.now().strftime('%T')}] Successfully generated dashboard data at: {out_file}")
+    print(f"[{datetime.now().strftime('%T')}] Wrote dashboard data to {out_file}")
     print(f"Data file size: {out_file.stat().st_size / 1024:.1f} KB")
 
     return payload
