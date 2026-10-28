@@ -37,15 +37,11 @@ from scripts.metrics import (
 from scripts.generate_results import VCEP_TO_CATEGORY, CATEGORY_ORDER
 
 
-# One fixed colour per model, used by every dashboard figure. Re-runs share
-# a hue with their initial run (initial = a lighter or darker step).
+# One fixed colour per model, used by every dashboard figure.
 MODEL_COLORS = {
     "aiva_opus_rerun": "#eb6834",
-    "aiva_opus_initial": "#a8461c",
     "aiva_sonnet_rerun": "#6250d6",
-    "aiva_sonnet_initial": "#a097ee",
     "aiva_haiku_rerun": "#1baf7a",
-    "aiva_haiku_initial": "#0f7a55",
     "claude_code_haiku": "#eda100",
     "aiva_gemini_pro": "#184f95",
     "aiva_gemini_flash": "#d55181",
@@ -80,6 +76,14 @@ def read_imported() -> list[dict]:
             rows.append(dict(zip(("key", "name", "family", "path"), parts)))
     return rows
 
+
+# Initial runs superseded by re-runs; they are not shown on the dashboard.
+RETIRED_MODELS = {"aiva_haiku_initial", "aiva_sonnet_initial", "aiva_opus_initial"}
+RETIRED_RESULT_DIRS = {
+    "Results_Claude_Haiku_5_5_Analysis",
+    "Results_Claude_Sonnet_5_5_Analysis",
+    "Results_Claude_Opus_5_5_Analysis",
+}
 
 FALLBACK_COLORS = ["#008300", "#e34948", "#0d366b", "#8c5a2b"]
 
@@ -131,8 +135,8 @@ def discover_model_files(repo_root: Path) -> dict[str, dict]:
     cc_path = repo_root / "Claude_code_results" / "acmg_classifications_manual_Haiku.json"
     if cc_path.exists():
         discovered["claude_code_haiku"] = {
-            "name": "Claude Haiku 5.5 (Claude-Code Prompt)",
-            "short_name": "Claude-Code Haiku",
+            "name": "Claude-Code Haiku 5.5",
+            "short_name": "Claude-Code Haiku 5.5",
             "family": "Anthropic Claude",
             "is_anthropic": True,
             "type": "Direct Prompt (Claude Code)",
@@ -146,8 +150,8 @@ def discover_model_files(repo_root: Path) -> dict[str, dict]:
     haiku_rr = repo_root / "Results_Claude_Haiku_5_5_Analysis_rerun" / "haiku_full.jsonl"
     if haiku_rr.exists():
         discovered["aiva_haiku_rerun"] = {
-            "name": "Claude Haiku 5.5 (AIVA Re-Run)",
-            "short_name": "AIVA Haiku Rerun",
+            "name": "AIVA-Haiku-5.5",
+            "short_name": "AIVA-Haiku-5.5",
             "family": "Anthropic Claude",
             "is_anthropic": True,
             "type": "Autonomous Agent (AIVA)",
@@ -157,43 +161,13 @@ def discover_model_files(repo_root: Path) -> dict[str, dict]:
             "description": "AIVA multi-step clinical reasoning engine powered by Claude Haiku 5.5 across full cohort (re-run).",
         }
 
-    # 3. AIVA Claude Haiku Initial
-    haiku_init = repo_root / "Results_Claude_Haiku_5_5_Analysis" / "haiku_full.jsonl"
-    if haiku_init.exists():
-        discovered["aiva_haiku_initial"] = {
-            "name": "Claude Haiku 5.5 (AIVA Initial)",
-            "short_name": "AIVA Haiku Init",
-            "family": "Anthropic Claude",
-            "is_anthropic": True,
-            "type": "Autonomous Agent (AIVA)",
-            "path": str(haiku_init),
-            "format": "jsonl",
-            "color": "#3B82F6",
-            "description": "AIVA clinical reasoning engine with Claude Haiku 5.5 (initial pass).",
-        }
-
-    # 4. AIVA Claude Sonnet Initial
-    sonnet_init = repo_root / "Results_Claude_Sonnet_5_5_Analysis" / "sonnet_full.jsonl"
-    if sonnet_init.exists():
-        discovered["aiva_sonnet_initial"] = {
-            "name": "Claude Sonnet 5.5 (AIVA Initial)",
-            "short_name": "AIVA Sonnet Init",
-            "family": "Anthropic Claude",
-            "is_anthropic": True,
-            "type": "Autonomous Agent (AIVA)",
-            "path": str(sonnet_init),
-            "format": "jsonl",
-            "color": "#7C3AED",
-            "description": "AIVA clinical reasoning engine powered by Claude Sonnet 5.5 (initial run).",
-        }
-
-    # 5. AIVA Claude Sonnet Re-Run (partial runs are included; coverage is reported)
+    # 3. AIVA Claude Sonnet Re-Run (partial runs are included; coverage is reported)
     sonnet_rr = repo_root / "Results_Claude_Sonnet_5_5_Analysis_rerun" / "sonnet_full.jsonl"
     if sonnet_rr.exists():
         if True:
             discovered["aiva_sonnet_rerun"] = {
-                "name": "Claude Sonnet 5.5 (AIVA Re-Run)",
-                "short_name": "AIVA Sonnet Rerun",
+                "name": "AIVA-Sonnet-5.5",
+                "short_name": "AIVA-Sonnet-5.5",
                 "family": "Anthropic Claude",
                 "is_anthropic": True,
                 "type": "Autonomous Agent (AIVA)",
@@ -203,28 +177,13 @@ def discover_model_files(repo_root: Path) -> dict[str, dict]:
                 "description": "Re-run of Claude Sonnet 5.5 with the revised ACMG criteria engine.",
             }
 
-    # 6. AIVA Claude Opus Initial
-    opus_init = repo_root / "Results_Claude_Opus_5_5_Analysis" / "opus_full.jsonl"
-    if opus_init.exists():
-        discovered["aiva_opus_initial"] = {
-            "name": "Claude Opus 5.5 (AIVA Initial)",
-            "short_name": "AIVA Opus Init",
-            "family": "Anthropic Claude",
-            "is_anthropic": True,
-            "type": "Autonomous Agent (AIVA)",
-            "path": str(opus_init),
-            "format": "jsonl",
-            "color": "#EA580C",
-            "description": "AIVA clinical reasoning engine powered by Claude Opus 5.5 (initial run).",
-        }
-
-    # 7. AIVA Claude Opus Re-Run (partial runs are included; coverage is reported)
+    # 4. AIVA Claude Opus Re-Run (partial runs are included; coverage is reported)
     opus_rr = repo_root / "Results_Claude_Opus_5_5_Analysis_rerun" / "opus_full.jsonl"
     if opus_rr.exists():
         if True:
             discovered["aiva_opus_rerun"] = {
-                "name": "Claude Opus 5.5 (AIVA Re-Run)",
-                "short_name": "AIVA Opus Rerun",
+                "name": "AIVA-Opus-5.5",
+                "short_name": "AIVA-Opus-5.5",
                 "family": "Anthropic Claude",
                 "is_anthropic": True,
                 "type": "Autonomous Agent (AIVA)",
@@ -234,12 +193,12 @@ def discover_model_files(repo_root: Path) -> dict[str, dict]:
                 "description": "Re-run of Claude Opus 5.5; may cover part of the cohort while in progress.",
             }
 
-    # 8. AIVA Gemini 3 Pro
+    # 5. AIVA Gemini 3 Pro
     gemini_pro = repo_root / "Results_Gemini_Pro_Analysis" / "classifications_google_gemini-3-pro-preview_combined.jsonl"
     if gemini_pro.exists():
         discovered["aiva_gemini_pro"] = {
-            "name": "Gemini 3 Pro (AIVA)",
-            "short_name": "AIVA Gemini Pro",
+            "name": "AIVA-Gemini-3-Pro",
+            "short_name": "AIVA-Gemini-3-Pro",
             "family": "Google Gemini",
             "is_anthropic": False,
             "type": "Autonomous Agent (AIVA)",
@@ -249,12 +208,12 @@ def discover_model_files(repo_root: Path) -> dict[str, dict]:
             "description": "AIVA engine powered by Gemini 3 Pro Preview across 8,387 variants.",
         }
 
-    # 9. AIVA Gemini 3.8 Flash
+    # 6. AIVA Gemini 3.8 Flash
     gemini_flash = repo_root / "Results_Gemini_3_8_Flash_Analysis" / "gemini_flash_2627.jsonl"
     if gemini_flash.exists():
         discovered["aiva_gemini_flash"] = {
-            "name": "Gemini 3.8 Flash (AIVA)",
-            "short_name": "AIVA Gemini Flash",
+            "name": "AIVA-Gemini-3.8-Flash",
+            "short_name": "AIVA-Gemini-3.8-Flash",
             "family": "Google Gemini",
             "is_anthropic": False,
             "type": "Autonomous Agent (AIVA)",
@@ -264,12 +223,12 @@ def discover_model_files(repo_root: Path) -> dict[str, dict]:
             "description": "AIVA engine powered by Gemini 3.8 Flash (2,627 variant subset).",
         }
 
-    # 10. Dynamic Scan for other Results_* directories
+    # 7. Dynamic Scan for other Results_* directories
     for res_dir in sorted(glob.glob(str(repo_root / "Results_*"))):
         res_path = Path(res_dir)
         d_name = res_path.name
-        # Skip if rerun (managed specifically above) or already registered
-        if "_rerun" in d_name.lower() or any(d_name in m["path"] for m in discovered.values()):
+        # Skip re-runs (managed above), retired initial runs, and registered dirs
+        if "_rerun" in d_name.lower() or d_name in RETIRED_RESULT_DIRS or any(d_name in m["path"] for m in discovered.values()):
             continue
         # Check for jsonl
         j_files = list(res_path.glob("*.jsonl"))
@@ -289,7 +248,7 @@ def discover_model_files(repo_root: Path) -> dict[str, dict]:
                 "description": f"Auto-discovered benchmark results from {d_name}.",
             }
 
-    # 11. Results imported through the dashboard server
+    # 8. Results imported through the dashboard server
     for row in read_imported():
         path = REPO_ROOT / row["path"]
         if path.exists():
@@ -305,9 +264,9 @@ def discover_model_files(repo_root: Path) -> dict[str, dict]:
                 "description": "Imported through the dashboard.",
             }
 
-    # 12. Classical Baselines
+    # 9. Classical Baselines
     discovered["baseline_bias"] = {
-        "name": "BIAS-2015 (Standard Tool)",
+        "name": "BIAS-2015",
         "short_name": "BIAS-2015",
         "family": "Classical ACMG Tools",
         "is_anthropic": False,
@@ -318,7 +277,7 @@ def discover_model_files(repo_root: Path) -> dict[str, dict]:
         "description": "Classical rule-based ACMG classification tool (BIAS-2015).",
     }
     discovered["baseline_intervar"] = {
-        "name": "InterVar (Standard Tool)",
+        "name": "InterVar",
         "short_name": "InterVar",
         "family": "Classical ACMG Tools",
         "is_anthropic": False,
@@ -824,7 +783,8 @@ def carry_over_archived_models(payload: dict, excluded: set[str]) -> None:
         if m["key"] in excluded and m["key"] not in current and m["key"] not in listed:
             payload["metadata"]["excluded_models"].append({"key": m["key"], "name": m["name"]})
     archived = [m for m in previous.get("models", [])
-                if m["key"] not in current and m["key"] not in excluded and not m.get("imported")
+                if m["key"] not in current and m["key"] not in excluded and m["key"] not in RETIRED_MODELS
+                and not m.get("imported")
                 and m["key"] in previous.get("confusion_matrices", {})]
     if not archived:
         return

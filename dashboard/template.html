@@ -1101,7 +1101,7 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
     box.innerHTML = `<div class="st-h">${ms.map(({ m, c }) => {
       const ex = pctOf(c, "exact"), dr = ex + pctOf(c, "tier");
       const segs = OUTCOMES.map(([k, label, a]) => c[k] ? `<div class="st-seg" style="width:${pctOf(c, k)}%;${k === "cross" ? "min-width:3px;" : ""}${outcomeStyle(m, a)}"${tipAttr(segTip(m, c, k, label))}>${pctOf(c, k) >= minLabel ? f1(pctOf(c, k)) : ""}</div>` : "").join("");
-      return `<div class="st-row"><div class="st-name">${mname(m)}<small>${esc(m.name)}</small></div>
+      return `<div class="st-row"><div class="st-name">${mname(m)}${m.name !== m.short_name ? `<small>${esc(m.name)}</small>` : ""}</div>
         <div><div class="st-brk"><span style="width:${ex}%"></span><em>Exact ${f1(ex)}%</em></div>
           <div class="st-brk dr" style="margin-top:-2px"><span style="width:${dr}%"></span><em style="right:calc(${100 - dr}% + 4px)">Directional ${f1(dr)}%</em></div>
           <div class="st-bar">${segs}</div></div>
@@ -1733,7 +1733,7 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
       ? "Removing a model adds it to dashboard/excluded_models.txt and rebuilds the dataset and dashboard/index.html. Commit and push those files to publish the change. Restore undoes a removal."
       : "This page is static, so removing a model hides it in this tab only. To remove a model permanently, run python dashboard/server.py, remove it there, then commit and push dashboard/index.html.";
     $("modelsTable").innerHTML = `<thead><tr><th>Model</th><th class="r">Evaluated</th><th>Source</th><th></th></tr></thead><tbody>${D.models.map((m) =>
-      `<tr><td>${mname(m)}<div class="model-meta">${esc(m.name)}</div></td><td class="r num">${int(m.evaluated_count)}</td>
+      `<tr><td>${mname(m)}${m.name !== m.short_name ? `<div class="model-meta">${esc(m.name)}</div>` : ""}</td><td class="r num">${int(m.evaluated_count)}</td>
         <td class="model-meta">${m.imported ? "Imported in this tab" : m.archived ? "Archived (earlier build)" : esc(m.type)}</td>
         <td class="r"><button type="button" class="btn btn-danger" data-remove="${esc(m.key)}">Remove</button></td></tr>`).join("")}</tbody>`;
     const removed = LOCAL_SERVER ? (D.metadata.excluded_models || []) : [];
