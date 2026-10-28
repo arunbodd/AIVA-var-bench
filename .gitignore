@@ -20,6 +20,13 @@ venv/
 
 # ─── Generated results ───
 results/
+Results_Claude_Sonnet_5_5_Analysis_rerun/
+Results_Claude_Opus_5_5_Analysis_rerun/
+
+# ─── Large database archives & tables ───
+*.tar
+*.tar.gz
+data/bias_v3_tables/
 
 # ─── Logs & ad-hoc debug output ───
 *.log

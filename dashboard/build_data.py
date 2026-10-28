@@ -140,20 +140,26 @@ def discover_model_files(repo_root: Path) -> dict[str, dict]:
             "description": "AIVA clinical reasoning engine powered by Claude Sonnet 5.5 (initial run).",
         }
 
-    # 5. AIVA Claude Sonnet Re-Run (Live)
+    # 5. AIVA Claude Sonnet Re-Run (Discovered once completed >= 8387 variants)
     sonnet_rr = repo_root / "Results_Claude_Sonnet_5_5_Analysis_rerun" / "sonnet_full.jsonl"
     if sonnet_rr.exists():
-        discovered["aiva_sonnet_rerun"] = {
-            "name": "Claude Sonnet 5.5 (AIVA Re-Run Live)",
-            "short_name": "AIVA Sonnet Rerun",
-            "family": "Anthropic Claude",
-            "is_anthropic": True,
-            "type": "Autonomous Agent (AIVA)",
-            "path": str(sonnet_rr),
-            "format": "jsonl",
-            "color": "#9333EA",
-            "description": "Live re-run of Claude Sonnet 5.5 with revised ACMG criteria engine.",
-        }
+        try:
+            with open(sonnet_rr, "rb") as f:
+                cnt = sum(1 for _ in f)
+        except Exception:
+            cnt = 0
+        if cnt >= 8387:
+            discovered["aiva_sonnet_rerun"] = {
+                "name": "Claude Sonnet 5.5 (AIVA Re-Run)",
+                "short_name": "AIVA Sonnet Rerun",
+                "family": "Anthropic Claude",
+                "is_anthropic": True,
+                "type": "Autonomous Agent (AIVA)",
+                "path": str(sonnet_rr),
+                "format": "jsonl",
+                "color": "#9333EA",
+                "description": "Completed full re-run of Claude Sonnet 5.5 with revised ACMG criteria engine.",
+            }
 
     # 6. AIVA Claude Opus Initial
     opus_init = repo_root / "Results_Claude_Opus_5_5_Analysis" / "opus_full.jsonl"
@@ -170,20 +176,26 @@ def discover_model_files(repo_root: Path) -> dict[str, dict]:
             "description": "AIVA clinical reasoning engine powered by Claude Opus 5.5 (initial run).",
         }
 
-    # 7. AIVA Claude Opus Re-Run (Live)
+    # 7. AIVA Claude Opus Re-Run (Discovered once completed >= 8387 variants)
     opus_rr = repo_root / "Results_Claude_Opus_5_5_Analysis_rerun" / "opus_full.jsonl"
     if opus_rr.exists():
-        discovered["aiva_opus_rerun"] = {
-            "name": "Claude Opus 5.5 (AIVA Re-Run Live)",
-            "short_name": "AIVA Opus Rerun",
-            "family": "Anthropic Claude",
-            "is_anthropic": True,
-            "type": "Autonomous Agent (AIVA)",
-            "path": str(opus_rr),
-            "format": "jsonl",
-            "color": "#C2410C",
-            "description": "Live re-run of Claude Opus 5.5 on full cohort.",
-        }
+        try:
+            with open(opus_rr, "rb") as f:
+                cnt = sum(1 for _ in f)
+        except Exception:
+            cnt = 0
+        if cnt >= 8387:
+            discovered["aiva_opus_rerun"] = {
+                "name": "Claude Opus 5.5 (AIVA Re-Run)",
+                "short_name": "AIVA Opus Rerun",
+                "family": "Anthropic Claude",
+                "is_anthropic": True,
+                "type": "Autonomous Agent (AIVA)",
+                "path": str(opus_rr),
+                "format": "jsonl",
+                "color": "#C2410C",
+                "description": "Completed full re-run of Claude Opus 5.5 on full cohort.",
+            }
 
     # 8. AIVA Gemini 3 Pro
     gemini_pro = repo_root / "Results_Gemini_Pro_Analysis" / "classifications_google_gemini-3-pro-preview_combined.jsonl"
@@ -219,8 +231,8 @@ def discover_model_files(repo_root: Path) -> dict[str, dict]:
     for res_dir in sorted(glob.glob(str(repo_root / "Results_*"))):
         res_path = Path(res_dir)
         d_name = res_path.name
-        # Skip if already registered
-        if any(d_name in m["path"] for m in discovered.values()):
+        # Skip if rerun (managed specifically above) or already registered
+        if "_rerun" in d_name.lower() or any(d_name in m["path"] for m in discovered.values()):
             continue
         # Check for jsonl
         j_files = list(res_path.glob("*.jsonl"))

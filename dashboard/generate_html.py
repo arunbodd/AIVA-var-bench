@@ -103,14 +103,8 @@ html_content = """<!DOCTYPE html>
         </div>
       </div>
 
-      <!-- Right: Action Buttons & Live Indicator -->
+      <!-- Right: Action Buttons -->
       <div class="flex items-center space-x-3">
-        <!-- Live Job Status Indicator -->
-        <button onclick="switchTab('jobs')" class="flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20 transition-all text-xs font-medium">
-          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span id="headerLiveText">Sonnet: 7% | Opus: 3%</span>
-        </button>
-
         <!-- Refresh Button -->
         <button onclick="refreshDashboardData()" title="Rebuild & refresh metrics" class="p-2 rounded-lg bg-dark-border/60 hover:bg-dark-border text-slate-300 hover:text-white transition-all text-xs flex items-center space-x-1.5 border border-slate-700/50">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -154,9 +148,6 @@ html_content = """<!DOCTYPE html>
         </button>
         <button onclick="switchTab('explorer')" id="tab-explorer" class="tab-btn px-3.5 py-2 rounded-lg border border-transparent text-slate-300 hover:text-white hover:bg-dark-border/40 transition-all flex items-center space-x-2">
           <span>🔍</span><span>Variant Explorer</span>
-        </button>
-        <button onclick="switchTab('jobs')" id="tab-jobs" class="tab-btn px-3.5 py-2 rounded-lg border border-transparent text-slate-300 hover:text-white hover:bg-dark-border/40 transition-all flex items-center space-x-2">
-          <span>⏱️</span><span>Live Re-Runs</span>
         </button>
       </div>
     </div>
@@ -545,36 +536,6 @@ html_content = """<!DOCTYPE html>
       </div>
     </section>
 
-    <!-- TAB 8: LIVE RE-RUNS MONITOR -->
-    <section id="view-jobs" class="tab-view hidden space-y-6">
-      <div class="glass-card rounded-2xl border border-dark-border p-6 space-y-6">
-        <div class="flex items-center justify-between">
-          <div>
-            <span class="text-xs font-semibold uppercase tracking-wider text-emerald-400">Active Background Daemon</span>
-            <h2 class="text-xl font-bold text-white tracking-tight mt-1">Live Overnight Benchmark Runners</h2>
-            <p class="text-xs text-slate-400 mt-1">Multi-pass detached execution on remaining cohort variants</p>
-          </div>
-          <button onclick="pollLiveJobs()" class="px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-medium hover:bg-emerald-500/20 transition-all flex items-center space-x-1.5">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-            <span>Check Status</span>
-          </button>
-        </div>
-
-        <div id="liveJobsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <!-- Dynamically populated -->
-        </div>
-
-        <div class="p-4 rounded-xl bg-dark-bg/60 border border-dark-border text-xs text-slate-400 space-y-2">
-          <div class="font-bold text-slate-300">Terminal Control & Monitoring:</div>
-          <div class="mono bg-black/40 p-3 rounded-lg text-slate-300 space-y-1">
-            <div><span class="text-emerald-400"># Live progress tail:</span> tail -f AIVA-var-bench/run_overnight_sonnet_*.log</div>
-            <div><span class="text-emerald-400"># Check PID status:</span> ps -p $(cat AIVA-var-bench/run_overnight_sonnet.pid)</div>
-            <div><span class="text-emerald-400"># Stop safely (resumes automatically):</span> kill $(cat AIVA-var-bench/run_overnight_sonnet.pid)</div>
-          </div>
-        </div>
-      </div>
-    </section>
-
   </main>
 
   <!-- UPLOAD / ADD MODEL MODAL -->
@@ -638,8 +599,6 @@ html_content = """<!DOCTYPE html>
     // Initialize on load
     document.addEventListener("DOMContentLoaded", () => {
       initDashboard();
-      // Start polling live jobs every 5 seconds
-      setInterval(pollLiveJobs, 5000);
     });
 
     function initDashboard() {
@@ -652,7 +611,6 @@ html_content = """<!DOCTYPE html>
       renderCriteria();
       renderConcordance();
       renderVariants();
-      renderLiveJobs();
     }
 
     function switchTab(tabId) {
@@ -670,7 +628,6 @@ html_content = """<!DOCTYPE html>
       if (tabId === 'safety') renderSafety();
       if (tabId === 'criteria') renderCriteria();
       if (tabId === 'concordance') renderConcordance();
-      if (tabId === 'jobs') renderLiveJobs();
     }
 
     // 1. LEADERBOARD
@@ -1096,58 +1053,6 @@ html_content = """<!DOCTYPE html>
         v.category.toLowerCase().includes(q)
       );
       renderVariants(filtered.slice(0, 50));
-    }
-
-    // 9. LIVE JOBS
-    function renderLiveJobs() {
-      const container = document.getElementById("liveJobsContainer");
-      const jobs = appData.live_jobs || {};
-
-      container.innerHTML = Object.entries(jobs).map(([name, j]) => `
-        <div class="glass-card rounded-xl border border-dark-border p-5 space-y-4">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center space-x-2">
-              <span class="w-2.5 h-2.5 rounded-full ${j.status === 'Running' ? 'bg-emerald-400 animate-pulse' : 'bg-slate-500'}"></span>
-              <h4 class="font-bold text-sm text-white">${name}</h4>
-            </div>
-            <span class="text-xs px-2 py-0.5 rounded font-mono font-bold ${j.status === 'Running' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-slate-800 text-slate-400'}">${j.status} (PID ${j.pid || '—'})</span>
-          </div>
-
-          <div>
-            <div class="flex justify-between text-xs mb-1">
-              <span class="text-slate-400">Classified: <strong class="text-white">${j.progress_count.toLocaleString()}</strong> / ${j.target_total.toLocaleString()}</span>
-              <span class="font-bold text-amber-400">${j.progress_pct}%</span>
-            </div>
-            <div class="w-full bg-dark-bg rounded-full h-2.5 overflow-hidden border border-dark-border">
-              <div class="bg-gradient-to-r from-amber-500 to-amber-400 h-2.5 rounded-full transition-all duration-500" style="width: ${j.progress_pct}%"></div>
-            </div>
-          </div>
-
-          <div class="text-[11px] text-slate-400 space-y-1">
-            <div class="truncate"><span class="text-slate-500">Log:</span> <span class="mono">${j.log_path || 'None'}</span></div>
-            <div class="truncate"><span class="text-slate-500">Latest:</span> <span class="mono text-slate-300">${j.latest_log_snippet || 'Running in background...'}</span></div>
-          </div>
-        </div>
-      `).join("");
-    }
-
-    async function pollLiveJobs() {
-      try {
-        const res = await fetch("/api/live");
-        if (res.ok) {
-          const liveData = await res.json();
-          appData.live_jobs = liveData;
-          if (currentTab === 'jobs') renderLiveJobs();
-
-          // Update header
-          const s = liveData['Sonnet 5.5 Re-Run']?.progress_pct ?? 7;
-          const o = liveData['Opus 5.5 Re-Run']?.progress_pct ?? 3;
-          const el = document.getElementById("headerLiveText");
-          if (el) el.innerText = `Sonnet: ${s}% | Opus: ${o}%`;
-        }
-      } catch (e) {
-        // Standalone file mode, ignore network error
-      }
     }
 
     async function refreshDashboardData() {

@@ -86,14 +86,8 @@
         </div>
       </div>
 
-      <!-- Right: Action Buttons & Live Indicator -->
+      <!-- Right: Action Buttons -->
       <div class="flex items-center space-x-3">
-        <!-- Live Job Status Indicator -->
-        <button onclick="switchTab('jobs')" class="flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20 transition-all text-xs font-medium">
-          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span id="headerLiveText">Sonnet: 7% | Opus: 3%</span>
-        </button>
-
         <!-- Refresh Button -->
         <button onclick="refreshDashboardData()" title="Rebuild & refresh metrics" class="p-2 rounded-lg bg-dark-border/60 hover:bg-dark-border text-slate-300 hover:text-white transition-all text-xs flex items-center space-x-1.5 border border-slate-700/50">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -137,9 +131,6 @@
         </button>
         <button onclick="switchTab('explorer')" id="tab-explorer" class="tab-btn px-3.5 py-2 rounded-lg border border-transparent text-slate-300 hover:text-white hover:bg-dark-border/40 transition-all flex items-center space-x-2">
           <span>🔍</span><span>Variant Explorer</span>
-        </button>
-        <button onclick="switchTab('jobs')" id="tab-jobs" class="tab-btn px-3.5 py-2 rounded-lg border border-transparent text-slate-300 hover:text-white hover:bg-dark-border/40 transition-all flex items-center space-x-2">
-          <span>⏱️</span><span>Live Re-Runs</span>
         </button>
       </div>
     </div>
@@ -524,36 +515,6 @@
               <!-- Dynamically populated -->
             </tbody>
           </table>
-        </div>
-      </div>
-    </section>
-
-    <!-- TAB 8: LIVE RE-RUNS MONITOR -->
-    <section id="view-jobs" class="tab-view hidden space-y-6">
-      <div class="glass-card rounded-2xl border border-dark-border p-6 space-y-6">
-        <div class="flex items-center justify-between">
-          <div>
-            <span class="text-xs font-semibold uppercase tracking-wider text-emerald-400">Active Background Daemon</span>
-            <h2 class="text-xl font-bold text-white tracking-tight mt-1">Live Overnight Benchmark Runners</h2>
-            <p class="text-xs text-slate-400 mt-1">Multi-pass detached execution on remaining cohort variants</p>
-          </div>
-          <button onclick="pollLiveJobs()" class="px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-medium hover:bg-emerald-500/20 transition-all flex items-center space-x-1.5">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-            <span>Check Status</span>
-          </button>
-        </div>
-
-        <div id="liveJobsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <!-- Dynamically populated -->
-        </div>
-
-        <div class="p-4 rounded-xl bg-dark-bg/60 border border-dark-border text-xs text-slate-400 space-y-2">
-          <div class="font-bold text-slate-300">Terminal Control & Monitoring:</div>
-          <div class="mono bg-black/40 p-3 rounded-lg text-slate-300 space-y-1">
-            <div><span class="text-emerald-400"># Live progress tail:</span> tail -f AIVA-var-bench/run_overnight_sonnet_*.log</div>
-            <div><span class="text-emerald-400"># Check PID status:</span> ps -p $(cat AIVA-var-bench/run_overnight_sonnet.pid)</div>
-            <div><span class="text-emerald-400"># Stop safely (resumes automatically):</span> kill $(cat AIVA-var-bench/run_overnight_sonnet.pid)</div>
-          </div>
         </div>
       </div>
     </section>
@@ -998,95 +959,6 @@
       }
     },
     {
-      "key": "aiva_sonnet_rerun",
-      "name": "Claude Sonnet 5.5 (AIVA Re-Run Live)",
-      "short_name": "AIVA Sonnet Rerun",
-      "family": "Anthropic Claude",
-      "is_anthropic": true,
-      "type": "Autonomous Agent (AIVA)",
-      "color": "#9333EA",
-      "description": "Live re-run of Claude Sonnet 5.5 with revised ACMG criteria engine.",
-      "evaluated_count": 3066,
-      "total_cohort": 8387,
-      "coverage_pct": 36.6,
-      "exact_accuracy": 44.65,
-      "directional_accuracy": 57.47,
-      "macro_f1_5": 45.06,
-      "macro_f1_3": 61.27,
-      "critical_error_count": 0,
-      "critical_error_rate": 0.0,
-      "false_pathogenic_count": 0,
-      "false_benign_count": 0,
-      "avg_latency_sec": 34.2,
-      "per_class_5": {
-        "Pathogenic": {
-          "precision": 97.3,
-          "recall": 11.23,
-          "f1": 20.13,
-          "support": 962,
-          "tp": 108,
-          "fp": 3,
-          "fn": 854
-        },
-        "Likely Pathogenic": {
-          "precision": 28.57,
-          "recall": 20.14,
-          "f1": 23.63,
-          "support": 695,
-          "tp": 140,
-          "fp": 350,
-          "fn": 555
-        },
-        "Uncertain Significance": {
-          "precision": 38.15,
-          "recall": 97.9,
-          "f1": 54.91,
-          "support": 811,
-          "tp": 794,
-          "fp": 1287,
-          "fn": 17
-        },
-        "Likely Benign": {
-          "precision": 73.33,
-          "recall": 30.03,
-          "f1": 42.62,
-          "support": 293,
-          "tp": 88,
-          "fp": 32,
-          "fn": 205
-        },
-        "Benign": {
-          "precision": 90.53,
-          "recall": 78.36,
-          "f1": 84.01,
-          "support": 305,
-          "tp": 239,
-          "fp": 25,
-          "fn": 66
-        }
-      },
-      "per_class_3": {
-        "pathogenic": {
-          "precision": 98.67,
-          "recall": 35.79,
-          "f1": 52.52,
-          "support": 1657
-        },
-        "vus": {
-          "precision": 38.15,
-          "recall": 97.9,
-          "f1": 54.91,
-          "support": 811
-        },
-        "benign": {
-          "precision": 97.66,
-          "recall": 62.71,
-          "f1": 76.37,
-          "support": 598
-        }
-      }
-    },
-    {
       "key": "aiva_opus_initial",
       "name": "Claude Opus 5.5 (AIVA Initial)",
       "short_name": "AIVA Opus Init",
@@ -1172,95 +1044,6 @@
           "recall": 61.83,
           "f1": 74.36,
           "support": 2059
-        }
-      }
-    },
-    {
-      "key": "aiva_opus_rerun",
-      "name": "Claude Opus 5.5 (AIVA Re-Run Live)",
-      "short_name": "AIVA Opus Rerun",
-      "family": "Anthropic Claude",
-      "is_anthropic": true,
-      "type": "Autonomous Agent (AIVA)",
-      "color": "#C2410C",
-      "description": "Live re-run of Claude Opus 5.5 on full cohort.",
-      "evaluated_count": 290,
-      "total_cohort": 8387,
-      "coverage_pct": 3.5,
-      "exact_accuracy": 60.34,
-      "directional_accuracy": 70.34,
-      "macro_f1_5": 61.09,
-      "macro_f1_3": 73.63,
-      "critical_error_count": 0,
-      "critical_error_rate": 0.0,
-      "false_pathogenic_count": 0,
-      "false_benign_count": 0,
-      "avg_latency_sec": 36.9,
-      "per_class_5": {
-        "Pathogenic": {
-          "precision": 100.0,
-          "recall": 27.5,
-          "f1": 43.14,
-          "support": 80,
-          "tp": 22,
-          "fp": 0,
-          "fn": 58
-        },
-        "Likely Pathogenic": {
-          "precision": 32.5,
-          "recall": 24.07,
-          "f1": 27.66,
-          "support": 54,
-          "tp": 13,
-          "fp": 27,
-          "fn": 41
-        },
-        "Uncertain Significance": {
-          "precision": 55.38,
-          "recall": 97.17,
-          "f1": 70.55,
-          "support": 106,
-          "tp": 103,
-          "fp": 83,
-          "fn": 3
-        },
-        "Likely Benign": {
-          "precision": 91.67,
-          "recall": 64.71,
-          "f1": 75.86,
-          "support": 34,
-          "tp": 22,
-          "fp": 2,
-          "fn": 12
-        },
-        "Benign": {
-          "precision": 83.33,
-          "recall": 93.75,
-          "f1": 88.24,
-          "support": 16,
-          "tp": 15,
-          "fp": 3,
-          "fn": 1
-        }
-      },
-      "per_class_3": {
-        "pathogenic": {
-          "precision": 96.77,
-          "recall": 44.78,
-          "f1": 61.22,
-          "support": 134
-        },
-        "vus": {
-          "precision": 55.38,
-          "recall": 97.17,
-          "f1": 70.55,
-          "support": 106
-        },
-        "benign": {
-          "precision": 97.62,
-          "recall": 82.0,
-          "f1": 89.13,
-          "support": 50
         }
       }
     },
@@ -1894,74 +1677,6 @@
         "benign"
       ]
     },
-    "aiva_sonnet_rerun": {
-      "matrix_5": [
-        [
-          108,
-          342,
-          512,
-          0,
-          0
-        ],
-        [
-          3,
-          140,
-          552,
-          0,
-          0
-        ],
-        [
-          0,
-          8,
-          794,
-          5,
-          4
-        ],
-        [
-          0,
-          0,
-          184,
-          88,
-          21
-        ],
-        [
-          0,
-          0,
-          39,
-          27,
-          239
-        ]
-      ],
-      "matrix_3": [
-        [
-          593,
-          1064,
-          0
-        ],
-        [
-          8,
-          794,
-          9
-        ],
-        [
-          0,
-          223,
-          375
-        ]
-      ],
-      "labels_5": [
-        "Pathogenic",
-        "Likely Pathogenic",
-        "Uncertain Significance",
-        "Likely Benign",
-        "Benign"
-      ],
-      "labels_3": [
-        "pathogenic",
-        "vus",
-        "benign"
-      ]
-    },
     "aiva_opus_initial": {
       "matrix_5": [
         [
@@ -2015,74 +1730,6 @@
           0,
           786,
           1273
-        ]
-      ],
-      "labels_5": [
-        "Pathogenic",
-        "Likely Pathogenic",
-        "Uncertain Significance",
-        "Likely Benign",
-        "Benign"
-      ],
-      "labels_3": [
-        "pathogenic",
-        "vus",
-        "benign"
-      ]
-    },
-    "aiva_opus_rerun": {
-      "matrix_5": [
-        [
-          22,
-          25,
-          33,
-          0,
-          0
-        ],
-        [
-          0,
-          13,
-          41,
-          0,
-          0
-        ],
-        [
-          0,
-          2,
-          103,
-          1,
-          0
-        ],
-        [
-          0,
-          0,
-          9,
-          22,
-          3
-        ],
-        [
-          0,
-          0,
-          0,
-          1,
-          15
-        ]
-      ],
-      "matrix_3": [
-        [
-          60,
-          74,
-          0
-        ],
-        [
-          2,
-          103,
-          1
-        ],
-        [
-          0,
-          9,
-          41
         ]
       ],
       "labels_5": [
@@ -2812,107 +2459,6 @@
         "blb_f1": 47.06
       }
     },
-    "aiva_sonnet_rerun": {
-      "Cancer Predisposition": {
-        "count": 382,
-        "exact_accuracy": 42.15,
-        "directional_accuracy": 57.59,
-        "macro_f1": 41.14,
-        "plp_f1": 26.42,
-        "vus_f1": 50.91,
-        "blb_f1": 50.98
-      },
-      "Metabolic Disorders": {
-        "count": 1310,
-        "exact_accuracy": 35.34,
-        "directional_accuracy": 48.55,
-        "macro_f1": 34.37,
-        "plp_f1": 19.52,
-        "vus_f1": 47.1,
-        "blb_f1": 42.85
-      },
-      "Cardiovascular Disorders": {
-        "count": 66,
-        "exact_accuracy": 63.64,
-        "directional_accuracy": 78.79,
-        "macro_f1": 57.78,
-        "plp_f1": 40.95,
-        "vus_f1": 76.67,
-        "blb_f1": 65.16
-      },
-      "Hematologic Disorders": {
-        "count": 135,
-        "exact_accuracy": 42.22,
-        "directional_accuracy": 61.48,
-        "macro_f1": 42.12,
-        "plp_f1": 4.45,
-        "vus_f1": 55.93,
-        "blb_f1": 72.9
-      },
-      "Immunodeficiency Disorders": {
-        "count": 202,
-        "exact_accuracy": 77.23,
-        "directional_accuracy": 84.16,
-        "macro_f1": 67.26,
-        "plp_f1": 36.12,
-        "vus_f1": 86.09,
-        "blb_f1": 88.98
-      },
-      "Neuromuscular Disorders": {
-        "count": 103,
-        "exact_accuracy": 33.01,
-        "directional_accuracy": 49.51,
-        "macro_f1": 34.06,
-        "plp_f1": 8.67,
-        "vus_f1": 25.71,
-        "blb_f1": 63.63
-      },
-      "Ophthalmologic Disorders": {
-        "count": 332,
-        "exact_accuracy": 62.05,
-        "directional_accuracy": 68.37,
-        "macro_f1": 55.16,
-        "plp_f1": 22.97,
-        "vus_f1": 74.45,
-        "blb_f1": 77.7
-      },
-      "Hearing Disorders": {
-        "count": 162,
-        "exact_accuracy": 51.23,
-        "directional_accuracy": 59.26,
-        "macro_f1": 48.98,
-        "plp_f1": 18.25,
-        "vus_f1": 55.41,
-        "blb_f1": 76.48
-      },
-      "RASopathies": {
-        "count": 307,
-        "exact_accuracy": 43.65,
-        "directional_accuracy": 60.91,
-        "macro_f1": 37.93,
-        "plp_f1": 26.38,
-        "vus_f1": 38.78,
-        "blb_f1": 49.05
-      },
-      "Vascular Disorders": {
-        "count": 36,
-        "exact_accuracy": 41.67,
-        "directional_accuracy": 58.33,
-        "macro_f1": 42.34,
-        "plp_f1": 0.0,
-        "vus_f1": 54.55,
-        "blb_f1": 78.57
-      },
-      "Epilepsy / Neurological": {
-        "count": 31,
-        "exact_accuracy": 58.06,
-        "directional_accuracy": 61.29,
-        "macro_f1": 45.0,
-        "plp_f1": 39.77,
-        "vus_f1": 45.45,
-        "blb_f1": 50.0
-      }
-    },
     "aiva_opus_initial": {
       "Cancer Predisposition": {
         "count": 2382,
@@ -3021,35 +2567,6 @@
         "plp_f1": 29.09,
         "vus_f1": 47.62,
         "blb_f1": 68.75
-      }
-    },
-    "aiva_opus_rerun": {
-      "Ophthalmologic Disorders": {
-        "count": 244,
-        "exact_accuracy": 62.3,
-        "directional_accuracy": 70.9,
-        "macro_f1": 65.53,
-        "plp_f1": 37.83,
-        "vus_f1": 71.26,
-        "blb_f1": 90.37
-      },
-      "Hearing Disorders": {
-        "count": 4,
-        "exact_accuracy": 25.0,
-        "directional_accuracy": 50.0,
-        "macro_f1": 33.33,
-        "plp_f1": 0.0,
-        "vus_f1": 0,
-        "blb_f1": 50.0
-      },
-      "RASopathies": {
-        "count": 42,
-        "exact_accuracy": 52.38,
-        "directional_accuracy": 69.05,
-        "macro_f1": 40.15,
-        "plp_f1": 18.75,
-        "vus_f1": 69.77,
-        "blb_f1": 46.75
       }
     },
     "aiva_gemini_pro": {
@@ -3601,35 +3118,6 @@
       "PS4": 133,
       "PVS1": 1475
     },
-    "aiva_sonnet_rerun": {
-      "BA1": 266,
-      "BP1": 9,
-      "BP2": 2,
-      "BP3": 0,
-      "BP4": 165,
-      "BP5": 3,
-      "BP7": 21,
-      "BS1": 377,
-      "BS2": 21,
-      "BS3": 16,
-      "BS4": 1,
-      "PM1": 394,
-      "PM2": 2120,
-      "PM3": 177,
-      "PM4": 48,
-      "PM5": 144,
-      "PM6": 48,
-      "PP1": 22,
-      "PP2": 439,
-      "PP3": 1253,
-      "PP4": 27,
-      "PP5": 0,
-      "PS1": 20,
-      "PS2": 5,
-      "PS3": 165,
-      "PS4": 151,
-      "PVS1": 542
-    },
     "aiva_opus_initial": {
       "BA1": 930,
       "BP1": 35,
@@ -3658,35 +3146,6 @@
       "PS3": 462,
       "PS4": 357,
       "PVS1": 1481
-    },
-    "aiva_opus_rerun": {
-      "BA1": 18,
-      "BP1": 0,
-      "BP2": 1,
-      "BP3": 0,
-      "BP4": 38,
-      "BP5": 0,
-      "BP7": 33,
-      "BS1": 34,
-      "BS2": 0,
-      "BS3": 5,
-      "BS4": 0,
-      "PM1": 18,
-      "PM2": 215,
-      "PM3": 42,
-      "PM4": 10,
-      "PM5": 16,
-      "PM6": 0,
-      "PP1": 13,
-      "PP2": 17,
-      "PP3": 136,
-      "PP4": 2,
-      "PP5": 0,
-      "PS1": 2,
-      "PS2": 6,
-      "PS3": 32,
-      "PS4": 33,
-      "PVS1": 33
     },
     "aiva_gemini_pro": {
       "BA1": 163,
@@ -4209,12 +3668,6 @@
         }
       ]
     },
-    "aiva_sonnet_rerun": {
-      "false_pathogenic_count": 0,
-      "false_benign_count": 0,
-      "top_false_pathogenic": [],
-      "top_false_benign": []
-    },
     "aiva_opus_initial": {
       "false_pathogenic_count": 0,
       "false_benign_count": 2,
@@ -4246,12 +3699,6 @@
           ]
         }
       ]
-    },
-    "aiva_opus_rerun": {
-      "false_pathogenic_count": 0,
-      "false_benign_count": 0,
-      "top_false_pathogenic": [],
-      "top_false_benign": []
     },
     "aiva_gemini_pro": {
       "false_pathogenic_count": 18,
@@ -5029,20 +4476,10 @@
         "dir_pct": 79.9,
         "overlap": 8387
       },
-      "aiva_sonnet_rerun": {
-        "exact_pct": 65.7,
-        "dir_pct": 74.7,
-        "overlap": 3066
-      },
       "aiva_opus_initial": {
         "exact_pct": 60.5,
         "dir_pct": 74.1,
         "overlap": 8387
-      },
-      "aiva_opus_rerun": {
-        "exact_pct": 64.8,
-        "dir_pct": 73.4,
-        "overlap": 290
       },
       "aiva_gemini_pro": {
         "exact_pct": 48.9,
@@ -5086,20 +4523,10 @@
         "dir_pct": 83.9,
         "overlap": 8387
       },
-      "aiva_sonnet_rerun": {
-        "exact_pct": 81.4,
-        "dir_pct": 84.0,
-        "overlap": 3066
-      },
       "aiva_opus_initial": {
         "exact_pct": 71.6,
         "dir_pct": 75.4,
         "overlap": 8387
-      },
-      "aiva_opus_rerun": {
-        "exact_pct": 73.4,
-        "dir_pct": 76.9,
-        "overlap": 290
       },
       "aiva_gemini_pro": {
         "exact_pct": 46.4,
@@ -5143,20 +4570,10 @@
         "dir_pct": 82.9,
         "overlap": 8387
       },
-      "aiva_sonnet_rerun": {
-        "exact_pct": 80.4,
-        "dir_pct": 82.7,
-        "overlap": 3066
-      },
       "aiva_opus_initial": {
         "exact_pct": 70.7,
         "dir_pct": 74.4,
         "overlap": 8387
-      },
-      "aiva_opus_rerun": {
-        "exact_pct": 74.5,
-        "dir_pct": 76.9,
-        "overlap": 290
       },
       "aiva_gemini_pro": {
         "exact_pct": 46.4,
@@ -5200,20 +4617,10 @@
         "dir_pct": 100.0,
         "overlap": 8387
       },
-      "aiva_sonnet_rerun": {
-        "exact_pct": 79.2,
-        "dir_pct": 82.3,
-        "overlap": 3066
-      },
       "aiva_opus_initial": {
         "exact_pct": 79.0,
         "dir_pct": 83.6,
         "overlap": 8387
-      },
-      "aiva_opus_rerun": {
-        "exact_pct": 66.6,
-        "dir_pct": 70.7,
-        "overlap": 290
       },
       "aiva_gemini_pro": {
         "exact_pct": 50.9,
@@ -5234,63 +4641,6 @@
         "exact_pct": 52.1,
         "dir_pct": 61.1,
         "overlap": 8387
-      }
-    },
-    "aiva_sonnet_rerun": {
-      "claude_code_haiku": {
-        "exact_pct": 65.7,
-        "dir_pct": 74.7,
-        "overlap": 3066
-      },
-      "aiva_haiku_rerun": {
-        "exact_pct": 81.4,
-        "dir_pct": 84.0,
-        "overlap": 3066
-      },
-      "aiva_haiku_initial": {
-        "exact_pct": 80.4,
-        "dir_pct": 82.7,
-        "overlap": 3066
-      },
-      "aiva_sonnet_initial": {
-        "exact_pct": 79.2,
-        "dir_pct": 82.3,
-        "overlap": 3066
-      },
-      "aiva_sonnet_rerun": {
-        "exact_pct": 100.0,
-        "dir_pct": 100.0,
-        "overlap": 3066
-      },
-      "aiva_opus_initial": {
-        "exact_pct": 73.2,
-        "dir_pct": 78.3,
-        "overlap": 3066
-      },
-      "aiva_opus_rerun": {
-        "exact_pct": 84.1,
-        "dir_pct": 86.6,
-        "overlap": 290
-      },
-      "aiva_gemini_pro": {
-        "exact_pct": 46.8,
-        "dir_pct": 60.5,
-        "overlap": 3066
-      },
-      "aiva_gemini_flash": {
-        "exact_pct": 60.4,
-        "dir_pct": 68.5,
-        "overlap": 2627
-      },
-      "baseline_bias": {
-        "exact_pct": 37.6,
-        "dir_pct": 53.4,
-        "overlap": 3066
-      },
-      "baseline_intervar": {
-        "exact_pct": 54.4,
-        "dir_pct": 62.9,
-        "overlap": 3066
       }
     },
     "aiva_opus_initial": {
@@ -5314,20 +4664,10 @@
         "dir_pct": 83.6,
         "overlap": 8387
       },
-      "aiva_sonnet_rerun": {
-        "exact_pct": 73.2,
-        "dir_pct": 78.3,
-        "overlap": 3066
-      },
       "aiva_opus_initial": {
         "exact_pct": 100.0,
         "dir_pct": 100.0,
         "overlap": 8387
-      },
-      "aiva_opus_rerun": {
-        "exact_pct": 69.3,
-        "dir_pct": 75.2,
-        "overlap": 290
       },
       "aiva_gemini_pro": {
         "exact_pct": 54.2,
@@ -5348,63 +4688,6 @@
         "exact_pct": 52.1,
         "dir_pct": 64.5,
         "overlap": 8387
-      }
-    },
-    "aiva_opus_rerun": {
-      "claude_code_haiku": {
-        "exact_pct": 64.8,
-        "dir_pct": 73.4,
-        "overlap": 290
-      },
-      "aiva_haiku_rerun": {
-        "exact_pct": 73.4,
-        "dir_pct": 76.9,
-        "overlap": 290
-      },
-      "aiva_haiku_initial": {
-        "exact_pct": 74.5,
-        "dir_pct": 76.9,
-        "overlap": 290
-      },
-      "aiva_sonnet_initial": {
-        "exact_pct": 66.6,
-        "dir_pct": 70.7,
-        "overlap": 290
-      },
-      "aiva_sonnet_rerun": {
-        "exact_pct": 84.1,
-        "dir_pct": 86.6,
-        "overlap": 290
-      },
-      "aiva_opus_initial": {
-        "exact_pct": 69.3,
-        "dir_pct": 75.2,
-        "overlap": 290
-      },
-      "aiva_opus_rerun": {
-        "exact_pct": 100.0,
-        "dir_pct": 100.0,
-        "overlap": 290
-      },
-      "aiva_gemini_pro": {
-        "exact_pct": 58.6,
-        "dir_pct": 71.0,
-        "overlap": 290
-      },
-      "aiva_gemini_flash": {
-        "exact_pct": 65.5,
-        "dir_pct": 74.1,
-        "overlap": 290
-      },
-      "baseline_bias": {
-        "exact_pct": 54.8,
-        "dir_pct": 70.3,
-        "overlap": 290
-      },
-      "baseline_intervar": {
-        "exact_pct": 49.0,
-        "dir_pct": 55.5,
-        "overlap": 290
       }
     },
     "aiva_gemini_pro": {
@@ -5428,20 +4711,10 @@
         "dir_pct": 62.9,
         "overlap": 8387
       },
-      "aiva_sonnet_rerun": {
-        "exact_pct": 46.8,
-        "dir_pct": 60.5,
-        "overlap": 3066
-      },
       "aiva_opus_initial": {
         "exact_pct": 54.2,
         "dir_pct": 71.1,
         "overlap": 8387
-      },
-      "aiva_opus_rerun": {
-        "exact_pct": 58.6,
-        "dir_pct": 71.0,
-        "overlap": 290
       },
       "aiva_gemini_pro": {
         "exact_pct": 100.0,
@@ -5485,20 +4758,10 @@
         "dir_pct": 61.1,
         "overlap": 2627
       },
-      "aiva_sonnet_rerun": {
-        "exact_pct": 60.4,
-        "dir_pct": 68.5,
-        "overlap": 2627
-      },
       "aiva_opus_initial": {
         "exact_pct": 62.3,
         "dir_pct": 73.5,
         "overlap": 2627
-      },
-      "aiva_opus_rerun": {
-        "exact_pct": 65.5,
-        "dir_pct": 74.1,
-        "overlap": 290
       },
       "aiva_gemini_pro": {
         "exact_pct": 62.5,
@@ -5542,20 +4805,10 @@
         "dir_pct": 53.5,
         "overlap": 8387
       },
-      "aiva_sonnet_rerun": {
-        "exact_pct": 37.6,
-        "dir_pct": 53.4,
-        "overlap": 3066
-      },
       "aiva_opus_initial": {
         "exact_pct": 46.7,
         "dir_pct": 62.1,
         "overlap": 8387
-      },
-      "aiva_opus_rerun": {
-        "exact_pct": 54.8,
-        "dir_pct": 70.3,
-        "overlap": 290
       },
       "aiva_gemini_pro": {
         "exact_pct": 51.6,
@@ -5599,20 +4852,10 @@
         "dir_pct": 61.1,
         "overlap": 8387
       },
-      "aiva_sonnet_rerun": {
-        "exact_pct": 54.4,
-        "dir_pct": 62.9,
-        "overlap": 3066
-      },
       "aiva_opus_initial": {
         "exact_pct": 52.1,
         "dir_pct": 64.5,
         "overlap": 8387
-      },
-      "aiva_opus_rerun": {
-        "exact_pct": 49.0,
-        "dir_pct": 55.5,
-        "overlap": 290
       },
       "aiva_gemini_pro": {
         "exact_pct": 53.8,
@@ -5655,9 +4898,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Likely Benign",
         "baseline_bias": "Benign",
@@ -5685,9 +4926,7 @@
         "aiva_haiku_rerun": "Likely Pathogenic",
         "aiva_haiku_initial": "Likely Pathogenic",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Likely Pathogenic",
         "aiva_opus_initial": "Pathogenic",
-        "aiva_opus_rerun": "Likely Pathogenic",
         "aiva_gemini_pro": "Pathogenic",
         "aiva_gemini_flash": "Pathogenic",
         "baseline_bias": "Pathogenic",
@@ -5712,9 +4951,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Uncertain Significance",
@@ -5742,9 +4979,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Likely Pathogenic",
-        "aiva_opus_rerun": "Pathogenic",
         "aiva_gemini_pro": "Pathogenic",
         "aiva_gemini_flash": "Pathogenic",
         "baseline_bias": "Pathogenic",
@@ -5772,9 +5007,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Likely Pathogenic",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Likely Pathogenic",
         "aiva_opus_initial": "Pathogenic",
-        "aiva_opus_rerun": "Likely Pathogenic",
         "aiva_gemini_pro": "Pathogenic",
         "aiva_gemini_flash": "Pathogenic",
         "baseline_bias": "Pathogenic",
@@ -5799,9 +5032,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Benign",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Benign",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Likely Benign",
         "aiva_gemini_flash": "Likely Benign",
         "baseline_bias": "Benign",
@@ -5825,9 +5056,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Uncertain Significance",
@@ -5855,9 +5084,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Pathogenic",
         "aiva_gemini_flash": "Pathogenic",
         "baseline_bias": "Pathogenic",
@@ -5885,9 +5112,7 @@
         "aiva_haiku_rerun": "Likely Pathogenic",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Likely Pathogenic",
         "aiva_opus_initial": "Likely Pathogenic",
-        "aiva_opus_rerun": "Likely Pathogenic",
         "aiva_gemini_pro": "Pathogenic",
         "aiva_gemini_flash": "Pathogenic",
         "baseline_bias": "Pathogenic",
@@ -5913,9 +5138,7 @@
         "aiva_haiku_rerun": "Benign",
         "aiva_haiku_initial": "Benign",
         "aiva_sonnet_initial": "Benign",
-        "aiva_sonnet_rerun": "Benign",
         "aiva_opus_initial": "Benign",
-        "aiva_opus_rerun": "Benign",
         "aiva_gemini_pro": "Likely Benign",
         "aiva_gemini_flash": "Likely Benign",
         "baseline_bias": "Benign",
@@ -5941,9 +5164,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Uncertain Significance",
@@ -5971,9 +5192,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Likely Pathogenic",
         "aiva_gemini_flash": "Likely Pathogenic",
         "baseline_bias": "Pathogenic",
@@ -6001,9 +5220,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Likely Pathogenic",
         "aiva_gemini_flash": "Likely Pathogenic",
         "baseline_bias": "Pathogenic",
@@ -6031,9 +5248,7 @@
         "aiva_haiku_rerun": "Likely Pathogenic",
         "aiva_haiku_initial": "Likely Pathogenic",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Likely Pathogenic",
         "aiva_opus_initial": "Likely Pathogenic",
-        "aiva_opus_rerun": "Pathogenic",
         "aiva_gemini_pro": "Pathogenic",
         "aiva_gemini_flash": "Pathogenic",
         "baseline_bias": "Pathogenic",
@@ -6061,9 +5276,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Likely Pathogenic",
         "aiva_opus_initial": "Likely Pathogenic",
-        "aiva_opus_rerun": "Likely Pathogenic",
         "aiva_gemini_pro": "Pathogenic",
         "aiva_gemini_flash": "Pathogenic",
         "baseline_bias": "Pathogenic",
@@ -6088,9 +5301,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Uncertain Significance",
@@ -6118,9 +5329,7 @@
         "aiva_haiku_rerun": "Likely Pathogenic",
         "aiva_haiku_initial": "Likely Pathogenic",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Pathogenic",
         "aiva_opus_initial": "Likely Pathogenic",
-        "aiva_opus_rerun": "Pathogenic",
         "aiva_gemini_pro": "Pathogenic",
         "aiva_gemini_flash": "Pathogenic",
         "baseline_bias": "Pathogenic",
@@ -6148,9 +5357,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Uncertain Significance",
@@ -6175,9 +5382,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Likely Benign",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Benign",
@@ -6204,9 +5409,7 @@
         "aiva_haiku_rerun": "Benign",
         "aiva_haiku_initial": "Benign",
         "aiva_sonnet_initial": "Benign",
-        "aiva_sonnet_rerun": "Benign",
         "aiva_opus_initial": "Benign",
-        "aiva_opus_rerun": "Benign",
         "aiva_gemini_pro": "Benign",
         "aiva_gemini_flash": "Benign",
         "baseline_bias": "Benign",
@@ -6228,9 +5431,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Pathogenic",
@@ -6254,9 +5455,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Uncertain Significance",
@@ -6280,9 +5479,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Uncertain Significance",
@@ -6308,9 +5505,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Benign",
         "aiva_gemini_flash": "Likely Benign",
         "baseline_bias": "Benign",
@@ -6335,9 +5530,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Likely Benign",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Likely Benign",
         "baseline_bias": "Likely Benign",
@@ -6364,9 +5557,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Likely Pathogenic",
         "aiva_gemini_flash": "Likely Pathogenic",
         "baseline_bias": "Pathogenic",
@@ -6393,9 +5584,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Pathogenic",
         "aiva_gemini_flash": "Likely Pathogenic",
         "baseline_bias": "Pathogenic",
@@ -6423,9 +5612,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Likely Pathogenic",
         "aiva_sonnet_initial": "Pathogenic",
-        "aiva_sonnet_rerun": "Likely Pathogenic",
         "aiva_opus_initial": "Likely Pathogenic",
-        "aiva_opus_rerun": "Likely Pathogenic",
         "aiva_gemini_pro": "Pathogenic",
         "aiva_gemini_flash": "Likely Pathogenic",
         "baseline_bias": "Pathogenic",
@@ -6449,9 +5636,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Uncertain Significance",
@@ -6479,9 +5664,7 @@
         "aiva_haiku_rerun": "Likely Pathogenic",
         "aiva_haiku_initial": "Likely Pathogenic",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Likely Pathogenic",
         "aiva_opus_initial": "Likely Pathogenic",
-        "aiva_opus_rerun": "Likely Pathogenic",
         "aiva_gemini_pro": "Likely Pathogenic",
         "aiva_gemini_flash": "Likely Pathogenic",
         "baseline_bias": "Likely Pathogenic",
@@ -6509,9 +5692,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Likely Pathogenic",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Likely Pathogenic",
         "aiva_gemini_pro": "Pathogenic",
         "aiva_gemini_flash": "Pathogenic",
         "baseline_bias": "Likely Pathogenic",
@@ -6537,9 +5718,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Likely Pathogenic",
         "aiva_sonnet_initial": "Likely Pathogenic",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Likely Pathogenic",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Likely Pathogenic",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Uncertain Significance",
@@ -6565,9 +5744,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Likely Pathogenic",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Pathogenic",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Uncertain Significance",
@@ -6595,9 +5772,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Likely Pathogenic",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Likely Pathogenic",
         "baseline_bias": "Likely Pathogenic",
@@ -6624,9 +5799,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Likely Pathogenic",
         "aiva_gemini_flash": "Likely Pathogenic",
         "baseline_bias": "Pathogenic",
@@ -6653,9 +5826,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Likely Pathogenic",
-        "aiva_sonnet_rerun": "Pathogenic",
         "aiva_opus_initial": "Pathogenic",
-        "aiva_opus_rerun": "Pathogenic",
         "aiva_gemini_pro": "Pathogenic",
         "aiva_gemini_flash": "Pathogenic",
         "baseline_bias": "Likely Pathogenic",
@@ -6683,9 +5854,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Likely Pathogenic",
         "baseline_bias": "Uncertain Significance",
@@ -6712,9 +5881,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Likely Pathogenic",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Likely Pathogenic",
         "baseline_bias": "Pathogenic",
@@ -6742,9 +5909,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Likely Pathogenic",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Pathogenic",
         "aiva_gemini_flash": "Pathogenic",
         "baseline_bias": "Uncertain Significance",
@@ -6772,9 +5937,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Likely Pathogenic",
-        "aiva_opus_rerun": "Likely Pathogenic",
         "aiva_gemini_pro": "Likely Pathogenic",
         "aiva_gemini_flash": "Pathogenic",
         "baseline_bias": "Likely Pathogenic",
@@ -6801,9 +5964,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Pathogenic",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Pathogenic",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Pathogenic",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Likely Pathogenic",
@@ -6830,9 +5991,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Likely Pathogenic",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Pathogenic",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Pathogenic",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Uncertain Significance",
@@ -6858,9 +6017,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Likely Pathogenic",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Likely Pathogenic",
@@ -6888,9 +6045,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Likely Pathogenic",
-        "aiva_sonnet_rerun": "Likely Pathogenic",
         "aiva_opus_initial": "Pathogenic",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Likely Pathogenic",
         "aiva_gemini_flash": "Pathogenic",
         "baseline_bias": "Uncertain Significance",
@@ -6918,9 +6073,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Likely Pathogenic",
         "baseline_bias": "Uncertain Significance",
@@ -6946,9 +6099,7 @@
         "aiva_haiku_rerun": "Benign",
         "aiva_haiku_initial": "Benign",
         "aiva_sonnet_initial": "Benign",
-        "aiva_sonnet_rerun": "Benign",
         "aiva_opus_initial": "Benign",
-        "aiva_opus_rerun": "Benign",
         "aiva_gemini_pro": "Likely Benign",
         "aiva_gemini_flash": "Benign",
         "baseline_bias": "Benign",
@@ -6974,9 +6125,7 @@
         "aiva_haiku_rerun": "Benign",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Benign",
-        "aiva_sonnet_rerun": "Benign",
         "aiva_opus_initial": "Benign",
-        "aiva_opus_rerun": "Benign",
         "aiva_gemini_pro": "Benign",
         "aiva_gemini_flash": "Benign",
         "baseline_bias": "Uncertain Significance",
@@ -7004,9 +6153,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Likely Pathogenic",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Likely Pathogenic",
         "aiva_gemini_flash": "Likely Pathogenic",
         "baseline_bias": "Uncertain Significance",
@@ -7031,9 +6178,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Likely Pathogenic",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Likely Pathogenic",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Uncertain Significance",
@@ -7060,9 +6205,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Likely Pathogenic",
         "aiva_gemini_flash": "Pathogenic",
         "baseline_bias": "Pathogenic",
@@ -7090,9 +6233,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Likely Pathogenic",
         "baseline_bias": "Uncertain Significance",
@@ -7120,9 +6261,7 @@
         "aiva_haiku_rerun": "Likely Pathogenic",
         "aiva_haiku_initial": "Likely Pathogenic",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Likely Pathogenic",
         "aiva_opus_initial": "Likely Pathogenic",
-        "aiva_opus_rerun": "Likely Pathogenic",
         "aiva_gemini_pro": "Likely Pathogenic",
         "aiva_gemini_flash": "Likely Pathogenic",
         "baseline_bias": "Pathogenic",
@@ -7149,9 +6288,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Likely Pathogenic",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Likely Pathogenic",
@@ -7176,9 +6313,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Likely Benign",
         "aiva_gemini_flash": "Likely Benign",
         "baseline_bias": "Likely Benign",
@@ -7205,9 +6340,7 @@
         "aiva_haiku_rerun": "Pathogenic",
         "aiva_haiku_initial": "Pathogenic",
         "aiva_sonnet_initial": "Likely Pathogenic",
-        "aiva_sonnet_rerun": "Pathogenic",
         "aiva_opus_initial": "Likely Pathogenic",
-        "aiva_opus_rerun": "Pathogenic",
         "aiva_gemini_pro": "Pathogenic",
         "aiva_gemini_flash": "Pathogenic",
         "baseline_bias": "Likely Pathogenic",
@@ -7233,9 +6366,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Likely Pathogenic",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Likely Pathogenic",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Likely Pathogenic",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Uncertain Significance",
@@ -7260,9 +6391,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Likely Benign",
         "aiva_gemini_pro": "Likely Benign",
         "aiva_gemini_flash": "Likely Benign",
         "baseline_bias": "Benign",
@@ -7288,9 +6417,7 @@
         "aiva_haiku_rerun": "Benign",
         "aiva_haiku_initial": "Benign",
         "aiva_sonnet_initial": "Benign",
-        "aiva_sonnet_rerun": "Benign",
         "aiva_opus_initial": "Benign",
-        "aiva_opus_rerun": "Benign",
         "aiva_gemini_pro": "Likely Benign",
         "aiva_gemini_flash": "Benign",
         "baseline_bias": "Benign",
@@ -7316,9 +6443,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Likely Benign",
-        "aiva_opus_rerun": "Likely Benign",
         "aiva_gemini_pro": "Likely Benign",
         "aiva_gemini_flash": "Likely Benign",
         "baseline_bias": "Likely Benign",
@@ -7345,9 +6470,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Likely Pathogenic",
-        "aiva_sonnet_rerun": "Likely Pathogenic",
         "aiva_opus_initial": "Pathogenic",
-        "aiva_opus_rerun": "Pathogenic",
         "aiva_gemini_pro": "Pathogenic",
         "aiva_gemini_flash": "Pathogenic",
         "baseline_bias": "Uncertain Significance",
@@ -7372,9 +6495,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Uncertain Significance",
@@ -7399,9 +6520,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Likely Benign",
         "aiva_gemini_flash": "Likely Benign",
         "baseline_bias": "Benign",
@@ -7429,9 +6548,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Pathogenic",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Likely Pathogenic",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Likely Pathogenic",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Uncertain Significance",
@@ -7459,9 +6576,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Pathogenic",
-        "aiva_opus_rerun": "Likely Pathogenic",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Likely Pathogenic",
         "baseline_bias": "Likely Pathogenic",
@@ -7488,9 +6603,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Likely Pathogenic",
-        "aiva_sonnet_rerun": "Likely Pathogenic",
         "aiva_opus_initial": "Likely Pathogenic",
-        "aiva_opus_rerun": "Likely Pathogenic",
         "aiva_gemini_pro": "Pathogenic",
         "aiva_gemini_flash": "Pathogenic",
         "baseline_bias": "Pathogenic",
@@ -7517,9 +6630,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Pathogenic",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Pathogenic",
         "aiva_gemini_flash": "Pathogenic",
         "baseline_bias": "Uncertain Significance",
@@ -7547,9 +6658,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Likely Pathogenic",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Likely Pathogenic",
         "aiva_gemini_pro": "Likely Pathogenic",
         "aiva_gemini_flash": "Pathogenic",
         "baseline_bias": "Uncertain Significance",
@@ -7575,9 +6684,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Pathogenic",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Pathogenic",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Pathogenic",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Uncertain Significance",
@@ -7604,9 +6711,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Likely Pathogenic",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Likely Pathogenic",
         "baseline_bias": "Likely Pathogenic",
@@ -7630,9 +6735,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Uncertain Significance",
@@ -7659,9 +6762,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Likely Pathogenic",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Pathogenic",
-        "aiva_opus_rerun": "Pathogenic",
         "aiva_gemini_pro": "Pathogenic",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Uncertain Significance",
@@ -7687,9 +6788,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Likely Pathogenic",
         "aiva_sonnet_initial": "Pathogenic",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Likely Pathogenic",
-        "aiva_opus_rerun": "Pathogenic",
         "aiva_gemini_pro": "Likely Pathogenic",
         "aiva_gemini_flash": "Pathogenic",
         "baseline_bias": "Uncertain Significance",
@@ -7713,9 +6812,7 @@
         "aiva_haiku_rerun": "Benign",
         "aiva_haiku_initial": "Benign",
         "aiva_sonnet_initial": "Benign",
-        "aiva_sonnet_rerun": "Benign",
         "aiva_opus_initial": "Benign",
-        "aiva_opus_rerun": "Benign",
         "aiva_gemini_pro": "Benign",
         "aiva_gemini_flash": "Benign",
         "baseline_bias": "Benign",
@@ -7742,9 +6839,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Uncertain Significance",
@@ -7772,9 +6867,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Likely Pathogenic",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Pathogenic",
         "aiva_gemini_flash": "Likely Pathogenic",
         "baseline_bias": "Pathogenic",
@@ -7802,9 +6895,7 @@
         "aiva_haiku_rerun": "Likely Pathogenic",
         "aiva_haiku_initial": "Likely Pathogenic",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Likely Pathogenic",
         "aiva_opus_initial": "Likely Pathogenic",
-        "aiva_opus_rerun": "Likely Pathogenic",
         "aiva_gemini_pro": "Pathogenic",
         "aiva_gemini_flash": "Pathogenic",
         "baseline_bias": "Likely Pathogenic",
@@ -7830,9 +6921,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Pathogenic",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Pathogenic",
         "aiva_gemini_flash": "Likely Pathogenic",
         "baseline_bias": "Likely Pathogenic",
@@ -7859,9 +6948,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Likely Pathogenic",
         "baseline_bias": "Uncertain Significance",
@@ -7887,9 +6974,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Likely Benign",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Likely Benign",
         "aiva_gemini_pro": "Likely Benign",
         "aiva_gemini_flash": "Likely Benign",
         "baseline_bias": "Benign",
@@ -7913,9 +6998,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Uncertain Significance",
@@ -7941,9 +7024,7 @@
         "aiva_haiku_rerun": "Benign",
         "aiva_haiku_initial": "Benign",
         "aiva_sonnet_initial": "Benign",
-        "aiva_sonnet_rerun": "Benign",
         "aiva_opus_initial": "Benign",
-        "aiva_opus_rerun": "Benign",
         "aiva_gemini_pro": "Likely Benign",
         "aiva_gemini_flash": "Benign",
         "baseline_bias": "Benign",
@@ -7971,9 +7052,7 @@
         "aiva_haiku_rerun": "Likely Pathogenic",
         "aiva_haiku_initial": "Likely Pathogenic",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Likely Pathogenic",
         "aiva_opus_initial": "Likely Pathogenic",
-        "aiva_opus_rerun": "Likely Pathogenic",
         "aiva_gemini_pro": "Likely Pathogenic",
         "aiva_gemini_flash": "Pathogenic",
         "baseline_bias": "Likely Pathogenic",
@@ -8000,9 +7079,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Likely Pathogenic",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Likely Pathogenic",
         "aiva_gemini_flash": "Likely Pathogenic",
         "baseline_bias": "Likely Pathogenic",
@@ -8028,9 +7105,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Pathogenic",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Likely Pathogenic",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Likely Pathogenic",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Uncertain Significance",
@@ -8056,9 +7131,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Pathogenic",
-        "aiva_sonnet_rerun": "Pathogenic",
         "aiva_opus_initial": "Pathogenic",
-        "aiva_opus_rerun": "Pathogenic",
         "aiva_gemini_pro": "Pathogenic",
         "aiva_gemini_flash": "Pathogenic",
         "baseline_bias": "Likely Pathogenic",
@@ -8084,9 +7157,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Likely Benign",
         "aiva_gemini_pro": "Likely Benign",
         "aiva_gemini_flash": "Likely Benign",
         "baseline_bias": "Uncertain Significance",
@@ -8110,9 +7181,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Uncertain Significance",
@@ -8139,9 +7208,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Likely Pathogenic",
-        "aiva_sonnet_rerun": "Pathogenic",
         "aiva_opus_initial": "Likely Pathogenic",
-        "aiva_opus_rerun": "Pathogenic",
         "aiva_gemini_pro": "Pathogenic",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Uncertain Significance",
@@ -8166,9 +7233,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Benign",
-        "aiva_sonnet_rerun": "Benign",
         "aiva_opus_initial": "Benign",
-        "aiva_opus_rerun": "Benign",
         "aiva_gemini_pro": "Likely Benign",
         "aiva_gemini_flash": "Likely Benign",
         "baseline_bias": "Benign",
@@ -8195,9 +7260,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Likely Pathogenic",
         "baseline_bias": "Likely Pathogenic",
@@ -8224,9 +7287,7 @@
         "aiva_haiku_rerun": "Likely Pathogenic",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Likely Pathogenic",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Likely Pathogenic",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Pathogenic",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Uncertain Significance",
@@ -8251,9 +7312,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Likely Benign",
@@ -8277,9 +7336,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Uncertain Significance",
@@ -8305,9 +7362,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Pathogenic",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Likely Pathogenic",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Pathogenic",
         "aiva_gemini_flash": "Pathogenic",
         "baseline_bias": "Likely Pathogenic",
@@ -8333,9 +7388,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Likely Pathogenic",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Likely Pathogenic",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Pathogenic",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Uncertain Significance",
@@ -8363,9 +7416,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Likely Pathogenic",
@@ -8393,9 +7444,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Likely Pathogenic",
         "baseline_bias": "Likely Pathogenic",
@@ -8422,9 +7471,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Pathogenic",
-        "aiva_sonnet_rerun": "Pathogenic",
         "aiva_opus_initial": "Likely Pathogenic",
-        "aiva_opus_rerun": "Pathogenic",
         "aiva_gemini_pro": "Pathogenic",
         "aiva_gemini_flash": "Pathogenic",
         "baseline_bias": "Likely Pathogenic",
@@ -8448,9 +7495,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Likely Benign",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Likely Benign",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Likely Benign",
         "aiva_gemini_flash": "Likely Benign",
         "baseline_bias": "Likely Benign",
@@ -8476,9 +7521,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Likely Benign",
         "baseline_bias": "Likely Benign",
@@ -8504,9 +7547,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Likely Benign",
         "aiva_gemini_pro": "Likely Benign",
         "aiva_gemini_flash": "Likely Benign",
         "baseline_bias": "Uncertain Significance",
@@ -8532,9 +7573,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Likely Pathogenic",
-        "aiva_sonnet_rerun": "Likely Pathogenic",
         "aiva_opus_initial": "Likely Pathogenic",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Pathogenic",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Uncertain Significance",
@@ -8560,9 +7599,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Likely Benign",
         "aiva_gemini_pro": "Likely Benign",
         "aiva_gemini_flash": "Likely Benign",
         "baseline_bias": "Likely Benign",
@@ -8586,9 +7623,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Uncertain Significance",
@@ -8616,9 +7651,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Likely Pathogenic",
-        "aiva_sonnet_rerun": "Likely Pathogenic",
         "aiva_opus_initial": "Likely Pathogenic",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Likely Pathogenic",
         "aiva_gemini_flash": "Likely Pathogenic",
         "baseline_bias": "Likely Pathogenic",
@@ -8646,9 +7679,7 @@
         "aiva_haiku_rerun": "Likely Pathogenic",
         "aiva_haiku_initial": "Likely Pathogenic",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Likely Pathogenic",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Likely Pathogenic",
         "aiva_gemini_pro": "Pathogenic",
         "aiva_gemini_flash": "Pathogenic",
         "baseline_bias": "Likely Pathogenic",
@@ -8676,9 +7707,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Likely Pathogenic",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Likely Pathogenic",
         "aiva_opus_initial": "Likely Pathogenic",
-        "aiva_opus_rerun": "Likely Pathogenic",
         "aiva_gemini_pro": "Likely Pathogenic",
         "aiva_gemini_flash": "Pathogenic",
         "baseline_bias": "Pathogenic",
@@ -8705,9 +7734,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Likely Pathogenic",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Likely Pathogenic",
         "baseline_bias": "Uncertain Significance",
@@ -8735,9 +7762,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Likely Pathogenic",
         "aiva_gemini_pro": "Likely Pathogenic",
         "aiva_gemini_flash": "Pathogenic",
         "baseline_bias": "Likely Pathogenic",
@@ -8763,9 +7788,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Pathogenic",
         "aiva_gemini_flash": "Pathogenic",
         "baseline_bias": "Likely Pathogenic",
@@ -8790,9 +7813,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Likely Benign",
         "aiva_gemini_flash": "Likely Benign",
         "baseline_bias": "Likely Benign",
@@ -8819,9 +7840,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Likely Pathogenic",
         "baseline_bias": "Likely Pathogenic",
@@ -8847,9 +7866,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Likely Benign",
         "aiva_gemini_pro": "Likely Benign",
         "aiva_gemini_flash": "Likely Benign",
         "baseline_bias": "Benign",
@@ -8877,9 +7894,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Likely Pathogenic",
         "aiva_gemini_flash": "Likely Pathogenic",
         "baseline_bias": "Uncertain Significance",
@@ -8907,9 +7922,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Likely Pathogenic",
         "baseline_bias": "Pathogenic",
@@ -8933,9 +7946,7 @@
         "aiva_haiku_rerun": "Benign",
         "aiva_haiku_initial": "Benign",
         "aiva_sonnet_initial": "Benign",
-        "aiva_sonnet_rerun": "Benign",
         "aiva_opus_initial": "Benign",
-        "aiva_opus_rerun": "Benign",
         "aiva_gemini_pro": "Benign",
         "aiva_gemini_flash": "Benign",
         "baseline_bias": "Benign",
@@ -8963,9 +7974,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Likely Pathogenic",
         "aiva_gemini_pro": "Likely Pathogenic",
         "aiva_gemini_flash": "Likely Pathogenic",
         "baseline_bias": "Pathogenic",
@@ -8992,9 +8001,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Uncertain Significance",
@@ -9020,9 +8027,7 @@
         "aiva_haiku_rerun": "Benign",
         "aiva_haiku_initial": "Benign",
         "aiva_sonnet_initial": "Benign",
-        "aiva_sonnet_rerun": "Benign",
         "aiva_opus_initial": "Benign",
-        "aiva_opus_rerun": "Benign",
         "aiva_gemini_pro": "Likely Benign",
         "aiva_gemini_flash": "Benign",
         "baseline_bias": "Benign",
@@ -9047,9 +8052,7 @@
         "aiva_haiku_rerun": "Benign",
         "aiva_haiku_initial": "Benign",
         "aiva_sonnet_initial": "Benign",
-        "aiva_sonnet_rerun": "Benign",
         "aiva_opus_initial": "Benign",
-        "aiva_opus_rerun": "Benign",
         "aiva_gemini_pro": "Likely Benign",
         "aiva_gemini_flash": "Benign",
         "baseline_bias": "Benign",
@@ -9075,9 +8078,7 @@
         "aiva_haiku_rerun": "Likely Pathogenic",
         "aiva_haiku_initial": "Likely Pathogenic",
         "aiva_sonnet_initial": "Pathogenic",
-        "aiva_sonnet_rerun": "Pathogenic",
         "aiva_opus_initial": "Pathogenic",
-        "aiva_opus_rerun": "Pathogenic",
         "aiva_gemini_pro": "Pathogenic",
         "aiva_gemini_flash": "Pathogenic",
         "baseline_bias": "Likely Pathogenic",
@@ -9105,9 +8106,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Pathogenic",
         "baseline_bias": "Uncertain Significance",
@@ -9135,9 +8134,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Pathogenic",
-        "aiva_opus_rerun": "Pathogenic",
         "aiva_gemini_pro": "Pathogenic",
         "aiva_gemini_flash": "Pathogenic",
         "baseline_bias": "Likely Pathogenic",
@@ -9161,9 +8158,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Likely Benign",
@@ -9191,9 +8186,7 @@
         "aiva_haiku_rerun": "Likely Pathogenic",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Likely Pathogenic",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Pathogenic",
         "baseline_bias": "Uncertain Significance",
@@ -9220,9 +8213,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Likely Pathogenic",
         "baseline_bias": "Pathogenic",
@@ -9250,9 +8241,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Likely Pathogenic",
         "aiva_opus_initial": "Likely Pathogenic",
-        "aiva_opus_rerun": "Likely Pathogenic",
         "aiva_gemini_pro": "Pathogenic",
         "aiva_gemini_flash": "Pathogenic",
         "baseline_bias": "Likely Pathogenic",
@@ -9277,9 +8266,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Uncertain Significance",
@@ -9305,9 +8292,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Likely Pathogenic",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Pathogenic",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Pathogenic",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Uncertain Significance",
@@ -9335,9 +8320,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Pathogenic",
-        "aiva_sonnet_rerun": "Pathogenic",
         "aiva_opus_initial": "Pathogenic",
-        "aiva_opus_rerun": "Pathogenic",
         "aiva_gemini_pro": "Pathogenic",
         "aiva_gemini_flash": "Pathogenic",
         "baseline_bias": "Pathogenic",
@@ -9364,9 +8347,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Likely Pathogenic",
         "baseline_bias": "Uncertain Significance",
@@ -9390,9 +8371,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Likely Benign",
         "aiva_gemini_flash": "Likely Benign",
         "baseline_bias": "Likely Benign",
@@ -9420,9 +8399,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Likely Pathogenic",
         "aiva_gemini_pro": "Pathogenic",
         "aiva_gemini_flash": "Pathogenic",
         "baseline_bias": "Likely Pathogenic",
@@ -9450,9 +8427,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Pathogenic",
         "aiva_opus_initial": "Likely Pathogenic",
-        "aiva_opus_rerun": "Likely Pathogenic",
         "aiva_gemini_pro": "Pathogenic",
         "aiva_gemini_flash": "Pathogenic",
         "baseline_bias": "Pathogenic",
@@ -9476,9 +8451,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Uncertain Significance",
@@ -9505,9 +8478,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Likely Pathogenic",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Likely Pathogenic",
         "aiva_gemini_flash": "Likely Pathogenic",
         "baseline_bias": "Likely Benign",
@@ -9535,9 +8506,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Pathogenic",
         "baseline_bias": "Uncertain Significance",
@@ -9565,9 +8534,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Likely Pathogenic",
         "aiva_gemini_flash": "Likely Pathogenic",
         "baseline_bias": "Likely Pathogenic",
@@ -9595,9 +8562,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Pathogenic",
         "aiva_gemini_flash": "Likely Pathogenic",
         "baseline_bias": "Likely Pathogenic",
@@ -9625,9 +8590,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Likely Pathogenic",
         "aiva_gemini_flash": "Likely Pathogenic",
         "baseline_bias": "Uncertain Significance",
@@ -9653,9 +8616,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Likely Pathogenic",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Pathogenic",
         "aiva_gemini_pro": "Likely Pathogenic",
         "aiva_gemini_flash": "Pathogenic",
         "baseline_bias": "Uncertain Significance",
@@ -9681,9 +8642,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Pathogenic",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Likely Pathogenic",
-        "aiva_opus_rerun": "Pathogenic",
         "aiva_gemini_pro": "Pathogenic",
         "aiva_gemini_flash": "Pathogenic",
         "baseline_bias": "Likely Pathogenic",
@@ -9709,9 +8668,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Likely Benign",
-        "aiva_opus_rerun": "Likely Benign",
         "aiva_gemini_pro": "Likely Benign",
         "aiva_gemini_flash": "Likely Benign",
         "baseline_bias": "Likely Benign",
@@ -9738,9 +8695,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Likely Pathogenic",
         "aiva_gemini_flash": "Likely Pathogenic",
         "baseline_bias": "Uncertain Significance",
@@ -9768,9 +8723,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Likely Pathogenic",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Likely Pathogenic",
         "baseline_bias": "Pathogenic",
@@ -9798,9 +8751,7 @@
         "aiva_haiku_rerun": "Likely Pathogenic",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Likely Pathogenic",
-        "aiva_sonnet_rerun": "Pathogenic",
         "aiva_opus_initial": "Likely Pathogenic",
-        "aiva_opus_rerun": "Pathogenic",
         "aiva_gemini_pro": "Pathogenic",
         "aiva_gemini_flash": "Pathogenic",
         "baseline_bias": "Pathogenic",
@@ -9828,9 +8779,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Likely Pathogenic",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Likely Pathogenic",
         "aiva_gemini_pro": "Pathogenic",
         "aiva_gemini_flash": "Pathogenic",
         "baseline_bias": "Likely Pathogenic",
@@ -9858,9 +8807,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Likely Pathogenic",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Likely Pathogenic",
         "aiva_gemini_pro": "Likely Pathogenic",
         "aiva_gemini_flash": "Likely Pathogenic",
         "baseline_bias": "Likely Pathogenic",
@@ -9887,9 +8834,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Likely Pathogenic",
         "baseline_bias": "Uncertain Significance",
@@ -9915,9 +8860,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Likely Benign",
-        "aiva_opus_rerun": "Likely Benign",
         "aiva_gemini_pro": "Likely Benign",
         "aiva_gemini_flash": "Likely Benign",
         "baseline_bias": "Benign",
@@ -9943,9 +8886,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Likely Pathogenic",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Likely Pathogenic",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Pathogenic",
         "aiva_gemini_flash": "Pathogenic",
         "baseline_bias": "Uncertain Significance",
@@ -9973,9 +8914,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Pathogenic",
         "aiva_opus_initial": "Likely Pathogenic",
-        "aiva_opus_rerun": "Pathogenic",
         "aiva_gemini_pro": "Pathogenic",
         "aiva_gemini_flash": "Pathogenic",
         "baseline_bias": "Uncertain Significance",
@@ -10001,9 +8940,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Pathogenic",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Likely Pathogenic",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Pathogenic",
         "aiva_gemini_flash": "Pathogenic",
         "baseline_bias": "Likely Pathogenic",
@@ -10027,9 +8964,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Likely Benign",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Benign",
@@ -10054,9 +8989,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Uncertain Significance",
@@ -10083,9 +9016,7 @@
         "aiva_haiku_rerun": "Likely Benign",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Likely Benign",
         "aiva_opus_initial": "Benign",
-        "aiva_opus_rerun": "Benign",
         "aiva_gemini_pro": "Benign",
         "aiva_gemini_flash": "Benign",
         "baseline_bias": "Benign",
@@ -10110,9 +9041,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Likely Benign",
         "aiva_gemini_pro": "Likely Benign",
         "aiva_gemini_flash": "Likely Benign",
         "baseline_bias": "Uncertain Significance",
@@ -10134,9 +9063,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Uncertain Significance",
@@ -10160,9 +9087,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Uncertain Significance",
@@ -10190,9 +9115,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Likely Pathogenic",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Pathogenic",
         "aiva_gemini_flash": "Pathogenic",
         "baseline_bias": "Likely Pathogenic",
@@ -10220,9 +9143,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Likely Pathogenic",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Pathogenic",
         "aiva_gemini_flash": "Pathogenic",
         "baseline_bias": "Pathogenic",
@@ -10246,9 +9167,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Likely Benign",
-        "aiva_opus_rerun": "Likely Benign",
         "aiva_gemini_pro": "Benign",
         "aiva_gemini_flash": "Likely Benign",
         "baseline_bias": "Benign",
@@ -10275,9 +9194,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Pathogenic",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Pathogenic",
         "aiva_gemini_flash": "Pathogenic",
         "baseline_bias": "Likely Pathogenic",
@@ -10303,9 +9220,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Likely Benign",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Likely Benign",
         "aiva_gemini_pro": "Benign",
         "aiva_gemini_flash": "Likely Benign",
         "baseline_bias": "Benign",
@@ -10333,9 +9248,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Pathogenic",
         "aiva_gemini_flash": "Likely Pathogenic",
         "baseline_bias": "Likely Pathogenic",
@@ -10361,9 +9274,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Benign",
-        "aiva_opus_rerun": "Benign",
         "aiva_gemini_pro": "Likely Benign",
         "aiva_gemini_flash": "Benign",
         "baseline_bias": "Benign",
@@ -10390,9 +9301,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Likely Pathogenic",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Pathogenic",
         "aiva_gemini_flash": "Pathogenic",
         "baseline_bias": "Pathogenic",
@@ -10416,9 +9325,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Uncertain Significance",
@@ -10440,9 +9347,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Uncertain Significance",
@@ -10470,9 +9375,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Pathogenic",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Pathogenic",
         "aiva_gemini_flash": "Pathogenic",
         "baseline_bias": "Likely Pathogenic",
@@ -10499,9 +9402,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Likely Pathogenic",
@@ -10527,9 +9428,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Uncertain Significance",
@@ -10555,9 +9454,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Uncertain Significance",
@@ -10581,9 +9478,7 @@
         "aiva_haiku_rerun": "Likely Benign",
         "aiva_haiku_initial": "Likely Benign",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Likely Benign",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Likely Benign",
         "aiva_gemini_pro": "Likely Benign",
         "aiva_gemini_flash": "Likely Benign",
         "baseline_bias": "Benign",
@@ -10610,9 +9505,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Likely Pathogenic",
         "baseline_bias": "Likely Pathogenic",
@@ -10639,9 +9532,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Likely Pathogenic",
         "aiva_gemini_pro": "Likely Pathogenic",
         "aiva_gemini_flash": "Likely Pathogenic",
         "baseline_bias": "Pathogenic",
@@ -10665,9 +9556,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Uncertain Significance",
@@ -10692,9 +9581,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Uncertain Significance",
@@ -10719,9 +9606,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Uncertain Significance",
@@ -10746,9 +9631,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Uncertain Significance",
@@ -10773,9 +9656,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Uncertain Significance",
@@ -10799,9 +9680,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Likely Benign",
         "aiva_opus_initial": "Likely Benign",
-        "aiva_opus_rerun": "Likely Benign",
         "aiva_gemini_pro": "Likely Benign",
         "aiva_gemini_flash": "Likely Benign",
         "baseline_bias": "Benign",
@@ -10828,9 +9707,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Likely Pathogenic",
         "baseline_bias": "Uncertain Significance",
@@ -10852,9 +9729,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Likely Benign",
         "aiva_gemini_flash": "Likely Benign",
         "baseline_bias": "Uncertain Significance",
@@ -10879,9 +9754,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Uncertain Significance",
@@ -10909,9 +9782,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Likely Pathogenic",
         "aiva_gemini_pro": "Likely Pathogenic",
         "aiva_gemini_flash": "Likely Pathogenic",
         "baseline_bias": "Pathogenic",
@@ -10937,9 +9808,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Uncertain Significance",
@@ -10965,9 +9834,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Likely Pathogenic",
@@ -10995,9 +9862,7 @@
         "aiva_haiku_rerun": "Likely Pathogenic",
         "aiva_haiku_initial": "Likely Pathogenic",
         "aiva_sonnet_initial": "Likely Pathogenic",
-        "aiva_sonnet_rerun": "Likely Pathogenic",
         "aiva_opus_initial": "Likely Pathogenic",
-        "aiva_opus_rerun": "Likely Pathogenic",
         "aiva_gemini_pro": "Likely Pathogenic",
         "aiva_gemini_flash": "Likely Pathogenic",
         "baseline_bias": "Pathogenic",
@@ -11025,9 +9890,7 @@
         "aiva_haiku_rerun": "Likely Pathogenic",
         "aiva_haiku_initial": "Likely Pathogenic",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Pathogenic",
         "aiva_opus_initial": "Likely Pathogenic",
-        "aiva_opus_rerun": "Pathogenic",
         "aiva_gemini_pro": "Pathogenic",
         "aiva_gemini_flash": "Pathogenic",
         "baseline_bias": "Pathogenic",
@@ -11053,9 +9916,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Likely Pathogenic",
         "aiva_gemini_flash": "Likely Pathogenic",
         "baseline_bias": "Likely Pathogenic",
@@ -11080,9 +9941,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Uncertain Significance",
@@ -11108,9 +9967,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Likely Pathogenic",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Likely Pathogenic",
         "aiva_gemini_flash": "Likely Pathogenic",
         "baseline_bias": "Uncertain Significance",
@@ -11137,9 +9994,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Likely Pathogenic",
         "aiva_opus_initial": "Likely Pathogenic",
-        "aiva_opus_rerun": "Likely Pathogenic",
         "aiva_gemini_pro": "Likely Pathogenic",
         "aiva_gemini_flash": "Likely Pathogenic",
         "baseline_bias": "Pathogenic",
@@ -11163,9 +10018,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Uncertain Significance",
@@ -11191,9 +10044,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Uncertain Significance",
@@ -11218,9 +10069,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Uncertain Significance",
@@ -11244,9 +10093,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Uncertain Significance",
@@ -11272,9 +10119,7 @@
         "aiva_haiku_rerun": "Likely Pathogenic",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Likely Pathogenic",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Likely Pathogenic",
@@ -11296,9 +10141,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Likely Pathogenic",
@@ -11324,9 +10167,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Likely Pathogenic",
         "aiva_gemini_flash": "Likely Pathogenic",
         "baseline_bias": "Pathogenic",
@@ -11350,9 +10191,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Uncertain Significance",
@@ -11374,9 +10213,7 @@
         "aiva_haiku_rerun": "Likely Benign",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Likely Benign",
         "aiva_opus_initial": "Likely Benign",
-        "aiva_opus_rerun": "Likely Benign",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Likely Benign",
         "baseline_bias": "Uncertain Significance",
@@ -11401,9 +10238,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Uncertain Significance",
@@ -11427,9 +10262,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Uncertain Significance",
@@ -11453,9 +10286,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Likely Benign",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Likely Benign",
         "baseline_bias": "Likely Benign",
@@ -11480,9 +10311,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Likely Benign",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Likely Benign",
         "aiva_gemini_pro": "Likely Benign",
         "aiva_gemini_flash": "Likely Benign",
         "baseline_bias": "Benign",
@@ -11509,9 +10338,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Likely Pathogenic",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Likely Pathogenic",
         "aiva_gemini_flash": "Likely Pathogenic",
         "baseline_bias": "Pathogenic",
@@ -11539,9 +10366,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Likely Pathogenic",
         "aiva_sonnet_initial": "Pathogenic",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Pathogenic",
-        "aiva_opus_rerun": "Likely Pathogenic",
         "aiva_gemini_pro": "Pathogenic",
         "aiva_gemini_flash": "Pathogenic",
         "baseline_bias": "Pathogenic",
@@ -11566,9 +10391,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Likely Pathogenic",
@@ -11594,9 +10417,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Likely Pathogenic",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Likely Pathogenic",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Pathogenic",
@@ -11624,9 +10445,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Likely Pathogenic",
         "aiva_sonnet_initial": "Likely Pathogenic",
-        "aiva_sonnet_rerun": "Likely Pathogenic",
         "aiva_opus_initial": "Likely Pathogenic",
-        "aiva_opus_rerun": "Pathogenic",
         "aiva_gemini_pro": "Pathogenic",
         "aiva_gemini_flash": "Pathogenic",
         "baseline_bias": "Pathogenic",
@@ -11653,9 +10472,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Uncertain Significance",
@@ -11682,9 +10499,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Likely Benign",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Likely Benign",
@@ -11712,9 +10527,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Likely Pathogenic",
         "aiva_gemini_flash": "Likely Pathogenic",
         "baseline_bias": "Pathogenic",
@@ -11739,9 +10552,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Uncertain Significance",
@@ -11765,9 +10576,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Uncertain Significance",
@@ -11795,9 +10604,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Likely Pathogenic",
         "aiva_gemini_pro": "Pathogenic",
         "aiva_gemini_flash": "Likely Pathogenic",
         "baseline_bias": "Pathogenic",
@@ -11822,9 +10629,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Likely Pathogenic",
@@ -11846,9 +10651,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Uncertain Significance",
@@ -11873,9 +10676,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Uncertain Significance",
@@ -11900,9 +10701,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Uncertain Significance",
@@ -11927,9 +10726,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Likely Pathogenic",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Pathogenic",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Likely Pathogenic",
@@ -11954,9 +10751,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Uncertain Significance",
@@ -11981,9 +10776,7 @@
         "aiva_haiku_rerun": "Likely Benign",
         "aiva_haiku_initial": "Likely Benign",
         "aiva_sonnet_initial": "Likely Benign",
-        "aiva_sonnet_rerun": "Likely Benign",
         "aiva_opus_initial": "Likely Benign",
-        "aiva_opus_rerun": "Likely Benign",
         "aiva_gemini_pro": "Benign",
         "aiva_gemini_flash": "Likely Benign",
         "baseline_bias": "Benign",
@@ -12009,9 +10802,7 @@
         "aiva_haiku_rerun": "Likely Benign",
         "aiva_haiku_initial": "Benign",
         "aiva_sonnet_initial": "Benign",
-        "aiva_sonnet_rerun": "Benign",
         "aiva_opus_initial": "Benign",
-        "aiva_opus_rerun": "Benign",
         "aiva_gemini_pro": "Benign",
         "aiva_gemini_flash": "Benign",
         "baseline_bias": "Benign",
@@ -12038,9 +10829,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Likely Pathogenic",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Uncertain Significance",
@@ -12066,9 +10855,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Uncertain Significance",
@@ -12094,9 +10881,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Pathogenic",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Uncertain Significance",
@@ -12123,9 +10908,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Likely Pathogenic",
         "baseline_bias": "Pathogenic",
@@ -12151,9 +10934,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Likely Pathogenic",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Uncertain Significance",
@@ -12180,9 +10961,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Pathogenic",
         "aiva_gemini_flash": "Likely Pathogenic",
         "baseline_bias": "Pathogenic",
@@ -12209,9 +10988,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Likely Pathogenic",
-        "aiva_sonnet_rerun": "Likely Pathogenic",
         "aiva_opus_initial": "Likely Pathogenic",
-        "aiva_opus_rerun": "Likely Pathogenic",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Likely Pathogenic",
         "baseline_bias": "Pathogenic",
@@ -12239,9 +11016,7 @@
         "aiva_haiku_rerun": "Likely Pathogenic",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Likely Pathogenic",
-        "aiva_sonnet_rerun": "Likely Pathogenic",
         "aiva_opus_initial": "Pathogenic",
-        "aiva_opus_rerun": "Pathogenic",
         "aiva_gemini_pro": "Pathogenic",
         "aiva_gemini_flash": "Pathogenic",
         "baseline_bias": "Pathogenic",
@@ -12268,9 +11043,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Likely Pathogenic",
         "aiva_sonnet_initial": "Likely Pathogenic",
-        "aiva_sonnet_rerun": "Likely Pathogenic",
         "aiva_opus_initial": "Likely Pathogenic",
-        "aiva_opus_rerun": "Likely Pathogenic",
         "aiva_gemini_pro": "Likely Pathogenic",
         "aiva_gemini_flash": "Likely Pathogenic",
         "baseline_bias": "Pathogenic",
@@ -12297,9 +11070,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Likely Pathogenic",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Likely Pathogenic",
         "aiva_opus_initial": "Likely Pathogenic",
-        "aiva_opus_rerun": "Likely Pathogenic",
         "aiva_gemini_pro": "Likely Pathogenic",
         "aiva_gemini_flash": "Likely Pathogenic",
         "baseline_bias": "Pathogenic",
@@ -12325,9 +11096,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Likely Pathogenic",
@@ -12352,9 +11121,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Uncertain Significance",
@@ -12379,9 +11146,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Uncertain Significance",
@@ -12408,9 +11173,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Likely Pathogenic",
         "aiva_opus_initial": "Likely Pathogenic",
-        "aiva_opus_rerun": "Likely Pathogenic",
         "aiva_gemini_pro": "Pathogenic",
         "aiva_gemini_flash": "Pathogenic",
         "baseline_bias": "Pathogenic",
@@ -12436,9 +11199,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Likely Pathogenic",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Likely Pathogenic",
@@ -12465,9 +11226,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Likely Pathogenic",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Likely Pathogenic",
         "aiva_gemini_flash": "Likely Pathogenic",
         "baseline_bias": "Likely Pathogenic",
@@ -12493,9 +11252,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Uncertain Significance",
@@ -12520,9 +11277,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Uncertain Significance",
@@ -12548,9 +11303,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Likely Pathogenic",
         "baseline_bias": "Uncertain Significance",
@@ -12575,9 +11328,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Pathogenic",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Uncertain Significance",
@@ -12605,9 +11356,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Likely Pathogenic",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Likely Pathogenic",
-        "aiva_opus_rerun": "Likely Pathogenic",
         "aiva_gemini_pro": "Pathogenic",
         "aiva_gemini_flash": "Pathogenic",
         "baseline_bias": "Pathogenic",
@@ -12632,9 +11381,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Uncertain Significance",
@@ -12660,9 +11407,7 @@
         "aiva_haiku_rerun": "Uncertain Significance",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Uncertain Significance",
-        "aiva_opus_rerun": "Uncertain Significance",
         "aiva_gemini_pro": "Uncertain Significance",
         "aiva_gemini_flash": "Uncertain Significance",
         "baseline_bias": "Uncertain Significance",
@@ -12689,9 +11434,7 @@
         "aiva_haiku_rerun": "Likely Benign",
         "aiva_haiku_initial": "Uncertain Significance",
         "aiva_sonnet_initial": "Uncertain Significance",
-        "aiva_sonnet_rerun": "Uncertain Significance",
         "aiva_opus_initial": "Likely Pathogenic",
-        "aiva_opus_rerun": "Likely Pathogenic",
         "aiva_gemini_pro": "Pathogenic",
         "aiva_gemini_flash": "Pathogenic",
         "baseline_bias": "Uncertain Significance",
@@ -12704,19 +11447,19 @@
       "pid": 23712,
       "status": "Running",
       "log_path": "/Users/arunbodd/Documents/Work/AIVA_Benchmarking/AIVA-var-bench/run_overnight_sonnet_20261027_214936.log",
-      "progress_count": 439,
+      "progress_count": 552,
       "target_total": 5760,
-      "progress_pct": 7.6,
-      "latest_log_snippet": "Progress: 439/5760 (7.6%)"
+      "progress_pct": 9.6,
+      "latest_log_snippet": "Progress: 552/5760 (9.6%)"
     },
     "Opus 5.5 Re-Run": {
       "pid": 24209,
       "status": "Running",
       "log_path": "/Users/arunbodd/Documents/Work/AIVA_Benchmarking/AIVA-var-bench/run_overnight_opus_20261027_221137.log",
-      "progress_count": 290,
+      "progress_count": 426,
       "target_total": 8387,
-      "progress_pct": 3.5,
-      "latest_log_snippet": "Progress: 290/8387 (3.5%)"
+      "progress_pct": 5.1,
+      "latest_log_snippet": "Progress: 426/8387 (5.1%)"
     }
   }
 };
@@ -12734,8 +11477,6 @@
     // Initialize on load
     document.addEventListener("DOMContentLoaded", () => {
       initDashboard();
-      // Start polling live jobs every 5 seconds
-      setInterval(pollLiveJobs, 5000);
     });
 
     function initDashboard() {
@@ -12748,7 +11489,6 @@
       renderCriteria();
       renderConcordance();
       renderVariants();
-      renderLiveJobs();
     }
 
     function switchTab(tabId) {
@@ -12766,7 +11506,6 @@
       if (tabId === 'safety') renderSafety();
       if (tabId === 'criteria') renderCriteria();
       if (tabId === 'concordance') renderConcordance();
-      if (tabId === 'jobs') renderLiveJobs();
     }
 
     // 1. LEADERBOARD
@@ -13192,58 +11931,6 @@
         v.category.toLowerCase().includes(q)
       );
       renderVariants(filtered.slice(0, 50));
-    }
-
-    // 9. LIVE JOBS
-    function renderLiveJobs() {
-      const container = document.getElementById("liveJobsContainer");
-      const jobs = appData.live_jobs || {};
-
-      container.innerHTML = Object.entries(jobs).map(([name, j]) => `
-        <div class="glass-card rounded-xl border border-dark-border p-5 space-y-4">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center space-x-2">
-              <span class="w-2.5 h-2.5 rounded-full ${j.status === 'Running' ? 'bg-emerald-400 animate-pulse' : 'bg-slate-500'}"></span>
-              <h4 class="font-bold text-sm text-white">${name}</h4>
-            </div>
-            <span class="text-xs px-2 py-0.5 rounded font-mono font-bold ${j.status === 'Running' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-slate-800 text-slate-400'}">${j.status} (PID ${j.pid || '—'})</span>
-          </div>
-
-          <div>
-            <div class="flex justify-between text-xs mb-1">
-              <span class="text-slate-400">Classified: <strong class="text-white">${j.progress_count.toLocaleString()}</strong> / ${j.target_total.toLocaleString()}</span>
-              <span class="font-bold text-amber-400">${j.progress_pct}%</span>
-            </div>
-            <div class="w-full bg-dark-bg rounded-full h-2.5 overflow-hidden border border-dark-border">
-              <div class="bg-gradient-to-r from-amber-500 to-amber-400 h-2.5 rounded-full transition-all duration-500" style="width: ${j.progress_pct}%"></div>
-            </div>
-          </div>
-
-          <div class="text-[11px] text-slate-400 space-y-1">
-            <div class="truncate"><span class="text-slate-500">Log:</span> <span class="mono">${j.log_path || 'None'}</span></div>
-            <div class="truncate"><span class="text-slate-500">Latest:</span> <span class="mono text-slate-300">${j.latest_log_snippet || 'Running in background...'}</span></div>
-          </div>
-        </div>
-      `).join("");
-    }
-
-    async function pollLiveJobs() {
-      try {
-        const res = await fetch("/api/live");
-        if (res.ok) {
-          const liveData = await res.json();
-          appData.live_jobs = liveData;
-          if (currentTab === 'jobs') renderLiveJobs();
-
-          // Update header
-          const s = liveData['Sonnet 5.5 Re-Run']?.progress_pct ?? 7;
-          const o = liveData['Opus 5.5 Re-Run']?.progress_pct ?? 3;
-          const el = document.getElementById("headerLiveText");
-          if (el) el.innerText = `Sonnet: ${s}% | Opus: ${o}%`;
-        }
-      } catch (e) {
-        // Standalone file mode, ignore network error
-      }
     }
 
     async function refreshDashboardData() {
