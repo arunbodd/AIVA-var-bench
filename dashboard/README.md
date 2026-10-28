@@ -1,10 +1,10 @@
 # AIVA Bench dashboard
 
 `index.html` is a self-contained page: open it directly, serve it with
+GitHub Pages, or run the local server for editing.
 
 Two sections: **Variant Classification** (everything below) and **Variant
 Ranking** (`#ranking`, an empty state until ranking results are added).
-GitHub Pages, or run the local server for editing.
 
 ## Adding a model
 
