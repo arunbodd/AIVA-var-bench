@@ -37,6 +37,24 @@ from scripts.metrics import (
 from scripts.generate_results import VCEP_TO_CATEGORY, CATEGORY_ORDER
 
 
+# One fixed colour per model, used by every dashboard figure. Re-runs share
+# a hue with their initial run (initial = a lighter or darker step).
+MODEL_COLORS = {
+    "aiva_opus_rerun": "#eb6834",
+    "aiva_opus_initial": "#a8461c",
+    "aiva_sonnet_rerun": "#6250d6",
+    "aiva_sonnet_initial": "#a097ee",
+    "aiva_haiku_rerun": "#1baf7a",
+    "aiva_haiku_initial": "#0f7a55",
+    "claude_code_haiku": "#eda100",
+    "aiva_gemini_pro": "#184f95",
+    "aiva_gemini_flash": "#d55181",
+    "baseline_bias": "#7a7873",
+    "baseline_intervar": "#b9b7b0",
+}
+FALLBACK_COLORS = ["#008300", "#e34948", "#0d366b", "#8c5a2b"]
+
+
 def get_vcep_category(panel: str) -> str:
     if not panel:
         return "Other"
@@ -140,15 +158,10 @@ def discover_model_files(repo_root: Path) -> dict[str, dict]:
             "description": "AIVA clinical reasoning engine powered by Claude Sonnet 5.5 (initial run).",
         }
 
-    # 5. AIVA Claude Sonnet Re-Run (Discovered once completed >= 8387 variants)
+    # 5. AIVA Claude Sonnet Re-Run (partial runs are included; coverage is reported)
     sonnet_rr = repo_root / "Results_Claude_Sonnet_5_5_Analysis_rerun" / "sonnet_full.jsonl"
     if sonnet_rr.exists():
-        try:
-            with open(sonnet_rr, "rb") as f:
-                cnt = sum(1 for _ in f)
-        except Exception:
-            cnt = 0
-        if cnt >= 8387:
+        if True:
             discovered["aiva_sonnet_rerun"] = {
                 "name": "Claude Sonnet 5.5 (AIVA Re-Run)",
                 "short_name": "AIVA Sonnet Rerun",
@@ -158,7 +171,7 @@ def discover_model_files(repo_root: Path) -> dict[str, dict]:
                 "path": str(sonnet_rr),
                 "format": "jsonl",
                 "color": "#9333EA",
-                "description": "Completed full re-run of Claude Sonnet 5.5 with revised ACMG criteria engine.",
+                "description": "Re-run of Claude Sonnet 5.5 with the revised ACMG criteria engine.",
             }
 
     # 6. AIVA Claude Opus Initial
@@ -176,15 +189,10 @@ def discover_model_files(repo_root: Path) -> dict[str, dict]:
             "description": "AIVA clinical reasoning engine powered by Claude Opus 5.5 (initial run).",
         }
 
-    # 7. AIVA Claude Opus Re-Run (Discovered once completed >= 8387 variants)
+    # 7. AIVA Claude Opus Re-Run (partial runs are included; coverage is reported)
     opus_rr = repo_root / "Results_Claude_Opus_5_5_Analysis_rerun" / "opus_full.jsonl"
     if opus_rr.exists():
-        try:
-            with open(opus_rr, "rb") as f:
-                cnt = sum(1 for _ in f)
-        except Exception:
-            cnt = 0
-        if cnt >= 8387:
+        if True:
             discovered["aiva_opus_rerun"] = {
                 "name": "Claude Opus 5.5 (AIVA Re-Run)",
                 "short_name": "AIVA Opus Rerun",
@@ -194,7 +202,7 @@ def discover_model_files(repo_root: Path) -> dict[str, dict]:
                 "path": str(opus_rr),
                 "format": "jsonl",
                 "color": "#C2410C",
-                "description": "Completed full re-run of Claude Opus 5.5 on full cohort.",
+                "description": "Re-run of Claude Opus 5.5; may cover part of the cohort while in progress.",
             }
 
     # 8. AIVA Gemini 3 Pro
@@ -275,6 +283,14 @@ def discover_model_files(repo_root: Path) -> dict[str, dict]:
         "color": "#94A3B8",
         "description": "Clinical bioinformatics standard rule-based variant classifier (InterVar).",
     }
+
+    extra = 0
+    for key, info in discovered.items():
+        if key in MODEL_COLORS:
+            info["color"] = MODEL_COLORS[key]
+        else:
+            info["color"] = FALLBACK_COLORS[extra % len(FALLBACK_COLORS)]
+            extra += 1
 
     return discovered
 
@@ -531,8 +547,16 @@ def build_dashboard_dataset():
             c_dir = sum(1 for g, p in zip(c_gt3, c_pred3) if g == p)
             c_m = calculate_class_metrics(c_gt, c_pred, CLASSIFICATION_LABELS)
 
+            c_cm = [[0] * 5 for _ in range(5)]
+            for g, p in zip(c_gt, c_pred):
+                if g in CLASSIFICATION_LABELS and p in CLASSIFICATION_LABELS:
+                    c_cm[CLASSIFICATION_LABELS.index(g)][CLASSIFICATION_LABELS.index(p)] += 1
+
             cat_metrics[cat] = {
                 "count": len(c_vids),
+                "exact_correct": c_exact,
+                "directional_correct": c_dir,
+                "matrix_5": c_cm,
                 "exact_accuracy": round(c_exact / len(c_vids) * 100, 2),
                 "directional_accuracy": round(c_dir / len(c_vids) * 100, 2),
                 "macro_f1": round(calculate_macro_f1(c_m) * 100, 2),
@@ -704,6 +728,8 @@ def build_dashboard_dataset():
         "live_jobs": live_jobs,
     }
 
+    carry_over_archived_models(payload)
+
     out_file = REPO_ROOT / "dashboard" / "data" / "benchmark_data.json"
     out_file.parent.mkdir(parents=True, exist_ok=True)
     with open(out_file, "w", encoding="utf-8") as f:
@@ -713,6 +739,64 @@ def build_dashboard_dataset():
     print(f"Data file size: {out_file.stat().st_size / 1024:.1f} KB")
 
     return payload
+
+
+def load_previous_dataset() -> dict:
+    """Dataset embedded in the current dashboard/index.html, if any."""
+    html_path = REPO_ROOT / "dashboard" / "index.html"
+    if not html_path.exists():
+        return {}
+    html = html_path.read_text(encoding="utf-8")
+    marker = "window.BENCHMARK_DATA = "
+    start = html.find(marker)
+    if start == -1:
+        return {}
+    try:
+        data, _ = json.JSONDecoder().raw_decode(html, start + len(marker))
+    except json.JSONDecodeError:
+        return {}
+    return data
+
+
+def carry_over_archived_models(payload: dict) -> None:
+    """
+    Keep models whose raw result files are not in this checkout (for example
+    runs excluded by .gitignore) by copying their computed results from the
+    previous build. They are flagged "archived" and lack variant-level
+    comparisons against models that were added later.
+    """
+    previous = load_previous_dataset()
+    current = {m["key"] for m in payload["models"]}
+    archived = [m for m in previous.get("models", [])
+                if m["key"] not in current and not m.get("imported")
+                and m["key"] in previous.get("confusion_matrices", {})]
+    if not archived:
+        return
+
+    for m in archived:
+        k = m["key"]
+        m = dict(m, archived=True, color=MODEL_COLORS.get(k, m.get("color", FALLBACK_COLORS[0])))
+        payload["models"].append(m)
+        payload["confusion_matrices"][k] = previous["confusion_matrices"][k]
+        for section in ("categories_data", "criteria_data", "safety_data"):
+            if k in previous.get(section, {}):
+                payload[section][k] = previous[section][k]
+        cats = payload["categories_data"].get(k, {})
+        for r in cats.values():
+            r.setdefault("exact_correct", round(r["exact_accuracy"] * r["count"] / 100))
+            r.setdefault("directional_correct", round(r["directional_accuracy"] * r["count"] / 100))
+
+        old_conc = previous.get("concordance", {}).get(k, {})
+        payload["concordance"][k] = {o: v for o, v in old_conc.items() if o in payload["concordance"] or o == k}
+        for o, v in old_conc.items():
+            if o in payload["concordance"] and o != k:
+                payload["concordance"][o][k] = v
+
+        old_preds = {v["id"]: v["predictions"].get(k) for v in previous.get("explorer_variants", [])}
+        for v in payload["explorer_variants"]:
+            if old_preds.get(v["id"]):
+                v["predictions"][k] = old_preds[v["id"]]
+        print(f"  Carried over {m['name']} from the previous build (raw results not found).")
 
 
 if __name__ == "__main__":

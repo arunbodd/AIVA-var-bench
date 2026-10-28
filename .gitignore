@@ -20,9 +20,11 @@ venv/
 
 # ─── Generated results ───
 results/
-Results_Claude_Opus_5_5_Analysis_rerun/
 !Results_Claude_Sonnet_5_5_Analysis_rerun/sonnet_full.jsonl
 !Results_Claude_Sonnet_5_5_Analysis_rerun/sonnet_metrics.json
+!Results_Claude_Opus_5_5_Analysis_rerun/opus_full.jsonl
+!Results_Claude_Sonnet_5_5_Analysis/sonnet_full.jsonl
+!Results_Claude_Opus_5_5_Analysis/opus_full.jsonl
 
 # ─── Large database archives & tables ───
 *.tar

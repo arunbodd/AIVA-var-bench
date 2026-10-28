@@ -272,6 +272,80 @@ dialog::backdrop { background: rgba(0, 0, 0, 0.45); }
 .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--text); color: var(--surface); padding: 9px 14px; border-radius: 8px; font-size: 13px; z-index: 110; max-width: calc(100vw - 32px); }
 
 footer { color: var(--muted); font-size: 12px; padding-top: 24px; }
+.card-head > [data-legend] { order: 10; flex-basis: 100%; }
+.card-head > .fig-export { margin-left: auto; }
+.card-head > .controls + .fig-export, .card-head > .seg + .fig-export, .card-head > .field + .fig-export { margin-left: 0; }
+@media (max-width: 767px) { .tab-bar { position: static; } }
+
+/* Model selection bar */
+.selbar { border-top: 1px solid var(--border); }
+.selbar .wrap { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding-top: 8px; padding-bottom: 8px; }
+.sel-focus { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; }
+.sel-focus select { font-weight: 500; max-width: 280px; }
+.sel-comps { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-width: 0; }
+.sel-lbl { font-size: 13px; color: var(--text-2); }
+.chips { display: flex; flex-wrap: wrap; gap: 4px; }
+.mchip { appearance: none; border: 1px solid var(--border); background: none; border-radius: 999px; padding: 2px 10px 2px 8px; font-size: 12px; color: var(--muted); cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; }
+.mchip .swatch { opacity: 0.35; }
+.mchip:hover { color: var(--text); border-color: var(--border-strong); }
+.mchip[aria-pressed="true"] { color: var(--text); border-color: var(--border-strong); background: var(--surface-2); font-weight: 500; }
+.mchip[aria-pressed="true"] .swatch { opacity: 1; }
+
+/* Tiles: focus vs comparators */
+.tile-cmps { margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--grid); display: grid; gap: 3px; }
+.tile-cmp { display: grid; grid-template-columns: auto minmax(0, 1fr) auto 64px; align-items: center; font-size: 12px; color: var(--text-2); font-variant-numeric: tabular-nums; }
+.tile-cmp .tc-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tile-cmp .tc-val { padding-left: 8px; }
+.tile-cmp .tc-d { text-align: right; font-weight: 600; }
+.tile-sub .swatch { margin-right: 4px; }
+
+/* Grouped horizontal bars */
+.gb { display: grid; }
+.gb-row { display: grid; grid-template-columns: minmax(110px, 190px) minmax(0, 1fr); gap: 4px 14px; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--grid); }
+.gb-row:last-child { border-bottom: 0; }
+.gb-lbl { display: flex; flex-direction: column; min-width: 0; }
+.gb-name { font-size: 13px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gb-sub { font-size: 11px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gb-bars { display: grid; gap: 3px; margin-right: 60px; }
+.gb-wide .gb-bars { margin-right: 132px; }
+.gb-plot { position: relative; height: 14px; }
+.gb-plot .gl { position: absolute; top: -4px; bottom: -4px; width: 1px; background: var(--grid); }
+.gb-plot .gl.base { background: var(--axis); }
+.gb-fill { position: absolute; left: 0; top: 2px; height: 10px; border-radius: 0 3px 3px 0; }
+.gb-val { position: absolute; top: -1px; padding-left: 6px; font-size: 11px; line-height: 16px; color: var(--text-2); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.gb-axis { border-bottom: 0; padding-top: 2px; }
+.gb-axis .gb-plot { height: 14px; }
+.gb-axis .tick { position: absolute; transform: translateX(-50%); font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.gb-axis .tick.first { transform: none; }
+.gb-axis .tick.last { transform: translateX(-100%); }
+
+/* Sankey */
+.flow-grid { display: grid; gap: 24px; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 1024px) { .flow-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.flow-svg { width: 100%; }
+.sankey { display: block; overflow: visible; }
+.sk-link { fill-opacity: 0.26; transition: fill-opacity 0.12s; }
+.sk-link.diag { fill-opacity: 0.78; }
+.sankey.hl .sk-link { fill-opacity: 0.07; }
+.sankey.hl .sk-link.on { fill-opacity: 0.9; }
+.sk-node { fill: var(--text-2); }
+.sk-lbl { fill: var(--text); font-size: 12px; font-weight: 600; }
+.sk-cnt { fill: var(--text-2); font-size: 11px; }
+.sk-head { fill: var(--muted); font-size: 11px; }
+.cm-n { font-weight: 400; color: var(--text-2); font-size: 12px; }
+
+/* Confusion grid and tables */
+.cm-grid { display: grid; gap: 24px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); }
+#prTable td.grp { font-weight: 600; vertical-align: top; }
+#prTable tr.grp-end td { border-bottom: 1px solid var(--axis); }
+#prTable tr:not(.grp-end) td { border-bottom: 0; }
+#safetyTable tr.sel td { font-weight: 600; }
+tr.row-link.focus td { background: var(--surface-2); }
+tr.row-link.focus td:first-child { box-shadow: inset 3px 0 0 var(--mc); }
+.pill-strong { color: var(--text); border-color: var(--text-2); }
+.model-name .swatch, .lbl .swatch, .rowh .swatch, .cm-title .swatch { margin-right: 6px; }
+th.selcol { color: var(--text); }
+
 /* Figure export */
 .fig-export { position: relative; }
 .fig-export summary { list-style: none; }
@@ -309,13 +383,20 @@ footer code { font-size: 12px; }
   <div class="wrap">
     <nav class="tabs" role="tablist" aria-label="Dashboard sections">
       <button class="tab" role="tab" data-tab="overview">Overview</button>
-      <button class="tab" role="tab" data-tab="compare">Compare</button>
       <button class="tab" role="tab" data-tab="categories">Disease categories</button>
+      <button class="tab" role="tab" data-tab="flows">Classification flows</button>
+      <button class="tab" role="tab" data-tab="confusion">Confusion matrices</button>
       <button class="tab" role="tab" data-tab="safety">Cross-direction errors</button>
       <button class="tab" role="tab" data-tab="criteria">ACMG criteria</button>
       <button class="tab" role="tab" data-tab="agreement">Agreement</button>
       <button class="tab" role="tab" data-tab="variants">Variants</button>
     </nav>
+  </div>
+  <div class="selbar">
+    <div class="wrap">
+      <label class="sel-focus"><span>Model</span><select id="focusSel" aria-label="Model"></select></label>
+      <div class="sel-comps"><span class="sel-lbl">compared with</span><div class="chips" id="compChips" role="group" aria-label="Comparison models"></div></div>
+    </div>
   </div>
 </div>
 
@@ -324,80 +405,101 @@ footer code { font-size: 12px; }
   <!-- OVERVIEW -->
   <section class="view" id="view-overview" role="tabpanel">
     <div class="tiles" id="tiles"></div>
-
-    <div class="card">
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-head">
+          <div><h3>Headline metrics</h3><p>All values are percentages of evaluated variants.</p></div>
+          <div class="legend" data-legend></div>
+        </div>
+        <div id="ovMetrics"></div>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <div><h3>F1 by ACMG class</h3><p>5-class F1 for each classification tier.</p></div>
+          <div class="legend" data-legend></div>
+        </div>
+        <div id="ovClass"></div>
+      </div>
+    </div>
+    <div class="card" data-static>
       <div class="card-head">
         <div>
           <h3>Leaderboard</h3>
-          <p>Each classifier scored against ClinGen expert-panel classifications.<span class="ui-hint"> Select a column to sort; select a model to compare it.</span></p>
+          <p>Every classifier scored against ClinGen expert-panel classifications.<span class="ui-hint"> Select a column to sort; select a row to make it the focus model.</span></p>
         </div>
         <div class="seg" id="familySeg" role="group" aria-label="Filter by family"></div>
       </div>
-      <div class="table-wrap">
-        <table id="leaderboard"></table>
-      </div>
+      <div class="table-wrap"><table id="leaderboard"></table></div>
       <p class="note" id="lbNote"></p>
-    </div>
-
-    <div class="grid-2">
-      <div class="card">
-        <div class="card-head">
-          <div>
-            <h3>Exact vs directional accuracy</h3>
-            <p>The gap is the share of calls that land on the right side (P/LP, VUS, B/LB) but in the wrong tier.</p>
-          </div>
-          <div class="legend">
-            <span><span class="swatch" style="background:var(--s1)"></span>Exact, 5-class</span>
-            <span><span class="swatch" style="background:var(--s2)"></span>Directional, 3-class</span>
-          </div>
-        </div>
-        <div id="accDots"></div>
-      </div>
-      <div class="card">
-        <div class="card-head">
-          <div>
-            <h3>F1 by ACMG class</h3>
-            <p>5-class F1 per classification tier. Darker is higher.</p>
-          </div>
-        </div>
-        <div class="table-wrap"><table class="heat" id="perClassHeat"></table></div>
-      </div>
     </div>
   </section>
 
-  <!-- COMPARE -->
-  <section class="view" id="view-compare" role="tabpanel" hidden>
+  <!-- CATEGORIES -->
+  <section class="view" id="view-categories" role="tabpanel" hidden>
     <div class="view-head">
-      <h2>Compare two classifiers</h2>
-      <p>Differences are percentage points, A minus B.</p>
-    </div>
-    <div class="card">
-      <div class="controls">
-        <label class="field"><span><span class="swatch" style="background:var(--s1)"></span>Model A</span><select id="cmpA"></select></label>
-        <button class="btn" id="swapBtn" type="button" style="align-self:flex-end">Swap</button>
-        <label class="field"><span><span class="swatch" style="background:var(--s2)"></span>Model B</span><select id="cmpB"></select></label>
-      </div>
-    </div>
-    <div class="tiles" id="cmpTiles"></div>
-    <div class="grid-2">
-      <div class="card">
-        <div class="card-head">
-          <div><h3>F1 by ACMG class</h3><p>5-class F1 for each tier.</p></div>
-          <div class="legend" id="cmpLegend"></div>
-        </div>
-        <div id="cmpBars"></div>
-      </div>
-      <div class="card">
-        <div class="card-head"><div><h3>Precision and recall</h3><p>Per class, 5-class labels.</p></div></div>
-        <div class="table-wrap"><table id="cmpTable"></table></div>
-      </div>
+      <h2>Performance by disease category</h2>
+      <p>Variants are grouped by the ClinGen expert panel (VCEP) that curated them, largest category first.</p>
     </div>
     <div class="card">
       <div class="card-head">
         <div>
-          <h3>Confusion matrices</h3>
-          <p>Rows are the expert classification, columns the model's call. Shading is the share of the row. Outlined cells are cross-direction errors.</p>
+          <h3>Correct calls by category</h3>
+          <p>Solid bar: exact 5-class match. Light bar: correct direction, 3-class (P/LP, VUS, B/LB). Bar length is the share of the category's variants. Labels read exact · directional / variants in category.</p>
         </div>
+        <div class="legend" data-legend></div>
+      </div>
+      <div id="catCorrect"></div>
+    </div>
+    <div class="card">
+      <div class="card-head">
+        <div><h3 id="catMetricTitle"></h3><p id="catMetricSub"></p></div>
+        <div class="controls">
+          <label class="field">Metric
+            <select id="catMetric">
+              <option value="macro_f1">Macro F1, 5-class</option>
+              <option value="exact_accuracy">Exact accuracy, 5-class</option>
+              <option value="directional_accuracy">Directional accuracy, 3-class</option>
+              <option value="plp_f1">Mean F1, P and LP</option>
+              <option value="vus_f1">F1, VUS</option>
+              <option value="blb_f1">Mean F1, LB and B</option>
+            </select>
+          </label>
+        </div>
+        <div class="legend" data-legend></div>
+      </div>
+      <div id="catMetricBars"></div>
+    </div>
+  </section>
+
+  <!-- FLOWS -->
+  <section class="view" id="view-flows" role="tabpanel" hidden>
+    <div class="view-head">
+      <h2>Classification flows</h2>
+      <p>Where each expert classification (left) ends up in the model's call (right). Band width is the number of variants; darker bands are exact matches. Hover a band or a class to trace it.</p>
+    </div>
+    <div class="card">
+      <div class="card-head">
+        <div><h3 id="flowTitle"></h3><p id="flowSub"></p></div>
+        <div class="controls">
+          <div class="seg" id="flowScaleSeg" role="group" aria-label="Class granularity">
+            <button data-v="5" type="button">5-class</button><button data-v="3" type="button">3-class</button>
+          </div>
+          <select id="flowCat" aria-label="Disease category"></select>
+        </div>
+      </div>
+      <div class="flow-grid" id="flows"></div>
+    </div>
+  </section>
+
+  <!-- CONFUSION -->
+  <section class="view" id="view-confusion" role="tabpanel" hidden>
+    <div class="view-head">
+      <h2>Confusion matrices</h2>
+      <p>Rows are the expert classification, columns the model's call. Shading, in each model's colour, is the share of the row. Outlined cells are cross-direction errors.</p>
+    </div>
+    <div class="card">
+      <div class="card-head">
+        <div><h3>Confusion matrices</h3><p id="cmSub"></p></div>
         <div class="controls">
           <div class="seg" id="cmScaleSeg" role="group" aria-label="Class granularity">
             <button data-v="5" type="button">5-class</button><button data-v="3" type="button">3-class</button>
@@ -407,34 +509,14 @@ footer code { font-size: 12px; }
           </div>
         </div>
       </div>
-      <div class="grid-2" id="cmPair"></div>
-    </div>
-  </section>
-
-  <!-- CATEGORIES -->
-  <section class="view" id="view-categories" role="tabpanel" hidden>
-    <div class="view-head">
-      <h2>Performance by disease category</h2>
-      <p>Variants are grouped by the ClinGen expert panel (VCEP) that curated them. Select a model column to sort categories by it.</p>
+      <div class="cm-grid" id="cmGrid"></div>
     </div>
     <div class="card">
       <div class="card-head">
-        <div><h3 id="catTitle"></h3><p id="catSub"></p></div>
-        <div class="controls">
-          <label class="field">Metric
-            <select id="catMetric">
-              <option value="macro_f1">Macro F1</option>
-              <option value="exact_accuracy">Exact accuracy</option>
-              <option value="directional_accuracy">Directional accuracy</option>
-              <option value="plp_f1">F1, P/LP</option>
-              <option value="vus_f1">F1, VUS</option>
-              <option value="blb_f1">F1, B/LB</option>
-            </select>
-          </label>
-          <div class="scale"><span>0</span><span class="ramp"></span><span>100</span></div>
-        </div>
+        <div><h3>Precision and recall by class</h3><p>5-class labels. Support is the number of expert-classified variants in the class.</p></div>
+        <div class="legend" data-legend></div>
       </div>
-      <div class="table-wrap"><table class="heat" id="catHeat"></table></div>
+      <div class="table-wrap"><table id="prTable"></table></div>
     </div>
   </section>
 
@@ -447,16 +529,16 @@ footer code { font-size: 12px; }
     <div class="grid-2">
       <div class="card">
         <div class="card-head">
-          <div><h3>Errors by direction</h3><p>Variant counts, ordered from fewest total errors.</p></div>
+          <div><h3>Errors by direction</h3><p>Variant counts for the selected models, fewest total errors first.</p></div>
         </div>
         <div id="b2b"></div>
       </div>
-      <div class="card">
-        <div class="card-head"><div><h3>Rates</h3><p>Per 1,000 evaluated variants.</p></div></div>
+      <div class="card" data-static>
+        <div class="card-head"><div><h3>Error rates</h3><p>Per 1,000 evaluated variants, all classifiers. Selected models in bold.</p></div></div>
         <div class="table-wrap"><table id="safetyTable"></table></div>
       </div>
     </div>
-    <div class="card">
+    <div class="card" data-static>
       <div class="card-head">
         <div><h3>Error cases</h3><p>Up to 10 cases per direction are stored for each model, with the ACMG criteria the model cited.</p></div>
         <label class="field">Model <select id="safetyModel"></select></label>
@@ -469,14 +551,19 @@ footer code { font-size: 12px; }
   <section class="view" id="view-criteria" role="tabpanel" hidden>
     <div class="view-head">
       <h2>ACMG/AMP criteria invoked</h2>
-      <p>Share of evaluated variants for which each model cited a criterion, with strength modifiers collapsed (PM2_Supporting counts as PM2). Hover a code for its definition.</p>
+      <p>Share of evaluated variants for which each model cited a criterion, with strength modifiers collapsed (PM2_Supporting counts as PM2).</p>
     </div>
     <div class="card">
       <div class="card-head">
-        <div><h3>Criterion usage</h3><p>Shading uses a square-root scale so rarely used criteria stay visible.</p></div>
-        <div class="scale"><span>0%</span><span class="ramp"></span><span id="critMax"></span></div>
+        <div><h3 id="critTitle"></h3><p>Percentage of evaluated variants.</p></div>
+        <div class="controls">
+          <div class="seg" id="critSeg" role="group" aria-label="Evidence type">
+            <button data-v="pathogenic" type="button">Pathogenic evidence</button><button data-v="benign" type="button">Benign evidence</button>
+          </div>
+        </div>
+        <div class="legend" data-legend></div>
       </div>
-      <div class="table-wrap"><table class="heat" id="critHeat"></table></div>
+      <div id="critBars"></div>
     </div>
   </section>
 
@@ -486,9 +573,16 @@ footer code { font-size: 12px; }
       <h2>Agreement between classifiers</h2>
       <p>Share of shared variants on which two classifiers return the same call, independent of the expert classification.</p>
     </div>
-    <div class="card">
+    <div class="card" data-static>
       <div class="card-head">
-        <div><h3 id="agreeTitle"></h3><p id="agreeSub"></p></div>
+        <div><h3 id="agreeFocusTitle"></h3><p>Solid bar: same 5-class call. Light bar: same direction (P/LP, VUS, B/LB).</p></div>
+      </div>
+      <div id="agreeBars"></div>
+      <p class="note" id="agreeNote"></p>
+    </div>
+    <div class="card" data-static>
+      <div class="card-head">
+        <div><h3 id="agreeTitle"></h3><p>All pairs. Shading is scaled to the observed range.</p></div>
         <div class="controls">
           <div class="seg" id="agreeSeg" role="group" aria-label="Agreement level">
             <button data-v="exact_pct" type="button">Exact, 5-class</button><button data-v="dir_pct" type="button">Directional, 3-class</button>
@@ -616,12 +710,15 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
 
   const state = {
     tab: "overview",
+    focus: null,
+    comps: ["baseline_bias", "baseline_intervar"],
     lbSort: { key: "macro_f1_5", desc: true },
     family: "all",
-    cmpA: null, cmpB: null,
+    catMetric: "macro_f1",
+    flowScale: "5", flowCat: "all",
     cmScale: "5", cmMode: "count",
-    catMetric: "macro_f1", catSortKey: "count",
     safetyModel: null,
+    critGroup: "pathogenic",
     agree: "exact_pct",
     vq: "", vcat: "all", vgt: "all", vonly: "all", vpage: 0
   };
@@ -703,40 +800,150 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
   // ---------- header / footer ----------
   function renderChrome() {
     const md = D.metadata;
-    const nModels = D.models.length;
-    $("subtitle").textContent = `ACMG classification against ClinGen expert curations · ${int(md.total_variants)} variants · ${nModels} classifiers`;
+    $("subtitle").textContent = `ACMG classification against ClinGen expert curations · ${int(md.total_variants)} variants · ${D.models.length} classifiers`;
+    const archived = D.models.filter((m) => m.archived);
     $("footer").innerHTML = `Dataset built ${esc(md.evaluation_date)}. Ground truth: ClinGen Evidence Repository expert-panel classifications. ` +
-      `Rebuild with <code>python scripts/update_dashboard.py</code>.`;
+      `Rebuild with <code>python scripts/update_dashboard.py</code>.` +
+      (archived.length ? ` ${archived.map((m) => esc(m.name)).join(" and ")} ${archived.length > 1 ? "are" : "is"} carried over from an earlier build because the raw results are not in this repository; variant-level comparisons with later runs are unavailable for ${archived.length > 1 ? "them" : "it"}.` : "");
   }
+
+  // ---------- model selection ----------
+  const selModels = () => [state.focus, ...state.comps].map(byKey).filter(Boolean);
+  const focusModel = () => byKey(state.focus);
+  const swatch = (m) => `<span class="swatch" style="background:${m.color}"></span>`;
+  const mname = (m) => `${swatch(m)}${esc(m.short_name)}`;
+
+  function defaultFocus() {
+    const full = D.models.filter((m) => isFull(m) && m.is_anthropic && !m.imported);
+    const pool = full.length ? full : D.models;
+    return pool.reduce((a, b) => (b.macro_f1_5 > a.macro_f1_5 ? b : a)).key;
+  }
+
+  function normalizeSelection() {
+    if (!byKey(state.focus)) state.focus = defaultFocus();
+    state.comps = [...new Set(state.comps)].filter((k) => byKey(k) && k !== state.focus);
+  }
+
+  function renderSelector() {
+    normalizeSelection();
+    $("focusSel").innerHTML = D.models.map((m) => `<option value="${esc(m.key)}">${esc(m.name)}${isFull(m) ? "" : " (subset)"}</option>`).join("");
+    $("focusSel").value = state.focus;
+    $("compChips").innerHTML = D.models.filter((m) => m.key !== state.focus).map((m) =>
+      `<button type="button" class="mchip" data-key="${esc(m.key)}" aria-pressed="${state.comps.includes(m.key)}">${swatch(m)}${esc(m.short_name)}</button>`).join("");
+    $("compChips").querySelectorAll(".mchip").forEach((b) => b.onclick = () => {
+      const k = b.dataset.key;
+      state.comps = state.comps.includes(k) ? state.comps.filter((x) => x !== k) : [...state.comps, k];
+      onSelectionChange();
+    });
+    const legend = selModels().map((m) => `<span>${mname(m)}</span>`).join("");
+    document.querySelectorAll("[data-legend]").forEach((el) => (el.innerHTML = legend));
+  }
+
+  function setFocus(key) {
+    if (!byKey(key)) return;
+    state.comps = state.comps.filter((k) => k !== key);
+    state.focus = key;
+    onSelectionChange();
+  }
+
+  function onSelectionChange() {
+    state.safetyModel = state.focus;
+    renderSelector();
+    RENDER[state.tab]();
+    writeHash();
+  }
+
+  // ---------- chart builders ----------
+  // Horizontal grouped bars. groups: [{label, sub, bars: [{m, v, v2, text, tip}]}]
+  // v2 (optional) draws a lighter bar behind v, e.g. directional behind exact.
+  function groupedBars(groups, opts = {}) {
+    const max = opts.max || 100;
+    const ticks = opts.ticks || [0, 25, 50, 75, 100];
+    const pos = (v) => Math.max(0, Math.min(100, (v / max) * 100));
+    const gl = ticks.map((t) => `<span class="gl${t === 0 ? " base" : ""}" style="left:${pos(t)}%"></span>`).join("");
+    const rows = groups.map((g) => `<div class="gb-row">
+      <div class="gb-lbl"><span class="gb-name"${g.tip ? tipAttr(g.tip) : ""}>${g.label}</span>${g.sub ? `<span class="gb-sub">${g.sub}</span>` : ""}</div>
+      <div class="gb-bars">${g.bars.map((b) => {
+        if (b.v == null) return `<div class="gb-plot">${gl}<span class="gb-val" style="left:0">${esc(b.text || "no data")}</span></div>`;
+        const light = b.v2 != null ? `<span class="gb-fill gb-light" style="width:${pos(b.v2)}%;background:color-mix(in srgb, ${b.m.color} 34%, transparent)"></span>` : "";
+        const end = Math.max(pos(b.v), b.v2 != null ? pos(b.v2) : 0);
+        return `<div class="gb-plot"${tipAttr(b.tip || "")}>${gl}${light}<span class="gb-fill" style="width:${pos(b.v)}%;background:${b.m.color}"></span><span class="gb-val" style="left:${end}%">${b.text}</span></div>`;
+      }).join("")}</div></div>`).join("");
+    const axis = `<div class="gb-row gb-axis"><div></div><div class="gb-bars"><div class="gb-plot">${ticks.map((t, i) =>
+      `<span class="tick${i === 0 ? " first" : ""}${i === ticks.length - 1 ? " last" : ""}" style="left:${pos(t)}%">${t}${opts.unit || ""}</span>`).join("")}</div></div></div>`;
+    return `<div class="gb${opts.wide ? " gb-wide" : ""}">${rows}${axis}</div>`;
+  }
+
+  function niceMax(v) {
+    const steps = [5, 10, 20, 25, 40, 50, 60, 75, 80, 100];
+    return steps.find((s) => s >= v) || Math.ceil(v / 10) * 10;
+  }
+
+  function hexLum(hex) {
+    const c = rgba(hex);
+    if (!c) return 1;
+    const [r, g, b] = [1, 3, 5].map((i) => parseInt(c.hex.slice(i, i + 2), 16) / 255).map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  }
+  function modelHeat(color, t) {
+    t = Math.max(0, Math.min(1, t || 0));
+    const surface = getComputedStyle(document.documentElement).getPropertyValue("--surface").trim() || "#ffffff";
+    const L = hexLum(surface) * (1 - t) + hexLum(color) * t;
+    return `background:color-mix(in oklab, ${color} ${Math.round(t * 100)}%, var(--surface));color:${L < 0.36 ? "#ffffff" : "#0b0b0b"}`;
+  }
+
+  const collapse3 = (m5) => {
+    const idx = [0, 0, 1, 2, 2];
+    const out = [[0, 0, 0], [0, 0, 0], [0, 0, 0]];
+    m5.forEach((row, i) => row.forEach((v, j) => (out[idx[i]][idx[j]] += v)));
+    return out;
+  };
 
   // ---------- overview ----------
   function renderTiles() {
-    const full = D.models.filter((m) => isFull(m) && !m.imported);
-    if (!full.length) { $("tiles").innerHTML = ""; return; }
-    const best = full.reduce((a, b) => (b.macro_f1_5 > a.macro_f1_5 ? b : a));
-    const claude = full.filter((m) => m.is_anthropic);
-    const bestClaude = claude.length ? claude.reduce((a, b) => (b.macro_f1_5 > a.macro_f1_5 ? b : a)) : null;
-    const fewest = full.reduce((a, b) => (b.critical_error_count < a.critical_error_count ? b : a));
-    const most = full.reduce((a, b) => (b.critical_error_count > a.critical_error_count ? b : a));
-    const nCats = categoriesWithData().length;
-
-    const tiles = [
-      { label: "Highest macro F1, full cohort", value: pct(best.macro_f1_5), sub: `<strong>${esc(best.name)}</strong><br>Exact ${pct(best.exact_accuracy)} · directional ${pct(best.directional_accuracy)}` }
+    const f = focusModel();
+    const comps = selModels().slice(1);
+    const metrics = [
+      { k: "macro_f1_5", label: "Macro F1, 5-class" },
+      { k: "exact_accuracy", label: "Exact accuracy, 5-class" },
+      { k: "directional_accuracy", label: "Directional accuracy, 3-class" },
+      { k: "critical_error_count", label: "Cross-direction errors", low: true, count: true }
     ];
-    if (bestClaude && bestClaude !== best) {
-      tiles.push({ label: "Highest macro F1, Claude", value: pct(bestClaude.macro_f1_5), sub: `<strong>${esc(bestClaude.name)}</strong><br>${signed(bestClaude.macro_f1_5 - best.macro_f1_5)} pp vs ${esc(best.short_name)}` });
-    }
-    tiles.push({
-      label: "Fewest cross-direction errors",
-      value: `${int(fewest.critical_error_count)}<small>of ${int(fewest.evaluated_count)}</small>`,
-      sub: `<strong>${esc(fewest.name)}</strong><br>Most: ${esc(most.short_name)}, ${int(most.critical_error_count)}`
-    });
-    tiles.push({
-      label: "Cohort",
-      value: int(D.metadata.total_variants),
-      sub: `ClinGen expert-curated variants<br>${nCats} disease categories · 5 ACMG classes`
-    });
-    $("tiles").innerHTML = tiles.map((t) => `<div class="tile"><div class="tile-label">${t.label}</div><div class="tile-value">${t.value}</div><div class="tile-sub">${t.sub}</div></div>`).join("");
+    $("tiles").innerHTML = metrics.map((x) => {
+      const fv = f[x.k] ?? 0;
+      const value = x.count ? `${int(fv)}<small>of ${int(f.evaluated_count)}</small>` : pct(fv);
+      const lines = comps.map((c) => {
+        const cv = c[x.k] ?? 0, d = fv - cv;
+        const cls = d === 0 ? "" : (x.low ? d < 0 : d > 0) ? "pos" : "neg";
+        const dtxt = x.count ? signed(d, 0) : `${signed(d)} pp`;
+        return `<div class="tile-cmp">${swatch(c)}<span class="tc-name">${esc(c.short_name)}</span><span class="tc-val">${x.count ? int(cv) : f1(cv)}</span><span class="tc-d ${cls}">${dtxt}</span></div>`;
+      }).join("");
+      return `<div class="tile"><div class="tile-label">${x.label}</div><div class="tile-value">${value}</div>
+        <div class="tile-sub">${swatch(f)}${esc(f.short_name)}${isFull(f) ? "" : ` · ${pct(f.coverage_pct)} of cohort`}</div>${lines ? `<div class="tile-cmps">${lines}</div>` : ""}</div>`;
+    }).join("");
+  }
+
+  function renderOvMetrics() {
+    const ms = selModels();
+    const metrics = [
+      ["macro_f1_5", "Macro F1", "5-class"], ["macro_f1_3", "Macro F1", "3-class"],
+      ["exact_accuracy", "Exact accuracy", "5-class"], ["directional_accuracy", "Directional accuracy", "3-class"]
+    ];
+    $("ovMetrics").innerHTML = groupedBars(metrics.map(([k, l, sub]) => ({
+      label: l, sub,
+      bars: ms.map((m) => ({ m, v: m[k], text: f1(m[k]), tip: `${m.name}\n${l} (${sub}): ${pct(m[k])}${isFull(m) ? "" : `\nScored on ${int(m.evaluated_count)} variants`}` }))
+    })), { unit: "" });
+  }
+
+  function renderOvClass() {
+    const ms = selModels();
+    $("ovClass").innerHTML = groupedBars(LABELS.map((l) => ({
+      label: l, sub: `n = ${int((focusModel().per_class_5[l] || {}).support)}`,
+      bars: ms.map((m) => {
+        const c = (m.per_class_5 || {})[l] || {};
+        return { m, v: c.f1, text: f1(c.f1), tip: `${m.name}\n${l}\nF1 ${pct(c.f1)} · precision ${pct(c.precision)} · recall ${pct(c.recall)}` };
+      })
+    })));
   }
 
   const LB_COLS = [
@@ -751,35 +958,35 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
 
   function renderFamilySeg() {
     const fams = [...new Set(D.models.map((m) => m.family))];
-    const el = $("familySeg");
-    el.innerHTML = `<button data-v="all" type="button">All</button>` + fams.map((f) => `<button data-v="${esc(f)}" type="button">${esc(shortFam(f))}</button>`).join("");
+    $("familySeg").innerHTML = `<button data-v="all" type="button">All</button>` + fams.map((f) => `<button data-v="${esc(f)}" type="button">${esc(shortFam(f))}</button>`).join("");
     seg("familySeg", state.family, (v) => { state.family = v; renderFamilySeg(); renderLeaderboard(); });
   }
 
   function renderLeaderboard() {
     const { key, desc } = state.lbSort;
-    let rows = D.models.filter((m) => state.family === "all" || m.family === state.family);
-    rows = rows.slice().sort((a, b) => {
+    const rows = D.models.filter((m) => state.family === "all" || m.family === state.family).slice().sort((a, b) => {
       let va = a[key] ?? 0, vb = b[key] ?? 0;
       if (key === "avg_latency_sec") { va = va || Infinity; vb = vb || Infinity; }
       return (isFull(b) - isFull(a)) || (desc ? vb - va : va - vb);
     });
-    const maxF1 = 100;
     const head = `<thead><tr><th class="rank">#</th><th>Model</th>${LB_COLS.map((c) => {
       const active = c.key === key;
       const ind = active ? `<span class="sort-ind" aria-hidden="true">${desc ? "▼" : "▲"}</span>` : "";
       return `<th class="r"${active ? ` aria-sort="${desc ? "descending" : "ascending"}"` : ""}><button class="th-sort" data-sort="${c.key}" style="align-items:flex-end"><span>${c.label}${ind}</span><span class="th-sub">${c.sub}</span></button></th>`;
     }).join("")}</tr></thead>`;
-
-    const body = rows.map((m, i) => {
+    let rank = 0;
+    const body = rows.map((m) => {
       const partial = !isFull(m);
+      if (!partial) rank++;
+      const role = m.key === state.focus ? "focus" : state.comps.includes(m.key) ? "comp" : "";
       const cov = partial
         ? `<span${tipAttr(`Scored on ${int(m.evaluated_count)} of ${int(m.total_cohort)} variants. Not directly comparable with full-cohort rows.`)}>${pct(m.coverage_pct)}<span class="pill">subset</span></span>`
         : pct(m.coverage_pct);
-      return `<tr class="row-link" data-key="${esc(m.key)}">
-        <td class="rank">${partial ? "—" : i + 1}</td>
-        <td><div class="model-cell"><span class="model-name">${esc(m.name)}${m.imported ? '<span class="pill">imported</span>' : ""}</span><span class="model-meta">${esc(m.type)}</span></div></td>
-        <td class="r num"><span class="inline-bar"><span>${f1(m.macro_f1_5)}</span><span class="track"><span class="fill" style="width:${(m.macro_f1_5 / maxF1) * 100}%"></span></span></span></td>
+      const tags = (m.imported ? '<span class="pill">imported</span>' : "") + (m.archived ? `<span class="pill"${tipAttr("Carried over from an earlier build; raw results are not in this repository.")}>archived</span>` : "") + (role === "focus" ? '<span class="pill pill-strong">focus</span>' : "");
+      return `<tr class="row-link ${role}" data-key="${esc(m.key)}" style="--mc:${m.color}">
+        <td class="rank">${partial ? "—" : rank}</td>
+        <td><div class="model-cell"><span class="model-name">${swatch(m)}${esc(m.name)}${tags}</span><span class="model-meta">${esc(m.type)}</span></div></td>
+        <td class="r num"><span class="inline-bar"><span>${f1(m.macro_f1_5)}</span><span class="track"><span class="fill" style="width:${m.macro_f1_5}%;background:${m.color}"></span></span></span></td>
         <td class="r num">${f1(m.exact_accuracy)}</td>
         <td class="r num">${f1(m.directional_accuracy)}</td>
         <td class="r num">${f1(m.macro_f1_3)}</td>
@@ -789,120 +996,163 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
       </tr>`;
     }).join("");
     $("leaderboard").innerHTML = head + `<tbody>${body}</tbody>`;
-
     $("leaderboard").querySelectorAll(".th-sort").forEach((b) => b.onclick = () => {
-      const k = b.dataset.sort;
-      const col = LB_COLS.find((c) => c.key === k);
-      if (state.lbSort.key === k) state.lbSort.desc = !state.lbSort.desc;
-      else state.lbSort = { key: k, desc: !col.low };
+      const k = b.dataset.sort, col = LB_COLS.find((c) => c.key === k);
+      if (state.lbSort.key === k) state.lbSort.desc = !state.lbSort.desc; else state.lbSort = { key: k, desc: !col.low };
       renderLeaderboard();
     });
-    $("leaderboard").querySelectorAll("tr.row-link").forEach((tr) => tr.onclick = () => openCompare(tr.dataset.key));
-
+    $("leaderboard").querySelectorAll("tr.row-link").forEach((tr) => tr.onclick = () => setFocus(tr.dataset.key));
     const partial = D.models.filter((m) => !isFull(m));
     $("lbNote").textContent = "Accuracy and F1 values are percentages. Cross-direction errors: B/LB truth called P/LP, or P/LP truth called B/LB." +
-      (partial.length ? ` ${partial.map((m) => m.short_name).join(", ")} ${partial.length > 1 ? "were" : "was"} scored on a subset of the cohort and ${partial.length > 1 ? "are" : "is"} listed after the full-cohort ranking.` : "");
+      (partial.length ? ` ${partial.map((m) => m.short_name).join(", ")} ${partial.length > 1 ? "were" : "was"} scored on part of the cohort and ${partial.length > 1 ? "are" : "is"} listed after the full-cohort ranking.` : "");
   }
 
-  function renderAccDots() {
-    const rows = D.models.slice().sort((a, b) => b.directional_accuracy - a.directional_accuracy);
-    const ticks = [0, 25, 50, 75, 100];
-    $("accDots").innerHTML = `<div class="rows">${rows.map((m) => {
-      const lo = Math.min(m.exact_accuracy, m.directional_accuracy), hi = Math.max(m.exact_accuracy, m.directional_accuracy);
-      return `<div class="rrow"><span class="lbl" title="${esc(m.name)}">${esc(m.short_name)}${isFull(m) ? "" : " *"}</span>
-        <div class="plot">${gridlines(ticks)}
-          <span class="span" style="left:${lo}%;width:${hi - lo}%"></span>
-          <span class="dot" style="left:${m.exact_accuracy}%;background:var(--s1)"${tipAttr(`${m.name}\nExact (5-class): ${pct(m.exact_accuracy)}`)}></span>
-          <span class="dot" style="left:${m.directional_accuracy}%;background:var(--s2)"${tipAttr(`${m.name}\nDirectional (3-class): ${pct(m.directional_accuracy)}\nGap: ${(m.directional_accuracy - m.exact_accuracy).toFixed(1)} pp`)}></span>
-        </div><span class="val">${f1(m.directional_accuracy)}</span></div>`;
-    }).join("")}${axisRow(ticks)}</div>` +
-      (D.models.some((m) => !isFull(m)) ? `<p class="note">* Scored on a subset of the cohort.</p>` : "");
+  // ---------- categories ----------
+  function categoriesWithData() {
+    return (D.metadata.categories || []).filter((c) => D.models.some((m) => (D.categories_data[m.key] || {})[c]?.count));
+  }
+  const catCount = (c) => Math.max(0, ...D.models.map((m) => ((D.categories_data[m.key] || {})[c] || {}).count || 0));
+
+  function renderCatCorrect() {
+    const ms = selModels();
+    const cats = categoriesWithData().sort((a, b) => catCount(b) - catCount(a));
+    $("catCorrect").innerHTML = groupedBars(cats.map((c) => ({
+      label: esc(c), sub: `n = ${int(catCount(c))}`,
+      bars: ms.map((m) => {
+        const r = (D.categories_data[m.key] || {})[c];
+        if (!r || !r.count) return { m, v: null, text: "not evaluated" };
+        const ex = r.exact_correct ?? Math.round(r.exact_accuracy * r.count / 100);
+        const dr = r.directional_correct ?? Math.round(r.directional_accuracy * r.count / 100);
+        return {
+          m, v: (ex / r.count) * 100, v2: (dr / r.count) * 100,
+          text: `${int(ex)} · ${int(dr)} / ${int(r.count)}`,
+          tip: `${m.name}\n${c}\nExact (5-class): ${int(ex)} of ${int(r.count)} (${pct(ex / r.count * 100)})\nDirectional (3-class): ${int(dr)} of ${int(r.count)} (${pct(dr / r.count * 100)})`
+        };
+      })
+    })), { wide: true, unit: "%" });
   }
 
-  function renderPerClassHeat() {
-    const rows = D.models.filter((m) => m.per_class_5 && Object.keys(m.per_class_5).length).sort((a, b) => b.macro_f1_5 - a.macro_f1_5);
-    const head = `<thead><tr><th>Model</th>${LABELS.map((l) => `<th class="colh"${tipAttr(l)}>${ABBR[l]}</th>`).join("")}</tr></thead>`;
-    const body = rows.map((m) => `<tr><td class="rowh">${esc(m.short_name)}</td>${LABELS.map((l) => {
-      const c = m.per_class_5[l] || {};
-      const v = c.f1 ?? 0;
-      return `<td class="h" style="${heatStyle(v / 100)}"${tipAttr(`${m.name}\n${l}\nF1 ${pct(v)} · precision ${pct(c.precision)} · recall ${pct(c.recall)}\nSupport ${int(c.support)}`)}>${f1(v)}</td>`;
-    }).join("")}</tr>`).join("");
-    $("perClassHeat").innerHTML = head + `<tbody>${body}</tbody>`;
+  function renderCatMetric() {
+    const metric = state.catMetric;
+    const label = [...$("catMetric").options].find((o) => o.value === metric).textContent;
+    $("catMetricTitle").textContent = label + " by category";
+    $("catMetricSub").textContent = "Percentages. Categories with fewer variants have wider uncertainty.";
+    const ms = selModels();
+    const cats = categoriesWithData().sort((a, b) => catCount(b) - catCount(a));
+    $("catMetricBars").innerHTML = groupedBars(cats.map((c) => ({
+      label: esc(c), sub: `n = ${int(catCount(c))}`,
+      bars: ms.map((m) => {
+        const r = (D.categories_data[m.key] || {})[c];
+        if (!r || !r.count) return { m, v: null, text: "not evaluated" };
+        return { m, v: r[metric], text: f1(r[metric]), tip: `${m.name}\n${c}\n${label}: ${pct(r[metric])}\nEvaluated: ${int(r.count)} variants` };
+      })
+    })));
   }
 
-  // ---------- compare ----------
-  function populateCompareSelects() {
-    const opts = D.models.map((m) => `<option value="${esc(m.key)}">${esc(m.name)}</option>`).join("");
-    $("cmpA").innerHTML = opts;
-    $("cmpB").innerHTML = opts;
-    if (!byKey(state.cmpA)) state.cmpA = (byKey("claude_code_haiku") || D.models[0]).key;
-    if (!byKey(state.cmpB)) state.cmpB = (byKey("aiva_haiku_rerun") || D.models[1] || D.models[0]).key;
-    $("cmpA").value = state.cmpA;
-    $("cmpB").value = state.cmpB;
+  function renderCategories() { renderCatCorrect(); renderCatMetric(); }
+
+  // ---------- flows (Sankey) ----------
+  function flowMatrix(m) {
+    let mat;
+    if (state.flowCat === "all") mat = (D.confusion_matrices[m.key] || {}).matrix_5;
+    else mat = ((D.categories_data[m.key] || {})[state.flowCat] || {}).matrix_5;
+    if (!mat) return null;
+    return state.flowScale === "5" ? mat : collapse3(mat);
   }
 
-  function openCompare(key) {
-    if (key === state.cmpB) state.cmpB = state.cmpA;
-    state.cmpA = key;
-    populateCompareSelects();
-    setTab("compare");
+  function sankeySvg(m, mat, width) {
+    const five = mat.length === 5;
+    const short = five ? LABELS.map((l) => ABBR[l]) : ["P/LP", "VUS", "B/LB"];
+    const full = five ? LABELS : ["Pathogenic or likely pathogenic", "Uncertain significance", "Benign or likely benign"];
+    const dirOf = five ? ["p", "p", "v", "b", "b"] : ["p", "v", "b"];
+    const k = mat.length;
+    const rowT = mat.map((r) => r.reduce((a, b) => a + b, 0));
+    const colT = mat[0].map((_, j) => mat.reduce((a, r) => a + r[j], 0));
+    const total = rowT.reduce((a, b) => a + b, 0);
+    const H = 360, top = 26, bottom = 6, gap = 10, nodeW = 10;
+    const Lx = 92, Rx = Math.max(Lx + 80, width - 104 - nodeW);
+    const sc = (H - top - bottom - gap * (k - 1)) / Math.max(1, total);
+    const place = (tots) => { let y = top; return tots.map((t) => { const y0 = y; y += t * sc + gap; return y0; }); };
+    const ly = place(rowT), ry = place(colT);
+    const lOff = ly.slice(), rOff = ry.slice();
+    const x0 = Lx + nodeW, x1 = Rx, xm = (x0 + x1) / 2;
+    const links = [];
+    for (let i = 0; i < k; i++) {
+      for (let j = 0; j < k; j++) {
+        const v = mat[i][j];
+        if (!v) continue;
+        const h = Math.max(0.6, v * sc);
+        const a = lOff[i], b = rOff[j];
+        lOff[i] += v * sc; rOff[j] += v * sc;
+        const kind = i === j ? "diag" : dirOf[i] === dirOf[j] ? "near" : (dirOf[i] === "v" || dirOf[j] === "v") ? "near" : "cross";
+        const d = `M${n2(x0)},${n2(a)} C${n2(xm)},${n2(a)} ${n2(xm)},${n2(b)} ${n2(x1)},${n2(b)} L${n2(x1)},${n2(b + h)} C${n2(xm)},${n2(b + h)} ${n2(xm)},${n2(a + h)} ${n2(x0)},${n2(a + h)} Z`;
+        links.push(`<path class="sk-link ${kind}" d="${d}" fill="${m.color}" data-s="${i}" data-t="${j}"${tipAttr(`${m.short_name}\nExpert ${full[i]} → model ${full[j]}\n${int(v)} variants · ${pct(v / rowT[i] * 100)} of expert ${short[i]}${kind === "cross" ? "\nCross-direction error" : ""}`)}/>`);
+      }
+    }
+    const nodes = [];
+    for (let i = 0; i < k; i++) {
+      const h = Math.max(1, rowT[i] * sc), y = ly[i];
+      nodes.push(`<rect class="sk-node" x="${Lx}" y="${n2(y)}" width="${nodeW}" height="${n2(h)}" data-side="s" data-i="${i}"${tipAttr(`Expert ${full[i]}\n${int(rowT[i])} variants`)}/>`);
+      nodes.push(`<text class="sk-lbl" x="${Lx - 8}" y="${n2(y + h / 2 - 1)}" text-anchor="end">${short[i]}</text><text class="sk-cnt" x="${Lx - 8}" y="${n2(y + h / 2 + 12)}" text-anchor="end">${int(rowT[i])}</text>`);
+    }
+    for (let j = 0; j < k; j++) {
+      const h = Math.max(1, colT[j] * sc), y = ry[j];
+      nodes.push(`<rect class="sk-node" x="${Rx}" y="${n2(y)}" width="${nodeW}" height="${n2(h)}" data-side="t" data-i="${j}"${tipAttr(`Model ${full[j]}\n${int(colT[j])} variants`)}/>`);
+      nodes.push(`<text class="sk-lbl" x="${Rx + nodeW + 8}" y="${n2(y + h / 2 - 1)}">${short[j]}</text><text class="sk-cnt" x="${Rx + nodeW + 8}" y="${n2(y + h / 2 + 12)}">${int(colT[j])}</text>`);
+    }
+    const heads = `<text class="sk-head" x="${Lx + nodeW}" y="14" text-anchor="end">Expert</text><text class="sk-head" x="${Rx}" y="14">Model</text>`;
+    return `<svg class="sankey" width="${width}" height="${H}" viewBox="0 0 ${width} ${H}" role="img" aria-label="Classification flow for ${esc(m.name)}">${heads}${links.join("")}${nodes.join("")}</svg>`;
   }
 
-  function renderCompare() {
-    const A = byKey(state.cmpA), B = byKey(state.cmpB);
-    if (!A || !B) return;
-    $("cmpLegend").innerHTML = `<span><span class="swatch" style="background:var(--s1)"></span>${esc(A.short_name)}</span><span><span class="swatch" style="background:var(--s2)"></span>${esc(B.short_name)}</span>`;
-
-    const metrics = [
-      { k: "macro_f1_5", label: "Macro F1, 5-class", unit: "pp" },
-      { k: "exact_accuracy", label: "Exact accuracy", unit: "pp" },
-      { k: "directional_accuracy", label: "Directional accuracy", unit: "pp" },
-      { k: "critical_error_count", label: "Cross-direction errors", low: true, count: true }
-    ];
-    $("cmpTiles").innerHTML = metrics.map((x) => {
-      const a = A[x.k] ?? 0, b = B[x.k] ?? 0, d = a - b;
-      const better = x.low ? d < 0 : d > 0;
-      const cls = d === 0 ? "" : better ? "pos" : "neg";
-      const fmt = x.count ? int : f1;
-      const dtxt = x.count ? signed(d, 0) : `${signed(d)} pp`;
-      return `<div class="tile"><div class="tile-label">${x.label}</div>
-        <div class="tile-value"><span class="${cls}">${dtxt}</span></div>
-        <div class="tile-sub"><span class="swatch" style="background:var(--s1)"></span>${fmt(a)} &nbsp; <span class="swatch" style="background:var(--s2)"></span>${fmt(b)}</div></div>`;
-    }).join("");
-
-    const ticks = [0, 25, 50, 75, 100];
-    $("cmpBars").innerHTML = `<div class="rows bars-2">${LABELS.map((l) => {
-      const a = (A.per_class_5 || {})[l]?.f1, b = (B.per_class_5 || {})[l]?.f1;
-      return `<div class="rrow"><span class="lbl">${l}</span><div class="plot">${gridlines(ticks)}
-        ${a != null ? `<span class="bar a" style="left:0;width:${a}%"${tipAttr(`${A.name}\n${l} F1: ${pct(a)}`)}></span><span class="bar-lbl" style="left:${a}%;top:2px">${f1(a)}</span>` : ""}
-        ${b != null ? `<span class="bar b" style="left:0;width:${b}%"${tipAttr(`${B.name}\n${l} F1: ${pct(b)}`)}></span><span class="bar-lbl" style="left:${b}%;top:18px">${f1(b)}</span>` : ""}
-      </div><span class="val ${a != null && b != null ? (a - b >= 0 ? "pos" : "neg") : ""}">${a != null && b != null ? signed(a - b) : ""}</span></div>`;
-    }).join("")}${axisRow(ticks)}</div><p class="note">Right column: difference in F1, A minus B.</p>`;
-
-    const head = `<thead><tr><th>Class</th><th class="r">Support</th>
-      <th class="r"><span class="swatch" style="background:var(--s1)"></span>Precision</th><th class="r">Recall</th>
-      <th class="r"><span class="swatch" style="background:var(--s2)"></span>Precision</th><th class="r">Recall</th></tr></thead>`;
-    const body = LABELS.map((l) => {
-      const a = (A.per_class_5 || {})[l] || {}, b = (B.per_class_5 || {})[l] || {};
-      return `<tr><td>${ABBR[l]}</td><td class="r num">${int(a.support ?? b.support)}</td>
-        <td class="r num">${f1(a.precision)}</td><td class="r num">${f1(a.recall)}</td>
-        <td class="r num">${f1(b.precision)}</td><td class="r num">${f1(b.recall)}</td></tr>`;
-    }).join("");
-    $("cmpTable").innerHTML = head + `<tbody>${body}</tbody>`;
-
-    seg("cmScaleSeg", state.cmScale, (v) => { state.cmScale = v; renderCompare(); });
-    seg("cmModeSeg", state.cmMode, (v) => { state.cmMode = v; renderCompare(); });
-    $("cmPair").innerHTML = [[A, "var(--s1)"], [B, "var(--s2)"]].map(([m, c]) => `<div><p class="cm-title"><span class="swatch" style="background:${c}"></span>${esc(m.name)}</p>${confusionTable(m)}</div>`).join("");
+  function renderFlows() {
+    seg("flowScaleSeg", state.flowScale, (v) => { state.flowScale = v; renderFlows(); });
+    const cats = categoriesWithData().sort((a, b) => catCount(b) - catCount(a));
+    $("flowCat").innerHTML = `<option value="all">All categories</option>` + cats.map((c) => `<option value="${esc(c)}">${esc(c)} (${int(catCount(c))})</option>`).join("");
+    if (state.flowCat !== "all" && !cats.includes(state.flowCat)) state.flowCat = "all";
+    $("flowCat").value = state.flowCat;
+    $("flowTitle").textContent = `Expert classification to model call, ${state.flowScale}-class`;
+    $("flowSub").textContent = state.flowCat === "all" ? `All ${int(D.metadata.total_variants)} cohort variants.` : `${state.flowCat}.`;
+    const grid = $("flows");
+    const ms = selModels();
+    grid.innerHTML = ms.map((m) => `<div class="flow-panel" data-key="${esc(m.key)}"><p class="cm-title">${mname(m)}<span class="cm-n"></span></p><div class="flow-svg"></div></div>`).join("");
+    grid.querySelectorAll(".flow-panel").forEach((panel) => {
+      const m = byKey(panel.dataset.key);
+      const mat = flowMatrix(m);
+      const box = panel.querySelector(".flow-svg");
+      if (!mat) {
+        box.innerHTML = `<p class="empty">${m.archived ? "Per-category flows need this model's raw results, which are not in the repository." : "No data for this selection."}</p>`;
+        return;
+      }
+      const total = mat.reduce((a, r) => a + r.reduce((x, y) => x + y, 0), 0);
+      panel.querySelector(".cm-n").textContent = ` · ${int(total)} variants`;
+      box.innerHTML = sankeySvg(m, mat, Math.max(280, Math.floor(box.clientWidth || 520)));
+    });
   }
 
+  function setupFlowHover() {
+    const grid = $("flows");
+    const clear = () => grid.querySelectorAll("svg.hl").forEach((s) => { s.classList.remove("hl"); s.querySelectorAll(".on").forEach((e) => e.classList.remove("on")); });
+    grid.addEventListener("pointerover", (e) => {
+      const el = e.target.closest(".sk-link, .sk-node");
+      clear();
+      if (!el) return;
+      const svg = el.ownerSVGElement;
+      svg.classList.add("hl");
+      if (el.classList.contains("sk-link")) el.classList.add("on");
+      else svg.querySelectorAll(`.sk-link[data-${el.dataset.side}="${el.dataset.i}"]`).forEach((l) => l.classList.add("on"));
+    });
+    grid.addEventListener("pointerleave", clear);
+  }
+
+  // ---------- confusion ----------
   function confusionTable(m) {
     const cm = D.confusion_matrices[m.key];
     if (!cm) return `<p class="empty">No confusion matrix for this model.</p>`;
     const five = state.cmScale === "5";
-    const mat = five ? cm.matrix_5 : cm.matrix_3;
+    const mat = five ? cm.matrix_5 : collapse3(cm.matrix_5);
     const labels = five ? LABELS.map((l) => ABBR[l]) : ["P/LP", "VUS", "B/LB"];
     const full = five ? LABELS : ["Pathogenic or likely pathogenic", "Uncertain significance", "Benign or likely benign"];
-    const dirOf = (i) => five ? ["p", "p", "v", "b", "b"][i] : ["p", "v", "b"][i];
+    const dirOf = (i) => (five ? ["p", "p", "v", "b", "b"] : ["p", "v", "b"])[i];
     const head = `<thead><tr><th class="cm-axis">Expert \\ Model</th>${labels.map((l) => `<th class="colh">${l}</th>`).join("")}</tr></thead>`;
     const body = mat.map((row, i) => {
       const sum = row.reduce((a, b) => a + b, 0);
@@ -910,70 +1160,51 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
         const share = sum ? v / sum : 0;
         const x = (dirOf(i) === "p" && dirOf(j) === "b") || (dirOf(i) === "b" && dirOf(j) === "p");
         const shown = state.cmMode === "count" ? int(v) : (share * 100).toFixed(1);
-        return `<td class="h${i === j ? " diag" : ""}${x && v > 0 ? " xdir" : ""}" style="${heatStyle(share)}"${tipAttr(`Expert: ${full[i]}\nModel: ${full[j]}\n${int(v)} variants, ${(share * 100).toFixed(1)}% of row`)}>${shown}</td>`;
+        return `<td class="h${i === j ? " diag" : ""}${x && v > 0 ? " xdir" : ""}" style="${modelHeat(m.color, share)}"${tipAttr(`${m.short_name}\nExpert: ${full[i]}\nModel: ${full[j]}\n${int(v)} variants, ${(share * 100).toFixed(1)}% of row`)}>${shown}</td>`;
       }).join("")}</tr>`;
     }).join("");
     return `<div class="table-wrap"><table class="heat cm">${head}<tbody>${body}</tbody></table></div>`;
   }
 
-  // ---------- categories ----------
-  function categoriesWithData() {
-    const cats = D.metadata.categories || [];
-    return cats.filter((c) => D.models.some((m) => (D.categories_data[m.key] || {})[c]?.count));
-  }
-
-  function renderCategories() {
-    const metric = state.catMetric;
-    const metricLabel = $("catMetric").selectedOptions[0].textContent;
-    const models = D.models.filter((m) => D.categories_data[m.key]);
-    const cats = categoriesWithData();
-    const countOf = (c) => Math.max(0, ...models.map((m) => (D.categories_data[m.key][c] || {}).count || 0));
-    const sk = state.catSortKey;
-    cats.sort((a, b) => {
-      if (sk === "count") return countOf(b) - countOf(a);
-      if (sk === "name") return a.localeCompare(b);
-      return ((D.categories_data[sk] || {})[b]?.[metric] ?? -1) - ((D.categories_data[sk] || {})[a]?.[metric] ?? -1);
-    });
-    $("catTitle").textContent = metricLabel + " by category";
-    $("catSub").textContent = `${cats.length} categories × ${models.length} classifiers. Values are percentages.`;
-
-    const sortBtn = (k, label, extra = "") => `<button class="th-sort" data-sort="${esc(k)}" ${extra}>${label}${sk === k ? '<span class="sort-ind" aria-hidden="true"> ▼</span>' : ""}</button>`;
-    const head = `<thead><tr><th>${sortBtn("name", "Category")}</th><th class="r">${sortBtn("count", "Variants", 'style="align-items:flex-end"')}</th>${models.map((m) =>
-      `<th class="colh"${sk === m.key ? ' aria-sort="descending"' : ""}>${sortBtn(m.key, esc(m.short_name), 'style="align-items:center;text-align:center"')}</th>`).join("")}</tr></thead>`;
-    const body = cats.map((c) => `<tr><td class="rowh">${esc(c)}</td><td class="r num">${int(countOf(c))}</td>${models.map((m) => {
-      const r = (D.categories_data[m.key] || {})[c];
-      if (!r || !r.count) return `<td class="h" style="color:var(--muted)">—</td>`;
-      const v = r[metric];
-      return `<td class="h" style="${heatStyle(v / 100)}"${tipAttr(`${m.name}\n${c}\n${metricLabel}: ${pct(v)}\nEvaluated: ${int(r.count)} variants`)}>${f1(v)}</td>`;
-    }).join("")}</tr>`).join("");
-    $("catHeat").innerHTML = head + `<tbody>${body}</tbody>`;
-    $("catHeat").querySelectorAll(".th-sort").forEach((b) => b.onclick = () => { state.catSortKey = b.dataset.sort; renderCategories(); });
+  function renderConfusion() {
+    seg("cmScaleSeg", state.cmScale, (v) => { state.cmScale = v; renderConfusion(); });
+    seg("cmModeSeg", state.cmMode, (v) => { state.cmMode = v; renderConfusion(); });
+    $("cmSub").textContent = state.cmMode === "count" ? "Cell values are variant counts." : "Cell values are the percentage of the row.";
+    $("cmGrid").innerHTML = selModels().map((m) => `<div><p class="cm-title">${mname(m)}</p>${confusionTable(m)}</div>`).join("");
+    const ms = selModels();
+    const head = `<thead><tr><th>Class</th><th>Model</th><th class="r">Precision</th><th class="r">Recall</th><th class="r">F1</th><th class="r">Support</th></tr></thead>`;
+    const body = LABELS.map((l) => ms.map((m, i) => {
+      const c = (m.per_class_5 || {})[l] || {};
+      return `<tr class="${i === ms.length - 1 ? "grp-end" : ""}">${i === 0 ? `<td rowspan="${ms.length}" class="grp">${l}</td>` : ""}<td>${mname(m)}</td><td class="r num">${f1(c.precision)}</td><td class="r num">${f1(c.recall)}</td><td class="r num"><strong>${f1(c.f1)}</strong></td><td class="r num">${int(c.support)}</td></tr>`;
+    }).join("")).join("");
+    $("prTable").innerHTML = head + `<tbody>${body}</tbody>`;
   }
 
   // ---------- safety ----------
   function renderSafety() {
-    const rows = D.models.slice().sort((a, b) => a.critical_error_count - b.critical_error_count || a.name.localeCompare(b.name));
+    const sel = selModels();
+    const rows = sel.slice().sort((a, b) => a.critical_error_count - b.critical_error_count || a.name.localeCompare(b.name));
     const max = Math.max(1, ...rows.map((m) => Math.max(m.false_pathogenic_count, m.false_benign_count)));
     $("b2b").innerHTML = `<div class="b2b">
-      <div class="b2b-row b2b-head"><span></span><span class="left"><span class="swatch" style="background:var(--s2)"></span>B/LB truth called P/LP</span><span class="right"><span class="swatch" style="background:var(--s1)"></span>P/LP truth called B/LB</span></div>
+      <div class="b2b-row b2b-head"><span></span><span class="left">B/LB truth called P/LP</span><span class="right">P/LP truth called B/LB</span></div>
       ${rows.map((m) => {
         const fp = m.false_pathogenic_count, fb = m.false_benign_count;
-        const wp = (fp / max) * 88, wb = (fb / max) * 88;
-        return `<div class="b2b-row"><span class="lbl" title="${esc(m.name)}">${esc(m.short_name)}</span>
-          <div class="b2b-side left">${fp ? `<span class="bar" style="width:${wp}%"${tipAttr(`${m.name}\n${fp} benign or likely benign variants called P/LP`)}></span>` : ""}<span class="cnt" style="right:${wp}%;padding-right:6px">${fp}</span></div>
-          <div class="b2b-side right">${fb ? `<span class="bar" style="width:${wb}%"${tipAttr(`${m.name}\n${fb} pathogenic or likely pathogenic variants called B/LB`)}></span>` : ""}<span class="cnt" style="left:${wb}%;padding-left:6px">${fb}</span></div>
+        const wp = (fp / max) * 82, wb = (fb / max) * 82;
+        return `<div class="b2b-row"><span class="lbl">${mname(m)}</span>
+          <div class="b2b-side left">${fp ? `<span class="bar" style="width:${wp}%;background:${m.color}"${tipAttr(`${m.name}\n${fp} benign or likely benign variants called P/LP`)}></span>` : ""}<span class="cnt" style="right:${wp}%;padding-right:6px">${fp}</span></div>
+          <div class="b2b-side right">${fb ? `<span class="bar" style="width:${wb}%;background:${m.color}"${tipAttr(`${m.name}\n${fb} pathogenic or likely pathogenic variants called B/LB`)}></span>` : ""}<span class="cnt" style="left:${wb}%;padding-left:6px">${fb}</span></div>
         </div>`;
       }).join("")}</div>`;
 
+    const all = D.models.slice().sort((a, b) => (a.critical_error_count / a.evaluated_count) - (b.critical_error_count / b.evaluated_count));
     const per1k = (n, m) => (m.evaluated_count ? (n / m.evaluated_count) * 1000 : 0).toFixed(2);
-    $("safetyTable").innerHTML = `<thead><tr><th>Model</th><th class="r">B/LB called P/LP</th><th class="r">P/LP called B/LB</th><th class="r">Total</th><th class="r">Evaluated</th></tr></thead><tbody>${rows.map((m) =>
-      `<tr><td>${esc(m.short_name)}</td><td class="r num">${per1k(m.false_pathogenic_count, m)}</td><td class="r num">${per1k(m.false_benign_count, m)}</td><td class="r num"><strong>${per1k(m.critical_error_count, m)}</strong></td><td class="r num">${int(m.evaluated_count)}</td></tr>`).join("")}</tbody>`;
+    $("safetyTable").innerHTML = `<thead><tr><th>Model</th><th class="r">B/LB called P/LP</th><th class="r">P/LP called B/LB</th><th class="r">Total</th><th class="r">Evaluated</th></tr></thead><tbody>${all.map((m) => {
+      const on = sel.includes(m);
+      return `<tr class="${on ? "sel" : ""}"><td>${mname(m)}</td><td class="r num">${per1k(m.false_pathogenic_count, m)}</td><td class="r num">${per1k(m.false_benign_count, m)}</td><td class="r num"><strong>${per1k(m.critical_error_count, m)}</strong></td><td class="r num">${int(m.evaluated_count)}</td></tr>`;
+    }).join("")}</tbody>`;
 
     const withCases = D.models.filter((m) => D.safety_data && D.safety_data[m.key]);
-    if (!withCases.find((m) => m.key === state.safetyModel)) {
-      const first = withCases.find((m) => m.is_anthropic) || withCases[0];
-      state.safetyModel = first ? first.key : null;
-    }
+    if (!withCases.find((m) => m.key === state.safetyModel)) state.safetyModel = (withCases.find((m) => m.key === state.focus) || withCases[0] || {}).key;
     $("safetyModel").innerHTML = withCases.map((m) => `<option value="${esc(m.key)}">${esc(m.name)} (${m.critical_error_count})</option>`).join("");
     if (state.safetyModel) $("safetyModel").value = state.safetyModel;
     renderCases();
@@ -997,37 +1228,56 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
 
   // ---------- criteria ----------
   function renderCriteria() {
-    const models = D.models.filter((m) => D.criteria_data[m.key]);
-    const share = (m, c) => ((D.criteria_data[m.key][c] || 0) / (m.evaluated_count || 1)) * 100;
+    seg("critSeg", state.critGroup, (v) => { state.critGroup = v; renderCriteria(); });
+    const list = CRITERIA[state.critGroup];
+    $("critTitle").textContent = state.critGroup === "pathogenic" ? "Pathogenic criteria" : "Benign criteria";
+    const ms = selModels();
+    const share = (m, c) => (D.criteria_data[m.key] ? ((D.criteria_data[m.key][c] || 0) / (m.evaluated_count || 1)) * 100 : null);
     let max = 0;
-    models.forEach((m) => [...CRITERIA.pathogenic, ...CRITERIA.benign].forEach(([c]) => (max = Math.max(max, share(m, c)))));
-    max = max || 1;
-    $("critMax").textContent = pct(max);
-    const head = `<thead><tr><th>Criterion</th>${models.map((m) => `<th class="colh"${tipAttr(m.name)}>${esc(m.short_name)}</th>`).join("")}</tr></thead>`;
-    const group = (title, list) => `<tr class="group"><td colspan="${models.length + 1}">${title}</td></tr>` + list.map(([c, def]) =>
-      `<tr><td class="rowh mono"${tipAttr(`${c}: ${def}`)}>${c}</td>${models.map((m) => {
-        const n = D.criteria_data[m.key][c] || 0, v = share(m, c);
-        return `<td class="h" style="${heatStyle(Math.sqrt(v / max))}"${tipAttr(`${c} · ${m.name}\n${int(n)} variants, ${v.toFixed(1)}% of evaluated\n${def}`)}>${n ? (v < 0.1 ? "<0.1" : v.toFixed(1)) : "0"}</td>`;
-      }).join("")}</tr>`).join("");
-    $("critHeat").innerHTML = head + `<tbody>${group("Pathogenic evidence", CRITERIA.pathogenic)}${group("Benign evidence", CRITERIA.benign)}</tbody>`;
+    list.forEach(([c]) => ms.forEach((m) => (max = Math.max(max, share(m, c) || 0))));
+    const top = niceMax(max);
+    const ticks = [0, top / 4, top / 2, (3 * top) / 4, top].map((t) => +t.toFixed(1));
+    $("critBars").innerHTML = groupedBars(list.map(([c, def]) => ({
+      label: `<span class="mono">${c}</span>`, sub: esc(def), tip: `${c}: ${def}`,
+      bars: ms.map((m) => {
+        const v = share(m, c);
+        if (v == null) return { m, v: null, text: "no criteria recorded" };
+        const n = D.criteria_data[m.key][c] || 0;
+        return { m, v, text: v > 0 && v < 0.1 ? "<0.1" : v.toFixed(1), tip: `${c} · ${m.name}\n${int(n)} variants, ${v.toFixed(1)}% of evaluated\n${def}` };
+      })
+    })), { max: top, ticks, unit: "%" });
   }
 
   // ---------- agreement ----------
   function renderAgreement() {
+    const f = focusModel();
+    $("agreeFocusTitle").innerHTML = `Agreement with ${mname(f)}`;
+    const conc = D.concordance[f.key] || {};
+    const others = D.models.filter((m) => m !== f);
+    const have = others.filter((m) => conc[m.key] && conc[m.key].overlap);
+    const missing = others.filter((m) => !(conc[m.key] && conc[m.key].overlap));
+    have.sort((a, b) => conc[b.key].dir_pct - conc[a.key].dir_pct);
+    $("agreeBars").innerHTML = have.length ? groupedBars(have.map((m) => {
+      const r = conc[m.key];
+      return {
+        label: mname(m), sub: `${int(r.overlap)} shared variants`,
+        bars: [{ m, v: r.exact_pct, v2: r.dir_pct, text: `${f1(r.exact_pct)} · ${f1(r.dir_pct)}`, tip: `${f.short_name} vs ${m.short_name}\nSame 5-class call: ${pct(r.exact_pct)}\nSame direction: ${pct(r.dir_pct)}\n${int(r.overlap)} shared variants` }]
+      };
+    }), { unit: "%" }) : `<p class="empty">No variant-level comparisons are available for this model.</p>`;
+    $("agreeNote").textContent = missing.length ? `Not available for ${missing.map((m) => m.short_name).join(", ")}: one of the pair was carried over from an earlier build without variant-level results.` : "";
+
     seg("agreeSeg", state.agree, (v) => { state.agree = v; renderAgreement(); });
     const models = D.models.filter((m) => D.concordance[m.key]);
     const vals = [];
-    models.forEach((a) => models.forEach((b) => { if (a !== b) { const v = D.concordance[a.key]?.[b.key]?.[state.agree]; if (v != null) vals.push(v); } }));
+    models.forEach((a) => models.forEach((b) => { if (a !== b) { const v = D.concordance[a.key]?.[b.key]; if (v && v.overlap) vals.push(v[state.agree]); } }));
     const lo = vals.length ? Math.floor(Math.min(...vals)) : 0, hi = vals.length ? Math.ceil(Math.max(...vals)) : 100;
     $("agreeMin").textContent = lo + "%";
     $("agreeMax").textContent = hi + "%";
-    $("agreeTitle").textContent = state.agree === "exact_pct" ? "Same 5-class call" : "Same direction (P/LP, VUS, B/LB)";
-    $("agreeSub").textContent = "Shading is scaled to the observed range.";
-    const head = `<thead><tr><th></th>${models.map((m) => `<th class="colh"${tipAttr(m.name)}>${esc(m.short_name)}</th>`).join("")}</tr></thead>`;
-    const body = models.map((a) => `<tr><td class="rowh">${esc(a.short_name)}</td>${models.map((b) => {
-      if (a === b) return `<td class="h" style="color:var(--muted)">—</td>`;
+    $("agreeTitle").textContent = state.agree === "exact_pct" ? "All pairs, same 5-class call" : "All pairs, same direction";
+    const head = `<thead><tr><th></th>${models.map((m) => `<th class="colh"${tipAttr(m.name)}>${swatch(m)}<br>${esc(m.short_name)}</th>`).join("")}</tr></thead>`;
+    const body = models.map((a) => `<tr><td class="rowh">${mname(a)}</td>${models.map((b) => {
       const r = D.concordance[a.key]?.[b.key];
-      if (!r || !r.overlap) return `<td class="h" style="color:var(--muted)">—</td>`;
+      if (a === b || !r || !r.overlap) return `<td class="h" style="color:var(--muted)">—</td>`;
       const v = r[state.agree];
       return `<td class="h" style="${heatStyle((v - lo) / Math.max(1, hi - lo))}"${tipAttr(`${a.short_name} vs ${b.short_name}\n${pct(v)} agreement\n${int(r.overlap)} shared variants`)}>${f1(v)}</td>`;
     }).join("")}</tr>`).join("");
@@ -1051,15 +1301,16 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
     $("vgt").innerHTML = `<option value="all">Any expert call</option>` + LABELS.map((l) => `<option value="${esc(l)}">${l}</option>`).join("");
     $("vcat").value = state.vcat;
     $("vgt").value = state.vgt;
-    const n = vs.length, total = D.metadata.total_variants;
-    $("varIntro").textContent = `${int(n)} of ${int(total)} cohort variants are embedded for inspection. Each cell is a classifier's call, shaded by how it relates to the expert classification.`;
+    $("varIntro").textContent = `${int(vs.length)} of ${int(D.metadata.total_variants)} cohort variants, sampled across disease categories, are embedded for inspection. Selected models are listed first.`;
   }
 
   function renderVariants() {
     seg("vonlySeg", state.vonly, (v) => { state.vonly = v; state.vpage = 0; renderVariants(); });
-    const models = D.models.filter((m) => (D.explorer_variants || []).some((v) => v.predictions && m.key in v.predictions));
+    const has = (m) => (D.explorer_variants || []).some((v) => v.predictions && v.predictions[m.key]);
+    const sel = selModels();
+    const models = [...sel, ...D.models.filter((m) => !sel.includes(m))].filter(has);
     const q = state.vq.trim().toLowerCase();
-    let list = (D.explorer_variants || []).filter((v) => {
+    const list = (D.explorer_variants || []).filter((v) => {
       if (state.vcat !== "all" && v.category !== state.vcat) return false;
       if (state.vgt !== "all" && v.ground_truth !== state.vgt) return false;
       if (q && !(`${v.gene} ${v.variation} ${v.disease} ${v.category}`.toLowerCase().includes(q))) return false;
@@ -1071,16 +1322,13 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
     const pages = Math.max(1, Math.ceil(list.length / PAGE));
     state.vpage = Math.min(state.vpage, pages - 1);
     const slice = list.slice(state.vpage * PAGE, state.vpage * PAGE + PAGE);
-    const head = `<thead><tr><th>Gene</th><th>Variant</th><th>Disease</th><th class="c">Expert</th>${models.map((m) => `<th class="colh"${tipAttr(m.name)}>${esc(m.short_name)}</th>`).join("")}</tr></thead>`;
+    const head = `<thead><tr><th>Gene</th><th>Variant</th><th>Disease</th><th class="c">Expert</th>${models.map((m) => `<th class="colh${sel.includes(m) ? " selcol" : ""}"${tipAttr(m.name)}>${swatch(m)}<br>${esc(m.short_name)}</th>`).join("")}</tr></thead>`;
     const body = slice.length ? slice.map((v) => `<tr>
       <td><strong>${esc(v.gene)}</strong></td>
       <td class="mono">${esc(v.variation)}</td>
       <td class="disease"><span class="d" title="${esc(v.disease)}">${esc(v.disease)}</span><span class="c">${esc(v.category)}${v.expert_panel ? " · " + esc(v.expert_panel) : ""}</span></td>
       <td class="c"><span class="chip truth"${tipAttr(`${v.ground_truth}${(v.ground_truth_criteria || []).length ? "\nExpert criteria: " + v.ground_truth_criteria.join(", ") : ""}`)}>${ABBR[v.ground_truth] || "—"}</span></td>
-      ${models.map((m) => {
-        const p = v.predictions[m.key];
-        return `<td class="c"><span class="chip ${matchClass(v.ground_truth, p)}"${tipAttr(`${m.name}\n${p || "No call"}`)}>${ABBR[p] || "—"}</span></td>`;
-      }).join("")}</tr>`).join("")
+      ${models.map((m) => { const p = v.predictions[m.key]; return `<td class="c"><span class="chip ${matchClass(v.ground_truth, p)}"${tipAttr(`${m.name}\n${p || "No call"}`)}>${ABBR[p] || "—"}</span></td>`; }).join("")}</tr>`).join("")
       : `<tr><td colspan="${models.length + 4}" class="empty">No variants match these filters.</td></tr>`;
     $("varTable").innerHTML = head + `<tbody>${body}</tbody>`;
     const from = list.length ? state.vpage * PAGE + 1 : 0, to = Math.min(list.length, (state.vpage + 1) * PAGE);
@@ -1091,30 +1339,49 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
     $("pgNext").onclick = () => { state.vpage++; renderVariants(); };
   }
 
-  // ---------- tabs ----------
+  // ---------- tabs & URL ----------
   const RENDER = {
-    overview: () => { renderTiles(); renderFamilySeg(); renderLeaderboard(); renderAccDots(); renderPerClassHeat(); },
-    compare: renderCompare,
+    overview: () => { renderTiles(); renderOvMetrics(); renderOvClass(); renderFamilySeg(); renderLeaderboard(); },
     categories: renderCategories,
+    flows: renderFlows,
+    confusion: renderConfusion,
     safety: renderSafety,
     criteria: renderCriteria,
     agreement: renderAgreement,
     variants: () => { renderVariantFilters(); renderVariants(); }
   };
 
-  function setTab(tab, push = true) {
+  function readHash() {
+    const [tab, q] = location.hash.slice(1).split("?");
+    const p = new URLSearchParams(q || "");
+    return { tab: tab || "overview", m: p.get("m"), c: p.get("c") };
+  }
+
+  function writeHash() {
+    const h = `#${state.tab}?m=${encodeURIComponent(state.focus)}&c=${state.comps.map(encodeURIComponent).join(",")}`;
+    if (location.hash !== h) history.replaceState(null, "", h);
+  }
+
+  function applyHash() {
+    const h = readHash();
+    if (h.m && byKey(h.m)) state.focus = h.m;
+    if (h.c != null) state.comps = h.c.split(",").filter(Boolean);
+    state.tab = RENDER[h.tab] ? h.tab : "overview";
+  }
+
+  function setTab(tab) {
     if (!RENDER[tab]) tab = "overview";
     state.tab = tab;
     document.querySelectorAll(".tab").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.tab === tab)));
     document.querySelectorAll(".view").forEach((v) => (v.hidden = v.id !== "view-" + tab));
     RENDER[tab]();
-    if (push && location.hash !== "#" + tab) history.replaceState(null, "", "#" + tab);
+    writeHash();
   }
 
   function renderAll() {
     renderChrome();
-    populateCompareSelects();
-    setTab(state.tab, false);
+    renderSelector();
+    setTab(state.tab);
   }
 
   // ---------- import ----------
@@ -1171,6 +1438,7 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
 
     D.models.push({
       key, name, short_name: name.length > 22 ? name.slice(0, 21) + "…" : name, family,
+      color: ["#008300", "#e34948", "#0d366b", "#8c5a2b"][D.models.filter((x) => x.imported).length % 4],
       is_anthropic: family === "Anthropic Claude", type: "Imported results", imported: true,
       evaluated_count: n, total_cohort: total, coverage_pct: +((n / total) * 100).toFixed(1),
       exact_accuracy: +((diag(m5) / n) * 100).toFixed(2), directional_accuracy: +((diag(m3) / n) * 100).toFixed(2),
@@ -1212,6 +1480,7 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
           const res = scoreImport(name, $("impFamily").value, parseRecords(String(reader.result)));
           dlg.close();
           state.tab = "overview";
+          state.focus = res.key;
           renderAll();
           toast(`${name}: scored ${int(res.n)} of ${int(D.metadata.total_variants)} variants.`);
         } catch (e) {
@@ -1403,9 +1672,39 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
     }).join("");
   }
 
+  // Inline <svg> charts are copied with their computed paint written as attributes.
+  function inlineSvg(svg, ox, oy) {
+    const r = svg.getBoundingClientRect();
+    const clone = svg.cloneNode(true);
+    const src = [...svg.querySelectorAll("*")], dst = [...clone.querySelectorAll("*")];
+    src.forEach((el, i) => {
+      const cs = getComputedStyle(el), c = dst[i];
+      c.removeAttribute("class");
+      c.removeAttribute("data-tip");
+      if (cs.display === "none") { c.remove(); return; }
+      const fill = cs.fill.startsWith("url") ? null : rgba(cs.fill);
+      c.setAttribute("fill", fill ? fill.hex : "none");
+      const fo = parseFloat(cs.fillOpacity) * (fill ? fill.a : 1);
+      if (fo < 1) c.setAttribute("fill-opacity", n2(fo));
+      const stroke = rgba(cs.stroke);
+      if (stroke && parseFloat(cs.strokeWidth) > 0) {
+        c.setAttribute("stroke", stroke.hex);
+        c.setAttribute("stroke-width", parseFloat(cs.strokeWidth));
+        if (stroke.a < 1) c.setAttribute("stroke-opacity", stroke.a);
+      }
+      if (el.tagName === "text") {
+        c.setAttribute("font-size", parseFloat(cs.fontSize));
+        c.setAttribute("font-weight", cs.fontWeight);
+        c.setAttribute("font-family", cs.fontFamily);
+      }
+    });
+    return `<g transform="translate(${n2(r.left - ox)},${n2(r.top - oy)})">${clone.innerHTML}</g>`;
+  }
+
   function walkSvg(node, ox, oy, out, root) {
     if (node.nodeType === 3) { out.push(textSvg(node, ox, oy)); return; }
     if (node.nodeType !== 1 || node.matches(EXPORT_IGNORE)) return;
+    if (node.tagName.toLowerCase() === "svg") { out.push(inlineSvg(node, ox, oy)); return; }
     const cs = getComputedStyle(node);
     if (cs.display === "none" || cs.visibility === "hidden") return;
     if (node !== root) {
@@ -1419,6 +1718,8 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
     const html = document.documentElement;
     const prevTheme = html.dataset.theme;
     html.dataset.theme = "light";
+    // Colours that depend on the theme are computed while rendering.
+    if (prevTheme !== "light") RENDER[state.tab]();
     // Let wide tables lay out at full width instead of scrolling.
     const prevWidth = card.style.width;
     const extra = Math.max(0, ...[...card.querySelectorAll(".table-wrap")].map((w) => w.scrollWidth - w.clientWidth));
@@ -1428,6 +1729,7 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
       card.classList.remove("exporting");
       card.style.width = prevWidth;
       if (prevTheme) html.dataset.theme = prevTheme; else delete html.dataset.theme;
+      if (prevTheme !== "light") RENDER[state.tab]();
     }
   }
 
@@ -1589,14 +1891,12 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
 
   function figureName(card) {
     const parts = ["aiva", card.querySelector(".card-head h3").textContent];
-    if (card.closest("#view-compare")) {
-      const A = byKey(state.cmpA), B = byKey(state.cmpB);
-      if (A && B) parts.push(`${A.short_name} vs ${B.short_name}`);
-      if (card.querySelector("#cmPair")) parts.push(state.cmScale + "-class", state.cmMode === "count" ? "counts" : "row-pct");
-    }
+    if (!card.hasAttribute("data-static")) parts.push(selModels().map((m) => m.short_name).join(" vs "));
+    if (card.querySelector("#flows") && state.flowCat !== "all") parts.push(state.flowCat);
+    if (card.querySelector("#cmGrid")) parts.push(state.cmScale + "-class", state.cmMode === "count" ? "counts" : "row-pct");
     if (card.querySelector("#caseTable")) { const m = byKey(state.safetyModel); if (m) parts.push(m.short_name); }
     if (card.querySelector("#agreeHeat")) parts.push(state.agree === "exact_pct" ? "exact" : "directional");
-    return slug(parts.join(" "));
+    return slug(parts.join(" ")).slice(0, 140).replace(/-$/, "");
   }
 
   async function exportFigure(card, fmt, dpi) {
@@ -1640,21 +1940,23 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
 
   // ---------- wiring ----------
   document.querySelectorAll(".tab").forEach((b) => (b.onclick = () => setTab(b.dataset.tab)));
-  $("cmpA").onchange = (e) => { state.cmpA = e.target.value; renderCompare(); };
-  $("cmpB").onchange = (e) => { state.cmpB = e.target.value; renderCompare(); };
-  $("swapBtn").onclick = () => { [state.cmpA, state.cmpB] = [state.cmpB, state.cmpA]; populateCompareSelects(); renderCompare(); };
-  $("catMetric").onchange = (e) => { state.catMetric = e.target.value; renderCategories(); };
+  $("focusSel").onchange = (e) => setFocus(e.target.value);
+  $("catMetric").onchange = (e) => { state.catMetric = e.target.value; renderCatMetric(); };
+  $("flowCat").onchange = (e) => { state.flowCat = e.target.value; renderFlows(); };
   $("safetyModel").onchange = (e) => { state.safetyModel = e.target.value; renderCases(); };
   $("vq").oninput = (e) => { state.vq = e.target.value; state.vpage = 0; renderVariants(); };
   $("vcat").onchange = (e) => { state.vcat = e.target.value; state.vpage = 0; renderVariants(); };
   $("vgt").onchange = (e) => { state.vgt = e.target.value; state.vpage = 0; renderVariants(); };
-  window.addEventListener("hashchange", () => setTab(location.hash.slice(1), false));
+  window.addEventListener("hashchange", () => { applyHash(); normalizeSelection(); renderSelector(); setTab(state.tab); });
+  let resizeT;
+  window.addEventListener("resize", () => { clearTimeout(resizeT); resizeT = setTimeout(() => { if (state.tab === "flows") renderFlows(); }, 150); });
 
   setupTheme();
   setupRefresh();
   setupImport();
   setupExport();
-  state.tab = location.hash.slice(1) || "overview";
+  setupFlowHover();
+  applyHash();
   renderAll();
 })();
 </script>
