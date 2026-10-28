@@ -49,6 +49,13 @@ def read_legacy_excluded() -> set[str]:
     return {k for k in keys if k}
 
 
+def macro_f1_directional(gt_3: list[str], pred_3: list[str]) -> float:
+    """Macro F1 over the three directions present in the ground truth."""
+    m = calculate_direction_metrics(gt_3, pred_3, DIRECTION_LABELS)
+    f1s = [m[d.lower()]["f1"] for d in DIRECTION_LABELS if m.get(d.lower(), {}).get("support", 0) > 0]
+    return sum(f1s) / len(f1s) if f1s else 0.0
+
+
 def get_vcep_category(panel: str) -> str:
     if not panel:
         return "Other"
@@ -449,6 +456,7 @@ def build_dashboard_dataset():
                 "exact_accuracy": round(c_exact / len(c_vids) * 100, 2),
                 "directional_accuracy": round(c_dir / len(c_vids) * 100, 2),
                 "macro_f1": round(calculate_macro_f1(c_m) * 100, 2),
+                "macro_f1_3": round(macro_f1_directional(c_gt3, c_pred3) * 100, 2),
                 "plp_f1": round((c_m["Pathogenic"]["f1"] + c_m["Likely Pathogenic"]["f1"]) / 2 * 100, 2),
                 "vus_f1": round(c_m["Uncertain Significance"]["f1"] * 100, 2),
                 "blb_f1": round((c_m["Benign"]["f1"] + c_m["Likely Benign"]["f1"]) / 2 * 100, 2),
