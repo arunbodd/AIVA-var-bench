@@ -42,3 +42,11 @@ Serves the page at http://localhost:8050 and enables the Models dialog
 "Save to the repository" (writes `imported_results/` and a `models.tsv` row),
 and "Rebuild data". Each change rebuilds `index.html`; commit and push to
 publish it.
+
+## Theme and fonts
+
+Colours and type follow mamidi.ai: Inter and Source Code Pro, deep green
+text, a beige page and an orange accent; the dark theme uses the site's deep
+green. The fonts' Latin subsets are in `fonts/` (SIL Open Font License 1.1,
+licence texts alongside) and `generate_html.py` embeds them, so the page
+works offline and exported SVG and TIFF figures keep the same type.

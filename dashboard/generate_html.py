@@ -10,6 +10,7 @@ The ground-truth label for every cohort variant is also embedded so that
 imported result files are scored against the full cohort in the browser.
 """
 
+import base64
 import json
 import sys
 from pathlib import Path
@@ -26,6 +27,14 @@ HTML_OUT = REPO_ROOT / "dashboard" / "index.html"
 TEMPLATE_FILE = REPO_ROOT / "dashboard" / "template.html"
 
 DATA_MARKER = "window.BENCHMARK_DATA = "
+
+# Latin subsets of Inter and Source Code Pro (SIL OFL 1.1, see fonts/), embedded
+# so the page works offline and exported figures keep the same type.
+FONTS_DIR = REPO_ROOT / "dashboard" / "fonts"
+FONT_FILES = [("Inter", "Inter-latin.woff2"), ("Source Code Pro", "SourceCodePro-latin.woff2")]
+LATIN_RANGE = ("U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, "
+               "U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, "
+               "U+2215, U+FEFF, U+FFFD")
 
 
 def load_benchmark_data() -> dict:
@@ -59,6 +68,20 @@ def load_ground_truth_index() -> dict:
     return index
 
 
+def font_faces_css() -> str:
+    rules = []
+    for family, name in FONT_FILES:
+        path = FONTS_DIR / name
+        if not path.exists():
+            continue
+        b64 = base64.b64encode(path.read_bytes()).decode("ascii")
+        rules.append(
+            f"@font-face{{font-family:'{family}';font-style:normal;font-weight:400 700;font-display:swap;"
+            f"src:url(data:font/woff2;base64,{b64}) format('woff2');unicode-range:{LATIN_RANGE}}}"
+        )
+    return "\n".join(rules)
+
+
 def to_script_json(obj) -> str:
     # Escape "</" so embedded strings can never close the <script> element.
     return json.dumps(obj, separators=(",", ":")).replace("</", "<\\/")
@@ -69,7 +92,8 @@ def main():
     data["ground_truth_index"] = load_ground_truth_index()
 
     template = TEMPLATE_FILE.read_text(encoding="utf-8")
-    html = template.replace("__BENCHMARK_DATA__", to_script_json(data))
+    html = template.replace("__FONT_FACES__", font_faces_css())
+    html = html.replace("__BENCHMARK_DATA__", to_script_json(data))
 
     HTML_OUT.write_text(html, encoding="utf-8")
     print(f"Generated standalone dashboard HTML at: {HTML_OUT}")
