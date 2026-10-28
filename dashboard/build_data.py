@@ -149,6 +149,21 @@ def discover_model_files(repo_root: Path) -> dict[str, dict]:
             "description": "Direct zero-shot prompting via Claude Code CLI without external clinical retrieval tools.",
         }
 
+    # 1b. Claude-Code Sonnet Manual Prompt
+    cc_sonnet_path = repo_root / "Claude_code_results" / "acmg_classifications_manual_sonnet.json"
+    if cc_sonnet_path.exists():
+        discovered["claude_code_sonnet"] = {
+            "name": "Claude-Code Sonnet 5.5",
+            "short_name": "Claude-Code Sonnet 5.5",
+            "family": "Anthropic Claude",
+            "is_anthropic": True,
+            "type": "Direct Prompt (Claude Code)",
+            "path": str(cc_sonnet_path),
+            "format": "json_array",
+            "color": "#7C3AED",
+            "description": "Direct prompting of Claude Sonnet 5.5 via Claude Code CLI without external clinical retrieval tools.",
+        }
+
     # 2. AIVA Claude Haiku Re-Run
     haiku_rr = repo_root / "Results_Claude_Haiku_5_5_Analysis_rerun" / "haiku_full.jsonl"
     if haiku_rr.exists():

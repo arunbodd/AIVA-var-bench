@@ -17,9 +17,11 @@ venv/
 !data/bias_unified.jsonl
 !data/erepo_bias_intervar_merged.jsonl
 !data/bias_2015/
+!Claude_code_results/*.json
 
 # ─── Generated results ───
 results/
+Results_Claude_Sonnet_5_5_Analysis_rerun/partial_1454/
 !Results_Claude_Sonnet_5_5_Analysis_rerun/sonnet_full.jsonl
 !Results_Claude_Sonnet_5_5_Analysis_rerun/sonnet_metrics.json
 !Results_Claude_Opus_5_5_Analysis_rerun/opus_full.jsonl
