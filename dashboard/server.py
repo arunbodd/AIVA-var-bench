@@ -7,6 +7,9 @@ Provides:
 - Dynamic REST API for dashboard data (`/api/data`)
 - Live background job monitoring endpoint (`/api/live`)
 - On-demand benchmark data refresh endpoint (`/api/refresh`)
+- Model management (`POST /api/models/remove|restore|import`): changes are
+  written to dashboard/excluded_models.txt, dashboard/imported_models.tsv and
+  imported_results/, then the dataset and index.html are rebuilt
 
 Usage:
     python dashboard/server.py             # Starts server on port 8050
@@ -28,6 +31,36 @@ from urllib.parse import urlparse
 REPO_ROOT = Path(__file__).resolve().parent.parent
 DASHBOARD_DIR = REPO_ROOT / "dashboard"
 DATA_FILE = DASHBOARD_DIR / "data" / "benchmark_data.json"
+EXCLUDED_FILE = DASHBOARD_DIR / "excluded_models.txt"
+IMPORTED_FILE = DASHBOARD_DIR / "imported_models.tsv"
+IMPORTED_DIR = REPO_ROOT / "imported_results"
+MAX_UPLOAD_BYTES = 200 * 1024 * 1024
+
+
+def rebuild() -> subprocess.CompletedProcess:
+    """Rebuild the dataset, then regenerate index.html from it."""
+    python_bin = "/tmp/aiva_env/bin/python3" if os.path.exists("/tmp/aiva_env/bin/python3") else sys.executable
+    env = os.environ.copy()
+    env["MPLCONFIGDIR"] = "/tmp/mpl_cache"
+    res = subprocess.run([python_bin, str(DASHBOARD_DIR / "build_data.py")], cwd=str(REPO_ROOT), env=env, capture_output=True, text=True)
+    if res.returncode == 0:
+        res = subprocess.run([python_bin, str(DASHBOARD_DIR / "generate_html.py")], cwd=str(REPO_ROOT), env=env, capture_output=True, text=True)
+    return res
+
+
+def read_lines(path: Path) -> list[str]:
+    return path.read_text(encoding="utf-8").splitlines() if path.exists() else []
+
+
+def set_excluded(key: str, excluded: bool) -> None:
+    keys = [k for k in (line.strip() for line in read_lines(EXCLUDED_FILE)) if k and k != key]
+    if excluded:
+        keys.append(key)
+    EXCLUDED_FILE.write_text("".join(k + "\n" for k in keys), encoding="utf-8")
+
+
+def slugify(text: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "_", text.lower()).strip("_")[:60] or "model"
 
 
 class DashboardHandler(http.server.SimpleHTTPRequestHandler):
@@ -65,25 +98,65 @@ class DashboardHandler(http.server.SimpleHTTPRequestHandler):
             return
 
         elif path == "/api/refresh":
-            print("[Server] Triggering dashboard data rebuild...")
-            python_bin = "/tmp/aiva_env/bin/python3" if os.path.exists("/tmp/aiva_env/bin/python3") else sys.executable
-            env = os.environ.copy()
-            env["MPLCONFIGDIR"] = "/tmp/mpl_cache"
-            res = subprocess.run([python_bin, str(DASHBOARD_DIR / "build_data.py")], cwd=str(REPO_ROOT), env=env, capture_output=True, text=True)
-
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json")
-            self.send_header("Access-Control-Allow-Origin", "*")
-            self.end_headers()
-
-            if DATA_FILE.exists():
-                with open(DATA_FILE, "rb") as f:
-                    self.wfile.write(f.read())
-            else:
-                self.wfile.write(json.dumps({"status": "error", "log": res.stderr}).encode())
-            return
+            print("[Server] Rebuilding dataset and index.html...")
+            res = rebuild()
+            if res.returncode != 0 or not DATA_FILE.exists():
+                return self.send_json({"status": "error", "log": res.stderr[-4000:]}, 500)
+            return self.send_json(json.loads(DATA_FILE.read_text(encoding="utf-8")))
 
         return super().do_GET()
+
+    def do_POST(self):
+        path = urlparse(self.path).path
+        if path not in ("/api/models/remove", "/api/models/restore", "/api/models/import"):
+            return self.send_json({"error": "Not found"}, 404)
+        # Only accept requests from pages served by this server.
+        origin = self.headers.get("Origin")
+        if origin and urlparse(origin).hostname not in ("localhost", "127.0.0.1", "::1"):
+            return self.send_json({"error": "Forbidden"}, 403)
+        length = int(self.headers.get("Content-Length") or 0)
+        if length > MAX_UPLOAD_BYTES:
+            return self.send_json({"error": "File too large"}, 413)
+        try:
+            body = json.loads(self.rfile.read(length) or b"{}")
+        except json.JSONDecodeError:
+            return self.send_json({"error": "Invalid JSON"}, 400)
+
+        if path == "/api/models/import":
+            name = str(body.get("name") or "").strip()
+            content = body.get("content") or ""
+            if not name or not content:
+                return self.send_json({"error": "name and content are required"}, 400)
+            key = "imported_" + slugify(name)
+            IMPORTED_DIR.mkdir(exist_ok=True)
+            rel = f"imported_results/{key}.jsonl"
+            (REPO_ROOT / rel).write_text(content, encoding="utf-8")
+            family = str(body.get("family") or "Other").replace("\t", " ")
+            rows = [line for line in read_lines(IMPORTED_FILE) if not line.startswith(key + "\t")]
+            rows.append("\t".join([key, name.replace("\t", " "), family, rel]))
+            IMPORTED_FILE.write_text("".join(r + "\n" for r in rows), encoding="utf-8")
+            set_excluded(key, False)
+        else:
+            key = str(body.get("key") or "").strip()
+            if not re.fullmatch(r"[A-Za-z0-9_\-]+", key):
+                return self.send_json({"error": "Invalid model key"}, 400)
+            set_excluded(key, path.endswith("remove"))
+
+        print(f"[Server] {path} {key}: rebuilding dataset and index.html...")
+        res = rebuild()
+        if res.returncode != 0 or not DATA_FILE.exists():
+            return self.send_json({"error": "Rebuild failed", "log": res.stderr[-4000:]}, 500)
+        data = json.loads(DATA_FILE.read_text(encoding="utf-8"))
+        data["changed_key"] = key
+        return self.send_json(data)
+
+    def send_json(self, obj, status: int = 200):
+        payload = json.dumps(obj).encode()
+        self.send_response(status)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(payload)))
+        self.end_headers()
+        self.wfile.write(payload)
 
     def get_live_job_status(self):
         jobs = {}
@@ -132,10 +205,10 @@ class DashboardHandler(http.server.SimpleHTTPRequestHandler):
         return jobs
 
 
-def run_server(port: int = 8050):
+def run_server(port: int = 8050, host: str = "127.0.0.1"):
     handler = DashboardHandler
     socketserver.TCPServer.allow_reuse_address = True
-    with socketserver.TCPServer(("", port), handler) as httpd:
+    with socketserver.TCPServer((host, port), handler) as httpd:
         print("\n" + "=" * 70)
         print("AIVA Variant Benchmark dashboard")
         print("=" * 70)
@@ -155,5 +228,6 @@ def run_server(port: int = 8050):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="AIVA Benchmark Dashboard Server")
     parser.add_argument("--port", type=int, default=8050, help="Port to bind (default: 8050)")
+    parser.add_argument("--host", default="127.0.0.1", help="Interface to bind (default: 127.0.0.1; the server can modify files)")
     args = parser.parse_args()
-    run_server(args.port)
+    run_server(args.port, args.host)

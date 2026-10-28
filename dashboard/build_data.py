@@ -52,6 +52,30 @@ MODEL_COLORS = {
     "baseline_bias": "#7a7873",
     "baseline_intervar": "#b9b7b0",
 }
+# Models removed from the dashboard (one key per line) and results imported
+# through the local dashboard server (tab-separated: key, name, family, path).
+EXCLUDED_FILE = REPO_ROOT / "dashboard" / "excluded_models.txt"
+IMPORTED_FILE = REPO_ROOT / "dashboard" / "imported_models.tsv"
+
+
+def read_excluded() -> set[str]:
+    if not EXCLUDED_FILE.exists():
+        return set()
+    keys = (line.split("#")[0].strip() for line in EXCLUDED_FILE.read_text(encoding="utf-8").splitlines())
+    return {k for k in keys if k}
+
+
+def read_imported() -> list[dict]:
+    if not IMPORTED_FILE.exists():
+        return []
+    rows = []
+    for line in IMPORTED_FILE.read_text(encoding="utf-8").splitlines():
+        parts = line.split("\t")
+        if len(parts) == 4 and not line.startswith("#"):
+            rows.append(dict(zip(("key", "name", "family", "path"), parts)))
+    return rows
+
+
 FALLBACK_COLORS = ["#008300", "#e34948", "#0d366b", "#8c5a2b"]
 
 
@@ -260,7 +284,23 @@ def discover_model_files(repo_root: Path) -> dict[str, dict]:
                 "description": f"Auto-discovered benchmark results from {d_name}.",
             }
 
-    # 11. Classical Baselines
+    # 11. Results imported through the dashboard server
+    for row in read_imported():
+        path = REPO_ROOT / row["path"]
+        if path.exists():
+            discovered[row["key"]] = {
+                "name": row["name"],
+                "short_name": row["name"] if len(row["name"]) <= 22 else row["name"][:21] + "…",
+                "family": row["family"],
+                "is_anthropic": row["family"] == "Anthropic Claude",
+                "type": "Imported results",
+                "path": str(path),
+                "format": "jsonl",
+                "color": "",
+                "description": "Imported through the dashboard.",
+            }
+
+    # 12. Classical Baselines
     discovered["baseline_bias"] = {
         "name": "BIAS-2015 (Standard Tool)",
         "short_name": "BIAS-2015",
@@ -372,6 +412,9 @@ def build_dashboard_dataset():
     print(f"Loaded {total_cohort} ClinGen expert curated variants.")
 
     models_info = discover_model_files(REPO_ROOT)
+    excluded = read_excluded()
+    excluded_models = [{"key": k, "name": m["name"]} for k, m in models_info.items() if k in excluded]
+    models_info = {k: m for k, m in models_info.items() if k not in excluded}
     print(f"Discovered {len(models_info)} models and baselines:")
     for k, m in models_info.items():
         print(f"  • [{m['family']}] {m['name']} ({m['format']})")
@@ -717,6 +760,7 @@ def build_dashboard_dataset():
             "categories": CATEGORY_ORDER,
             "classification_labels": CLASSIFICATION_LABELS,
             "direction_labels": DIRECTION_LABELS,
+            "excluded_models": excluded_models,
         },
         "models": models_summary,
         "confusion_matrices": models_confusion,
@@ -728,7 +772,7 @@ def build_dashboard_dataset():
         "live_jobs": live_jobs,
     }
 
-    carry_over_archived_models(payload)
+    carry_over_archived_models(payload, excluded)
 
     out_file = REPO_ROOT / "dashboard" / "data" / "benchmark_data.json"
     out_file.parent.mkdir(parents=True, exist_ok=True)
@@ -758,7 +802,7 @@ def load_previous_dataset() -> dict:
     return data
 
 
-def carry_over_archived_models(payload: dict) -> None:
+def carry_over_archived_models(payload: dict, excluded: set[str]) -> None:
     """
     Keep models whose raw result files are not in this checkout (for example
     runs excluded by .gitignore) by copying their computed results from the
@@ -767,8 +811,12 @@ def carry_over_archived_models(payload: dict) -> None:
     """
     previous = load_previous_dataset()
     current = {m["key"] for m in payload["models"]}
+    for m in previous.get("models", []):
+        listed = {x["key"] for x in payload["metadata"]["excluded_models"]}
+        if m["key"] in excluded and m["key"] not in current and m["key"] not in listed:
+            payload["metadata"]["excluded_models"].append({"key": m["key"], "name": m["name"]})
     archived = [m for m in previous.get("models", [])
-                if m["key"] not in current and not m.get("imported")
+                if m["key"] not in current and m["key"] not in excluded and not m.get("imported")
                 and m["key"] in previous.get("confusion_matrices", {})]
     if not archived:
         return

@@ -73,3 +73,6 @@ Results_Gemini_Pro_Analysis/figures/*.png
 Results_Gemini_Pro_Analysis/figures/*.pdf
 Results_Gemini_Pro_Analysis/figures/pdf/*.png
 Results_Gemini_Pro_Analysis/figures/png/*.pdf
+
+# ─── Results imported through the dashboard server ───
+!imported_results/*.jsonl

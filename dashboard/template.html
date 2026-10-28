@@ -269,6 +269,15 @@ dialog::backdrop { background: rgba(0, 0, 0, 0.45); }
 .dlg-foot { display: flex; justify-content: flex-end; gap: 8px; padding: 14px 20px; border-top: 1px solid var(--border); }
 .dlg-error { color: var(--critical); font-size: 13px; }
 
+dialog.dlg-wide { width: min(760px, calc(100vw - 32px)); }
+.dlg-sub { margin: 0 0 4px; font-size: 13px; font-weight: 600; color: var(--text-2); }
+.dlg-status { margin-right: auto; font-size: 12px; color: var(--text-2); align-self: center; }
+.check { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; color: var(--text-2); }
+.check input { margin-top: 3px; }
+#modelsTable td, #removedTable td { padding: 7px 8px; }
+.btn-danger { color: var(--critical); }
+.btn-danger.armed { background: var(--critical); color: #ffffff; border-color: var(--critical); }
+.btn:disabled { opacity: 0.5; cursor: default; }
 .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--text); color: var(--surface); padding: 9px 14px; border-radius: 8px; font-size: 13px; z-index: 110; max-width: calc(100vw - 32px); }
 
 footer { color: var(--muted); font-size: 12px; padding-top: 24px; }
@@ -318,6 +327,51 @@ footer { color: var(--muted); font-size: 12px; padding-top: 24px; }
 .gb-axis .tick { position: absolute; transform: translateX(-50%); font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
 .gb-axis .tick.first { transform: none; }
 .gb-axis .tick.last { transform: translateX(-100%); }
+
+/* Stacked outcome bars */
+.st-legend { order: 10; flex-basis: 100%; }
+.st-legend i { display: inline-block; width: 22px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
+.st-seg { flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; overflow: hidden; white-space: nowrap; box-sizing: border-box; }
+.st-v { display: grid; grid-template-columns: 40px minmax(0, 1fr); column-gap: 8px; }
+.st-yax { position: relative; height: 380px; font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.st-yax span { position: absolute; right: 0; transform: translateY(50%); }
+.st-area { position: relative; }
+.st-grid { position: absolute; left: 0; right: 0; top: 0; height: 380px; border-bottom: 1px solid var(--axis); }
+.st-grid .gl { position: absolute; left: 0; right: 0; height: 1px; background: var(--grid); }
+.st-slots { position: relative; display: flex; justify-content: space-around; }
+.st-block { width: 162px; }
+.st-colwrap { position: relative; width: 84px; height: 380px; }
+.st-col { position: absolute; inset: 0; display: flex; flex-direction: column-reverse; }
+.st-v .st-seg { width: 100%; border-top: 2px solid var(--surface); }
+.st-v .st-seg:first-child { border-radius: 0 0 3px 3px; border-top-width: 0; }
+.st-v .st-seg:last-child { border-radius: 3px 3px 0 0; }
+.st-mk { position: absolute; left: calc(100% + 3px); width: 10px; height: 0; border-top: 1px solid var(--text-2); }
+.st-mk span { position: absolute; left: 14px; top: 0; transform: translateY(-50%); font-size: 11px; color: var(--text-2); white-space: nowrap; line-height: 1.25; }
+.st-mk b { display: block; color: var(--text); font-size: 12px; font-weight: 600; }
+.st-xl { width: 162px; margin-left: -39px; padding-top: 10px; text-align: center; font-size: 12px; color: var(--text-2); line-height: 1.4; font-variant-numeric: tabular-nums; }
+.st-xl .nm { display: block; color: var(--text); font-size: 13px; font-weight: 600; }
+.st-xl .nm .swatch { margin-right: 5px; }
+.st-crit { color: var(--critical); }
+.st-h .st-row { display: grid; grid-template-columns: minmax(110px, 170px) minmax(0, 1fr); gap: 4px 16px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--grid); }
+.st-h .st-row:last-of-type { border-bottom: 0; }
+@media (max-width: 640px) { .st-h .st-row, .st-h .st-axis { grid-template-columns: minmax(0, 1fr); } .st-h .st-axis > span:first-child { display: none; } .st-h .st-meta { grid-column: 1; } .st-h .st-name small { display: none; } }
+.st-h .st-name { font-weight: 600; font-size: 13px; min-width: 0; }
+.st-h .st-name small { display: block; font-weight: 400; color: var(--muted); font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.st-h .st-bar { display: flex; height: 26px; }
+.st-h .st-seg { height: 100%; border-left: 2px solid var(--surface); }
+.st-h .st-seg:first-child { border-left-width: 0; border-radius: 4px 0 0 4px; }
+.st-h .st-seg:last-child { border-radius: 0 4px 4px 0; }
+.st-brk { position: relative; height: 14px; }
+.st-brk span { position: absolute; left: 0; top: 6px; height: 7px; border: 1px solid var(--muted); border-bottom: 0; }
+.st-brk em { position: absolute; top: -9px; left: 4px; font-style: normal; background: var(--surface); padding: 0 4px; white-space: nowrap; font-size: 11px; color: var(--text-2); }
+.st-brk.dr em { left: auto; right: 4px; }
+.st-meta { grid-column: 2; font-size: 12px; color: var(--text-2); font-variant-numeric: tabular-nums; display: flex; flex-wrap: wrap; gap: 2px 14px; }
+.st-meta b { color: var(--text); font-weight: 600; }
+.st-axis { display: grid; grid-template-columns: minmax(110px, 170px) minmax(0, 1fr); gap: 16px; }
+.st-axis .ticks { position: relative; height: 16px; font-size: 11px; color: var(--muted); }
+.st-axis .ticks span { position: absolute; transform: translateX(-50%); }
+.st-axis .ticks span:first-child { transform: none; }
+.st-axis .ticks span:last-child { transform: translateX(-100%); }
 
 /* Sankey */
 .flow-grid { display: grid; gap: 24px; grid-template-columns: minmax(0, 1fr); }
@@ -374,6 +428,7 @@ footer code { font-size: 12px; }
     <div class="actions">
       <button class="btn" id="themeBtn" type="button">Theme: System</button>
       <button class="btn" id="refreshBtn" type="button" hidden>Rebuild data</button>
+      <button class="btn" id="modelsBtn" type="button">Models</button>
       <button class="btn btn-primary" id="importBtn" type="button">Import results</button>
     </div>
   </div>
@@ -405,6 +460,16 @@ footer code { font-size: 12px; }
   <!-- OVERVIEW -->
   <section class="view" id="view-overview" role="tabpanel">
     <div class="tiles" id="tiles"></div>
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <h3>Where each call lands</h3>
+          <p>Every evaluated variant, split by how the model's call relates to the expert classification. Markers give exact accuracy (first segment) and directional accuracy (first two segments). Shades follow each model's colour; red is cross-direction.</p>
+        </div>
+        <div class="legend st-legend" id="stLegend"></div>
+      </div>
+      <div id="stacked"></div>
+    </div>
     <div class="grid-2">
       <div class="card">
         <div class="card-head">
@@ -632,7 +697,7 @@ footer code { font-size: 12px; }
     <div class="dlg-body">
       <div>
         <h3>Import model results</h3>
-        <p>A JSONL file (one record per line) or a JSON array. Each record needs a variant id (<code>variant_id</code> or <code>id</code>) and a call (<code>aiva_classification</code>, <code>classification</code> or <code>prediction</code>). Scoring runs in this browser against the full cohort; nothing is uploaded.</p>
+        <p>A JSONL file (one record per line) or a JSON array. Each record needs a variant id (<code>variant_id</code> or <code>id</code>) and a call (<code>aiva_classification</code>, <code>classification</code> or <code>prediction</code>). <span id="impWhere">Scoring runs in this browser against the full cohort; nothing is uploaded, and the model stays only until the page is reloaded.</span></p>
       </div>
       <div class="drop" id="drop" tabindex="0" role="button">
         <input type="file" id="fileInput" accept=".jsonl,.json,.ndjson" hidden>
@@ -648,11 +713,33 @@ footer code { font-size: 12px; }
           <option>Other</option>
         </select>
       </label>
+      <label class="check" id="impSaveWrap" hidden><input type="checkbox" id="impSave" checked> Save to the repository and rebuild (writes <code>imported_results/</code>; a model with the same name is replaced)</label>
       <div class="dlg-error" id="impError" hidden></div>
     </div>
     <div class="dlg-foot">
       <button class="btn" value="cancel" type="submit">Cancel</button>
       <button class="btn btn-primary" id="impGo" type="button">Score and add</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="modelsDlg" class="dlg-wide">
+  <form method="dialog">
+    <div class="dlg-body">
+      <div>
+        <h3>Models</h3>
+        <p id="modelsNote"></p>
+      </div>
+      <div class="table-wrap"><table id="modelsTable"></table></div>
+      <div id="removedWrap" hidden>
+        <h4 class="dlg-sub">Removed</h4>
+        <div class="table-wrap"><table id="removedTable"></table></div>
+      </div>
+      <div class="dlg-error" id="modelsError" hidden></div>
+    </div>
+    <div class="dlg-foot">
+      <span class="dlg-status" id="modelsStatus"></span>
+      <button class="btn" value="close" type="submit">Close</button>
     </div>
   </form>
 </dialog>
@@ -921,6 +1008,85 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
       return `<div class="tile"><div class="tile-label">${x.label}</div><div class="tile-value">${value}</div>
         <div class="tile-sub">${swatch(f)}${esc(f.short_name)}${isFull(f) ? "" : ` · ${pct(f.coverage_pct)} of cohort`}</div>${lines ? `<div class="tile-cmps">${lines}</div>` : ""}</div>`;
     }).join("");
+  }
+
+  // Every call falls in exactly one outcome, so the segments sum to 100%.
+  const OUTCOMES = [
+    ["exact", "Exact match", 1],
+    ["tier", "Right direction, wrong tier", 0.55],
+    ["hedge", "Expert P/LP or B/LB, called VUS", 0.3],
+    ["over", "Expert VUS, called P/LP or B/LB", 0.14],
+    ["cross", "Cross-direction", null]
+  ];
+
+  function outcomeCounts(m) {
+    const mat = (D.confusion_matrices[m.key] || {}).matrix_5;
+    if (!mat) return null;
+    const dir = ["p", "p", "v", "b", "b"];
+    const c = { exact: 0, tier: 0, hedge: 0, over: 0, cross: 0, n: 0 };
+    mat.forEach((row, i) => row.forEach((v, j) => {
+      c.n += v;
+      if (i === j) c.exact += v;
+      else if (dir[i] === dir[j]) c.tier += v;
+      else if (dir[j] === "v") c.hedge += v;
+      else if (dir[i] === "v") c.over += v;
+      else c.cross += v;
+    }));
+    return c;
+  }
+
+  function outcomeStyle(m, a) {
+    if (a == null) return "background:var(--critical);color:#ffffff";
+    const surface = getComputedStyle(document.documentElement).getPropertyValue("--surface").trim() || "#ffffff";
+    const L = hexLum(m.color) * a + hexLum(surface) * (1 - a);
+    return `background:color-mix(in srgb, ${m.color} ${Math.round(a * 100)}%, var(--surface));color:${L < 0.36 ? "#ffffff" : "#0b0b0b"}`;
+  }
+
+  function renderStacked() {
+    const ms = selModels().map((m) => ({ m, c: outcomeCounts(m) })).filter((x) => x.c && x.c.n);
+    const box = $("stacked");
+    $("stLegend").innerHTML = OUTCOMES.map(([, label, a]) => {
+      const fill = a == null ? "var(--critical)" : `linear-gradient(90deg, ${ms.map((x, i) =>
+        `color-mix(in srgb, ${x.m.color} ${Math.round(a * 100)}%, var(--surface)) ${(i * 100) / ms.length}% ${((i + 1) * 100) / ms.length}%`).join(", ")})`;
+      return `<span><i style="background:${fill}"></i>${label}</span>`;
+    }).join("");
+    if (!ms.length) { box.innerHTML = `<p class="empty">No confusion matrices for the selected models.</p>`; return; }
+    const pctOf = (c, k) => (c[k] / c.n) * 100;
+    const segTip = (m, c, k, label) => `${m.short_name}\n${label}: ${int(c[k])} of ${int(c.n)} (${pct(pctOf(c, k))})`;
+    const vertical = ms.length <= 5 && (box.clientWidth || 1000) >= ms.length * 175 + 60;
+
+    if (vertical) {
+      const ticks = [0, 25, 50, 75, 100];
+      box.innerHTML = `<div class="st-v">
+        <div class="st-yax">${ticks.map((t) => `<span style="bottom:${t}%">${t}%</span>`).join("")}</div>
+        <div class="st-area">
+          <div class="st-grid">${ticks.slice(1).map((t) => `<span class="gl" style="bottom:${t}%"></span>`).join("")}</div>
+          <div class="st-slots">${ms.map(({ m, c }) => {
+            const ex = pctOf(c, "exact"), dr = ex + pctOf(c, "tier");
+            const segs = OUTCOMES.map(([k, label, a]) => c[k] ? `<div class="st-seg" style="height:${pctOf(c, k)}%;${k === "cross" ? "min-height:3px;" : ""}${outcomeStyle(m, a)}"${tipAttr(segTip(m, c, k, label))}>${pctOf(c, k) >= 5 ? f1(pctOf(c, k)) : ""}</div>` : "").join("");
+            return `<div class="st-block">
+              <div class="st-colwrap"><div class="st-col">${segs}</div>
+                <div class="st-mk" style="bottom:${ex}%"><span>Exact<b>${f1(ex)}%</b></span></div>
+                <div class="st-mk" style="bottom:${dr}%"><span>Directional<b>${f1(dr)}%</b></span></div>
+              </div>
+              <div class="st-xl"><span class="nm">${mname(m)}</span>${int(c.exact)} exact · ${int(c.exact + c.tier)} directional<br><span class="st-crit">${int(c.cross)} cross-direction</span> of ${int(c.n)}</div>
+            </div>`;
+          }).join("")}</div>
+        </div></div>`;
+      return;
+    }
+
+    const barPx = Math.max(120, (box.clientWidth || 800) - (window.innerWidth <= 640 ? 0 : 186));
+    const minLabel = (40 / barPx) * 100;
+    box.innerHTML = `<div class="st-h">${ms.map(({ m, c }) => {
+      const ex = pctOf(c, "exact"), dr = ex + pctOf(c, "tier");
+      const segs = OUTCOMES.map(([k, label, a]) => c[k] ? `<div class="st-seg" style="width:${pctOf(c, k)}%;${k === "cross" ? "min-width:3px;" : ""}${outcomeStyle(m, a)}"${tipAttr(segTip(m, c, k, label))}>${pctOf(c, k) >= minLabel ? f1(pctOf(c, k)) : ""}</div>` : "").join("");
+      return `<div class="st-row"><div class="st-name">${mname(m)}<small>${esc(m.name)}</small></div>
+        <div><div class="st-brk"><span style="width:${ex}%"></span><em>Exact ${f1(ex)}%</em></div>
+          <div class="st-brk dr" style="margin-top:-2px"><span style="width:${dr}%"></span><em style="right:calc(${100 - dr}% + 4px)">Directional ${f1(dr)}%</em></div>
+          <div class="st-bar">${segs}</div></div>
+        <div class="st-meta"><span>Exact <b>${int(c.exact)}</b></span><span>Wrong tier <b>${int(c.tier)}</b></span><span>Hedged to VUS <b>${int(c.hedge)}</b></span><span>Called from VUS <b>${int(c.over)}</b></span><span class="st-crit">Cross-direction <b class="st-crit">${int(c.cross)}</b></span><span>of ${int(c.n)}</span></div></div>`;
+    }).join("")}<div class="st-axis"><span></span><div class="ticks">${[0, 25, 50, 75, 100].map((t) => `<span style="left:${t}%">${t}%</span>`).join("")}</div></div></div>`;
   }
 
   function renderOvMetrics() {
@@ -1341,7 +1507,7 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
 
   // ---------- tabs & URL ----------
   const RENDER = {
-    overview: () => { renderTiles(); renderOvMetrics(); renderOvClass(); renderFamilySeg(); renderLeaderboard(); },
+    overview: () => { renderTiles(); renderStacked(); renderOvMetrics(); renderOvClass(); renderFamilySeg(); renderLeaderboard(); },
     categories: renderCategories,
     flows: renderFlows,
     confusion: renderConfusion,
@@ -1475,7 +1641,25 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
       if (!pendingFile) { err.textContent = "Choose a file first."; err.hidden = false; return; }
       const name = $("impName").value.trim() || pendingFile.name;
       const reader = new FileReader();
-      reader.onload = () => {
+      reader.onload = async () => {
+        if (LOCAL_SERVER && $("impSave").checked) {
+          $("impGo").disabled = true; $("impGo").textContent = "Saving and rebuilding…";
+          try {
+            parseRecords(String(reader.result));
+            const data = await postModels("import", { name, family: $("impFamily").value, content: String(reader.result) });
+            dlg.close();
+            state.tab = "overview";
+            state.focus = data.changed_key;
+            applyServerData(data);
+            const m = byKey(data.changed_key);
+            toast(m ? `${name}: saved and scored on ${int(m.evaluated_count)} of ${int(D.metadata.total_variants)} variants.` : `${name} was saved but no records matched the cohort.`);
+          } catch (e) {
+            err.textContent = e.message; err.hidden = false;
+          } finally {
+            $("impGo").disabled = false; $("impGo").textContent = "Score and add";
+          }
+          return;
+        }
         try {
           const res = scoreImport(name, $("impFamily").value, parseRecords(String(reader.result)));
           dlg.close();
@@ -1489,6 +1673,94 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
       };
       reader.readAsText(pendingFile);
     };
+  }
+
+  // ---------- model management ----------
+  const LOCAL_SERVER = ["localhost", "127.0.0.1", "[::1]"].includes(location.hostname);
+
+  function removeModelLocal(key) {
+    D.models = D.models.filter((m) => m.key !== key);
+    ["confusion_matrices", "categories_data", "criteria_data", "safety_data", "concordance"].forEach((k) => { if (D[k]) delete D[k][key]; });
+    Object.values(D.concordance || {}).forEach((row) => delete row[key]);
+    (D.explorer_variants || []).forEach((v) => { if (v.predictions) delete v.predictions[key]; });
+  }
+
+  function applyServerData(data) {
+    data.ground_truth_index = GT;
+    D = data;
+    normalizeSelection();
+    renderAll();
+  }
+
+  async function postModels(action, body) {
+    const res = await fetch("/api/models/" + action, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.models) throw new Error(data.error ? `${data.error}${data.log ? ": " + data.log.split("\n").filter(Boolean).pop() : ""}` : `Server returned ${res.status}`);
+    return data;
+  }
+
+  function renderModelsDialog() {
+    $("modelsNote").textContent = LOCAL_SERVER
+      ? "Removing a model adds it to dashboard/excluded_models.txt and rebuilds the dataset and dashboard/index.html. Commit and push those files to publish the change. Restore undoes a removal."
+      : "This page is static, so removing a model hides it in this tab only. To remove a model permanently, run python dashboard/server.py, remove it there, then commit and push dashboard/index.html.";
+    $("modelsTable").innerHTML = `<thead><tr><th>Model</th><th class="r">Evaluated</th><th>Source</th><th></th></tr></thead><tbody>${D.models.map((m) =>
+      `<tr><td>${mname(m)}<div class="model-meta">${esc(m.name)}</div></td><td class="r num">${int(m.evaluated_count)}</td>
+        <td class="model-meta">${m.imported ? "Imported in this tab" : m.archived ? "Archived (earlier build)" : esc(m.type)}</td>
+        <td class="r"><button type="button" class="btn btn-danger" data-remove="${esc(m.key)}">Remove</button></td></tr>`).join("")}</tbody>`;
+    const removed = LOCAL_SERVER ? (D.metadata.excluded_models || []) : [];
+    $("removedWrap").hidden = !removed.length;
+    $("removedTable").innerHTML = `<tbody>${removed.map((m) => `<tr><td>${esc(m.name)}</td><td class="r"><button type="button" class="btn" data-restore="${esc(m.key)}">Restore</button></td></tr>`).join("")}</tbody>`;
+
+    $("modelsTable").querySelectorAll("[data-remove]").forEach((b) => b.onclick = async () => {
+      const key = b.dataset.remove, m = byKey(key);
+      if (D.models.length <= 1) { toast("At least one model must remain."); return; }
+      if (!b.classList.contains("armed")) {
+        $("modelsTable").querySelectorAll(".armed").forEach((x) => { x.classList.remove("armed"); x.textContent = "Remove"; });
+        b.classList.add("armed");
+        b.textContent = "Confirm";
+        if (m.archived && LOCAL_SERVER) $("modelsStatus").textContent = "Archived models cannot be restored after the next rebuild: their raw results are not in the repository.";
+        return;
+      }
+      if (LOCAL_SERVER && !m.imported) {
+        await serverAction(() => postModels("remove", { key }), `Removed ${m.name}.`);
+      } else {
+        removeModelLocal(key);
+        normalizeSelection();
+        renderAll();
+        renderModelsDialog();
+        toast(`Removed ${m.name} from this tab.`);
+      }
+    });
+    $("removedTable").querySelectorAll("[data-restore]").forEach((b) => b.onclick = () => {
+      const m = (D.metadata.excluded_models || []).find((x) => x.key === b.dataset.restore);
+      serverAction(() => postModels("restore", { key: b.dataset.restore }), `Restored ${m ? m.name : b.dataset.restore}.`);
+    });
+  }
+
+  async function serverAction(fn, okMsg) {
+    const dlg = $("modelsDlg"), err = $("modelsError");
+    dlg.querySelectorAll("button").forEach((b) => (b.disabled = true));
+    $("modelsStatus").textContent = "Rebuilding the dataset…";
+    err.hidden = true;
+    try {
+      applyServerData(await fn());
+      toast(okMsg + " Commit and push dashboard/ to publish.");
+      $("modelsStatus").textContent = "";
+    } catch (e) {
+      err.textContent = e.message; err.hidden = false;
+      $("modelsStatus").textContent = "";
+    } finally {
+      dlg.querySelectorAll("button").forEach((b) => (b.disabled = false));
+      renderModelsDialog();
+    }
+  }
+
+  function setupModels() {
+    $("modelsBtn").onclick = () => { $("modelsStatus").textContent = ""; $("modelsError").hidden = true; renderModelsDialog(); $("modelsDlg").showModal(); };
+    if (LOCAL_SERVER) {
+      $("impSaveWrap").hidden = false;
+      $("impWhere").textContent = "The file is scored against the full cohort. With the option below, it is also saved to the repository and the dashboard is rebuilt.";
+    }
   }
 
   // ---------- theme & refresh ----------
@@ -1949,11 +2221,12 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
   $("vgt").onchange = (e) => { state.vgt = e.target.value; state.vpage = 0; renderVariants(); };
   window.addEventListener("hashchange", () => { applyHash(); normalizeSelection(); renderSelector(); setTab(state.tab); });
   let resizeT;
-  window.addEventListener("resize", () => { clearTimeout(resizeT); resizeT = setTimeout(() => { if (state.tab === "flows") renderFlows(); }, 150); });
+  window.addEventListener("resize", () => { clearTimeout(resizeT); resizeT = setTimeout(() => { if (state.tab === "flows") renderFlows(); if (state.tab === "overview") renderStacked(); }, 150); });
 
   setupTheme();
   setupRefresh();
   setupImport();
+  setupModels();
   setupExport();
   setupFlowHover();
   applyHash();
