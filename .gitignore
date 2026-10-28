@@ -1,7 +1,8 @@
 # ─── Python ───
 *.pyc
 __pycache__
-venv
+venv/
+.venv/
 .env
 
 # ─── OS / editor junk ───
@@ -22,6 +23,7 @@ results/
 
 # ─── Logs & ad-hoc debug output ───
 *.log
+*.pid
 /nohup.out
 /log*
 /debug_*
