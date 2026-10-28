@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>AIVA Variant Benchmark</title>
+<link rel="icon" type="image/png" href="__MAMIDI_ICON__">
 <style id="fontFaces">__FONT_FACES__</style>
 <style>
 :root {
@@ -102,6 +103,11 @@ button, input, select { font: inherit; color: inherit; }
 /* Header */
 .app-header { background: var(--page); }
 .app-header .wrap { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding-top: 22px; padding-bottom: 16px; }
+.brand { display: flex; align-items: center; gap: 14px; min-width: 0; }
+.brand-logo { display: block; flex-shrink: 0; border-radius: 50%; box-shadow: 0 1px 3px rgba(19, 71, 52, 0.18); }
+.brand-logo img { display: block; width: 48px; height: 48px; border-radius: 50%; }
+.brand-text { min-width: 0; }
+@media (max-width: 640px) { .brand { gap: 12px; } .brand-logo img { width: 40px; height: 40px; } }
 .brand h1 { margin: 0; font-size: 20px; font-weight: 700; letter-spacing: -0.02em; }
 .brand p { margin: 2px 0 0; color: var(--text-2); font-size: 13px; }
 .actions { display: flex; gap: 8px; flex-wrap: wrap; }
@@ -627,8 +633,11 @@ footer code { font-size: 12px; }
 <header class="app-header">
   <div class="wrap">
     <div class="brand">
-      <h1>AIVA Variant Benchmark</h1>
-      <p id="subtitle"></p>
+      <a class="brand-logo" href="https://mamidi.ai/" target="_blank" rel="noopener"><img src="__MAMIDI_LOGO__" alt="Mamidi Health" width="48" height="48"></a>
+      <div class="brand-text">
+        <h1>AIVA Variant Benchmark</h1>
+        <p id="subtitle"></p>
+      </div>
     </div>
     <div class="actions">
       <button class="btn" id="themeBtn" type="button">Theme: System</button>

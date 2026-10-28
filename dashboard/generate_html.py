@@ -82,6 +82,10 @@ def font_faces_css() -> str:
     return "\n".join(rules)
 
 
+def data_uri(path: Path, mime: str) -> str:
+    return f"data:{mime};base64," + base64.b64encode(path.read_bytes()).decode("ascii") if path.exists() else ""
+
+
 def to_script_json(obj) -> str:
     # Escape "</" so embedded strings can never close the <script> element.
     return json.dumps(obj, separators=(",", ":")).replace("</", "<\\/")
@@ -93,6 +97,9 @@ def main():
 
     template = TEMPLATE_FILE.read_text(encoding="utf-8")
     html = template.replace("__FONT_FACES__", font_faces_css())
+    assets = REPO_ROOT / "dashboard" / "assets"
+    html = html.replace("__MAMIDI_LOGO__", data_uri(assets / "mamidi-logo.png", "image/png"))
+    html = html.replace("__MAMIDI_ICON__", data_uri(assets / "mamidi-icon.png", "image/png"))
     html = html.replace("__BENCHMARK_DATA__", to_script_json(data))
 
     HTML_OUT.write_text(html, encoding="utf-8")

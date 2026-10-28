@@ -49,4 +49,5 @@ Colours and type follow mamidi.ai: Inter and Source Code Pro, deep green
 text, a beige page and an orange accent; the dark theme uses the site's deep
 green. The fonts' Latin subsets are in `fonts/` (SIL Open Font License 1.1,
 licence texts alongside) and `generate_html.py` embeds them, so the page
-works offline and exported SVG and TIFF figures keep the same type.
+works offline and exported SVG and TIFF figures keep the same type. The
+Mamidi Health emblem in the header and browser tab comes from `assets/`.
