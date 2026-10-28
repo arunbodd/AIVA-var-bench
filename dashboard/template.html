@@ -1241,7 +1241,8 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
   }
 
   function setupRefresh() {
-    if (!location.protocol.startsWith("http")) return;
+    // Only the local server (dashboard/server.py) provides /api/refresh.
+    if (!["localhost", "127.0.0.1", "[::1]"].includes(location.hostname)) return;
     const btn = $("refreshBtn");
     btn.hidden = false;
     btn.onclick = async () => {
