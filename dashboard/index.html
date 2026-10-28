@@ -372,6 +372,38 @@ tr.lb-divider td { text-transform: none; letter-spacing: 0; font-size: 12px; fon
 .tile-cmp .tc-d { text-align: right; font-weight: 600; }
 .tile-sub .swatch { margin-right: 4px; }
 
+/* Leaderboard line chart */
+.lnchart { display: block; overflow: visible; }
+.ln-grid { stroke: var(--grid); stroke-width: 1; }
+.ln-axis { stroke: var(--axis); stroke-width: 1; }
+.ln-tick { fill: var(--muted); font-size: 11px; }
+.ln-xl { fill: var(--text); font-size: 12px; font-weight: 600; }
+.ln-xs { fill: var(--muted); font-size: 11px; }
+.ln-line { fill: none; stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; }
+.ln-leader { fill: none; stroke-width: 1; }
+.ln-pt { stroke: var(--surface); stroke-width: 2; }
+.ln-name { fill: var(--text); font-size: 12px; font-weight: 500; }
+.ln-v { fill: var(--text-2); font-weight: 400; }
+.ln-series { cursor: pointer; transition: opacity 0.12s; }
+.ln-series.partial .ln-line { stroke-opacity: 0.55; }
+.lnchart.hl .ln-series { opacity: 0.14; }
+.lnchart.hl .ln-series.on { opacity: 1; }
+.lnchart.hl .ln-series.on .ln-line { stroke-width: 3.5; }
+
+/* Grouped vertical bars */
+.vb { display: grid; grid-template-columns: 40px minmax(0, 1fr); column-gap: 8px; }
+.vb-y { position: relative; height: 280px; font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.vb-y span { position: absolute; right: 0; transform: translateY(50%); }
+.vb-plot { position: relative; height: 280px; display: flex; gap: 12px; padding: 0 6px; border-bottom: 1px solid var(--axis); }
+.vb-plot .gl { position: absolute; left: 0; right: 0; height: 1px; background: var(--grid); }
+.vb-group { position: relative; flex: 1; display: flex; align-items: flex-end; justify-content: center; gap: 2px; min-width: 0; }
+.vb-bar { position: relative; flex: 1; max-width: 34px; min-height: 1px; border-radius: 3px 3px 0 0; }
+.vb-bar.vb-empty { height: 100%; background: repeating-linear-gradient(0deg, transparent 0 6px, var(--grid) 6px 7px); border-radius: 0; opacity: 0.6; }
+.vb-val { position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); padding-bottom: 3px; font-size: 10px; color: var(--text-2); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.vb-x { display: flex; gap: 12px; padding: 0 6px; }
+.vb-xl { flex: 1; min-width: 0; text-align: center; padding-top: 8px; font-size: 12px; font-weight: 500; line-height: 1.3; }
+.vb-xl small { display: block; font-size: 11px; font-weight: 400; color: var(--muted); }
+
 /* Grouped horizontal bars */
 .gb { display: grid; }
 .gb-row { display: grid; grid-template-columns: minmax(110px, 190px) minmax(0, 1fr); gap: 4px 14px; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--grid); }
@@ -605,6 +637,15 @@ footer code { font-size: 12px; }
       <div class="seg" id="familySeg" role="group" aria-label="Filter by provider"></div>
     </div>
     <div class="lb-facts" id="lbFacts"></div>
+    <div class="card" id="lbLineCard" data-static>
+      <div class="card-head">
+        <div>
+          <h3>Where each model scores</h3>
+          <p>One line per model across the four accuracy and F1 measures, all percentages of evaluated variants. Where lines cross, models swap rank between measures. The axis starts at the lowest score shown, not at zero.<span class="ui-hint"> Hover a line to trace it; select it to open the model.</span></p>
+        </div>
+      </div>
+      <div id="lbLine"></div>
+    </div>
     <div class="card lb-card" data-static>
       <div class="card-head">
         <div>
@@ -640,7 +681,7 @@ footer code { font-size: 12px; }
       </div>
       <div class="card">
         <div class="card-head">
-          <div><h3>F1 by ACMG class</h3><p>5-class F1 for each classification tier.</p></div>
+          <div><h3>F1 by ACMG class</h3><p>5-class F1 for each classification tier: pathogenic (P), likely pathogenic (LP), VUS, likely benign (LB), benign (B).</p></div>
           <div class="legend" data-legend></div>
         </div>
         <div id="ovClass"></div>
@@ -778,7 +819,7 @@ footer code { font-size: 12px; }
     </div>
     <div class="card">
       <div class="card-head">
-        <div><h3 id="critTitle"></h3><p>Percentage of evaluated variants.</p></div>
+        <div><h3 id="critTitle"></h3><p>Percentage of evaluated variants. Hover a code for its definition.</p></div>
         <div class="controls">
           <div class="seg" id="critSeg" role="group" aria-label="Evidence type">
             <button data-v="pathogenic" type="button">Pathogenic evidence</button><button data-v="benign" type="button">Benign evidence</button>
@@ -1100,7 +1141,20 @@ window.BENCHMARK_DATA = {"metadata":{"title":"AIVA Variant Benchmark","subtitle"
   }
 
   const providerOf = (m) => (PROVIDER_ORDER.includes(m.family) ? m.family : "Other");
-  const byProvider = (models) => PROVIDER_ORDER.map((p) => [p, models.filter((m) => providerOf(m) === p)]).filter(([, ms]) => ms.length);
+  const methodShort = (t) => (/claude code/i.test(t || "") ? "Claude Code" : /aiva/i.test(t || "") ? "AIVA" : (t || "Other"));
+  // A provider with models from more than one method is split, e.g. "Anthropic · AIVA" and "Anthropic · Claude Code".
+  function groupOf(m) {
+    const p = providerOf(m);
+    const methods = new Set(D.models.filter((x) => providerOf(x) === p).map((x) => methodShort(x.type)));
+    return methods.size > 1 ? `${p} · ${methodShort(m.type)}` : p;
+  }
+  const METHOD_ORDER = ["AIVA", "Claude Code"];
+  const groupRank = (g) => {
+    const [p, meth] = g.split(" · ");
+    const mi = meth ? METHOD_ORDER.indexOf(meth) : 0;
+    return PROVIDER_ORDER.indexOf(p) * 100 + (mi < 0 ? 50 : mi);
+  };
+  const byProvider = (models) => [...new Set(models.map(groupOf))].sort((a, b) => groupRank(a) - groupRank(b)).map((g) => [g, models.filter((m) => groupOf(m) === g)]);
 
   function renderSelector() {
     normalizeSelection();
@@ -1137,7 +1191,7 @@ window.BENCHMARK_DATA = {"metadata":{"title":"AIVA Variant Benchmark","subtitle"
     $("pickerNote").textContent = `${state.comps.length} of ${MAX_COMPARE} comparison slots used. Charts stay readable and colours distinguishable with up to ${MAX_COMPARE + 1} models.`;
     $("pickerList").querySelectorAll("input[data-key]").forEach((c) => c.onchange = () => toggleComp(c.dataset.key));
     $("pickerList").querySelectorAll(".pk-all").forEach((b) => b.onclick = () => {
-      const ms = others.filter((m) => providerOf(m) === b.dataset.provider).map((m) => m.key);
+      const ms = others.filter((m) => groupOf(m) === b.dataset.provider).map((m) => m.key);
       if (ms.every((k) => state.comps.includes(k))) state.comps = state.comps.filter((k) => !ms.includes(k));
       else {
         const add = ms.filter((k) => !state.comps.includes(k));
@@ -1190,6 +1244,26 @@ window.BENCHMARK_DATA = {"metadata":{"title":"AIVA Variant Benchmark","subtitle"
     const axis = `<div class="gb-row gb-axis"><div></div><div class="gb-bars"><div class="gb-plot">${ticks.map((t, i) =>
       `<span class="tick${i === 0 ? " first" : ""}${i === ticks.length - 1 ? " last" : ""}" style="left:${pos(t)}%">${t}${opts.unit || ""}</span>`).join("")}</div></div></div>`;
     return `<div class="gb${opts.wide ? " gb-wide" : ""}">${rows}${axis}</div>`;
+  }
+
+  // Vertical grouped bars: groups along x, one bar per model in each group.
+  // groups: [{label, sub, tip, bars: [{m, v, text, tip}]}]
+  function verticalBars(groups, opts = {}) {
+    const max = opts.max || 100;
+    const ticks = opts.ticks || [0, 25, 50, 75, 100];
+    const pos = (v) => Math.max(0, Math.min(100, (v / max) * 100));
+    const nBars = Math.max(1, ...groups.map((g) => g.bars.length));
+    const width = opts.width || 1000;
+    const slot = (width - 48) / groups.length / (nBars + 1);
+    const showVals = slot >= 30;
+    const y = ticks.map((t) => `<span style="bottom:${pos(t)}%">${t}${opts.unit || ""}</span>`).join("");
+    const gl = ticks.slice(1).map((t) => `<span class="gl" style="bottom:${pos(t)}%"></span>`).join("");
+    const cols = groups.map((g) => `<div class="vb-group">${g.bars.map((b) => b.v == null
+      ? `<div class="vb-bar vb-empty"${tipAttr(b.tip || `${b.m.name}: no data`)}></div>`
+      : `<div class="vb-bar" style="height:${pos(b.v)}%;background:${b.m.color}"${tipAttr(b.tip || "")}>${showVals ? `<span class="vb-val">${b.text}</span>` : ""}</div>`).join("")}</div>`).join("");
+    const xl = groups.map((g) => `<div class="vb-xl"><span${g.tip ? tipAttr(g.tip) : ""}>${g.label}</span>${g.sub ? `<small>${g.sub}</small>` : ""}</div>`).join("");
+    return `<div class="vb"><div class="vb-y">${y}</div><div class="vb-plot">${gl}${cols}</div><div></div><div class="vb-x">${xl}</div></div>` +
+      (showVals ? "" : `<p class="note">Values on hover.</p>`);
   }
 
   function niceMax(v) {
@@ -1326,21 +1400,21 @@ window.BENCHMARK_DATA = {"metadata":{"title":"AIVA Variant Benchmark","subtitle"
       ["macro_f1_5", "Macro F1", "5-class"], ["macro_f1_3", "Macro F1", "3-class"],
       ["exact_accuracy", "Exact accuracy", "5-class"], ["directional_accuracy", "Directional accuracy", "3-class"]
     ];
-    $("ovMetrics").innerHTML = groupedBars(metrics.map(([k, l, sub]) => ({
+    $("ovMetrics").innerHTML = verticalBars(metrics.map(([k, l, sub]) => ({
       label: l, sub,
       bars: ms.map((m) => ({ m, v: m[k], text: f1(m[k]), tip: `${m.name}\n${l} (${sub}): ${pct(m[k])}${isFull(m) ? "" : `\nScored on ${int(m.evaluated_count)} variants`}` }))
-    })), { unit: "" });
+    })), { width: $("ovMetrics").clientWidth });
   }
 
   function renderOvClass() {
     const ms = selModels();
-    $("ovClass").innerHTML = groupedBars(LABELS.map((l) => ({
-      label: l, sub: `n = ${int((focusModel().per_class_5[l] || {}).support)}`,
+    $("ovClass").innerHTML = verticalBars(LABELS.map((l) => ({
+      label: ABBR[l], tip: l, sub: `n = ${int((focusModel().per_class_5[l] || {}).support)}`,
       bars: ms.map((m) => {
         const c = (m.per_class_5 || {})[l] || {};
         return { m, v: c.f1, text: f1(c.f1), tip: `${m.name}\n${l}\nF1 ${pct(c.f1)} · precision ${pct(c.precision)} · recall ${pct(c.recall)}` };
       })
-    })));
+    })), { width: $("ovClass").clientWidth });
   }
 
   const RANK_METRICS = [
@@ -1356,18 +1430,20 @@ window.BENCHMARK_DATA = {"metadata":{"title":"AIVA Variant Benchmark","subtitle"
 
   function renderFamilySeg() {
     const fams = byProvider(D.models).map(([p]) => p);
-    $("familySeg").innerHTML = `<button data-v="all" type="button">All providers</button>` + fams.map((f) => `<button data-v="${esc(f)}" type="button">${esc(f)}</button>`).join("");
+    if (state.family !== "all" && !fams.includes(state.family)) state.family = "all";
+    $("familySeg").innerHTML = `<button data-v="all" type="button">All</button>` + fams.map((f) => `<button data-v="${esc(f)}" type="button">${esc(f)}</button>`).join("");
     seg("familySeg", state.family, (v) => { state.family = v; renderFamilySeg(); renderLeaderboard(); });
   }
 
   function renderLeaderboard() {
     const rk = RANK_METRICS.find((x) => x.key === state.rankBy) || RANK_METRICS[0];
-    const visible = D.models.filter((m) => state.family === "all" || providerOf(m) === state.family);
+    const visible = D.models.filter((m) => state.family === "all" || groupOf(m) === state.family);
     const order = (a, b) => rk.low ? metricVal(a, rk.key) - metricVal(b, rk.key) : metricVal(b, rk.key) - metricVal(a, rk.key);
     const ranked = visible.filter(isFull).sort(order);
     const partial = visible.filter((m) => !isFull(m)).sort(order);
+    renderLbLine([...ranked, ...partial]);
     const full = D.models.filter(isFull);
-    const nProviders = byProvider(D.models).length;
+    const nProviders = new Set(D.models.map(providerOf)).size;
 
     $("lbLead").textContent = `${D.models.length} classifiers from ${nProviders} provider${nProviders === 1 ? "" : "s"}, each scored against the ClinGen expert classification of ${int(D.metadata.total_variants)} variants.`;
     $("lbTitle").textContent = `Ranked by ${rk.key === "per1k" ? "cross-direction errors per 1,000 variants" : rk.label + ", " + rk.sub}`;
@@ -1407,7 +1483,7 @@ window.BENCHMARK_DATA = {"metadata":{"title":"AIVA Variant Benchmark","subtitle"
       const tags = (m.imported ? '<span class="pill">imported</span>' : "") + (m.archived ? `<span class="pill"${tipAttr("Carried over from an earlier build; raw results are not in this repository.")}>archived</span>` : "");
       return `<tr class="row-link" tabindex="0" data-key="${esc(m.key)}" style="--mc:${m.color}">
         <td class="rank"><span class="lb-rank${rank && rank <= 3 ? " top" : ""}">${rank || "—"}</span></td>
-        <td data-label="Model"><div class="model-cell"><span class="model-name">${swatch(m)}${esc(m.name)}${tags}</span><span class="model-meta">${esc(providerOf(m))} · ${esc(m.type)}</span></div></td>
+        <td data-label="Model"><div class="model-cell"><span class="model-name">${swatch(m)}${esc(m.name)}${tags}</span><span class="model-meta">${esc(groupOf(m).includes(" · ") ? groupOf(m) : providerOf(m) + " · " + m.type)}</span></div></td>
         ${RANK_METRICS.map((x) => {
           const isBest = isFull(m) && bestOf[x.key] != null && Math.abs(metricVal(m, x.key) - bestOf[x.key]) < 1e-9;
           const tip = x.key === "per1k" ? tipAttr(`${int(m.false_pathogenic_count)} B/LB called P/LP\n${int(m.false_benign_count)} P/LP called B/LB\n${int(m.critical_error_count)} of ${int(m.evaluated_count)} variants`) : "";
@@ -1430,6 +1506,70 @@ window.BENCHMARK_DATA = {"metadata":{"title":"AIVA Variant Benchmark","subtitle"
       tr.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openAnalysis(tr.dataset.key); } };
     });
     $("lbNote").textContent = "Bold values are the best in each column among ranked models. Selecting a model opens its analysis against BIAS-2015, InterVar and any other models you choose.";
+  }
+
+  const LINE_METRICS = [
+    ["exact_accuracy", "Exact accuracy", "5-class"],
+    ["macro_f1_5", "Macro F1", "5-class"],
+    ["directional_accuracy", "Directional accuracy", "3-class"],
+    ["macro_f1_3", "Macro F1", "3-class"]
+  ];
+
+  function renderLbLine(models) {
+    const box = $("lbLine");
+    if (!models.length) { box.innerHTML = `<p class="empty">No models for this filter.</p>`; return; }
+    const W = Math.max(300, box.clientWidth || 1000);
+    const narrow = W < 640;
+    const H = narrow ? 300 : 360, top = 16, bottom = 46, left = 40, right = narrow ? 118 : 200;
+    const inset = narrow ? 34 : 60;
+    const x0 = left + inset, x1 = W - right - 16;
+    const xs = LINE_METRICS.map((_, i) => x0 + (i * (x1 - x0)) / (LINE_METRICS.length - 1));
+    const vals = models.flatMap((m) => LINE_METRICS.map(([k]) => m[k] ?? 0));
+    const lo = Math.max(0, Math.floor((Math.min(...vals) - 3) / 10) * 10), hi = Math.min(100, Math.ceil((Math.max(...vals) + 2) / 10) * 10);
+    const y = (v) => top + ((hi - v) / Math.max(1, hi - lo)) * (H - top - bottom);
+    const grid = [];
+    for (let t = lo; t <= hi; t += 10) grid.push(`<line class="ln-grid" x1="${left}" x2="${x1 + 8}" y1="${n2(y(t))}" y2="${n2(y(t))}"/><text class="ln-tick" x="${left - 6}" y="${n2(y(t) + 4)}" text-anchor="end">${t}</text>`);
+    const axes = xs.map((x, i) => `<line class="ln-axis" x1="${n2(x)}" x2="${n2(x)}" y1="${top}" y2="${H - bottom}"/>` +
+      `<text class="ln-xl" x="${n2(x)}" y="${H - bottom + 18}" text-anchor="middle">${narrow ? ["Exact", "F1", "Direct.", "F1"][i] : LINE_METRICS[i][1]}</text><text class="ln-xs" x="${n2(x)}" y="${H - bottom + 32}" text-anchor="middle">${narrow ? LINE_METRICS[i][2].replace("-class", "-cl.") : LINE_METRICS[i][2]}</text>`).join("");
+
+    // End labels, nudged apart so they never overlap
+    const gap = narrow ? 13 : 15;
+    const lbl = models.map((m) => ({ m, y0: y(m[LINE_METRICS[LINE_METRICS.length - 1][0]] ?? 0) })).sort((a, b) => a.y0 - b.y0);
+    lbl.forEach((l, i) => { l.y = i ? Math.max(l.y0, lbl[i - 1].y + gap) : l.y0; });
+    const overflow = lbl.length ? lbl[lbl.length - 1].y - (H - bottom) : 0;
+    if (overflow > 0) for (let i = lbl.length - 1; i >= 0; i--) { lbl[i].y = Math.min(lbl[i].y, (i === lbl.length - 1 ? H - bottom : lbl[i + 1].y - gap)); }
+    const labelY = Object.fromEntries(lbl.map((l) => [l.m.key, l.y]));
+    const xl = xs[xs.length - 1];
+
+    const series = models.map((m) => {
+      const pts = LINE_METRICS.map(([k], i) => [xs[i], y(m[k] ?? 0)]);
+      const partial = !isFull(m);
+      const ly = labelY[m.key], lastY = pts[pts.length - 1][1];
+      const name = narrow && m.short_name.length > 15 ? m.short_name.slice(0, 14) + "…" : m.short_name;
+      const tipBase = `${m.name}${partial ? ` (scored on ${int(m.evaluated_count)} variants)` : ""}`;
+      return `<g class="ln-series${partial ? " partial" : ""}" data-key="${esc(m.key)}">
+        <polyline class="ln-line" points="${pts.map((p) => p.map(n2).join(",")).join(" ")}" stroke="${m.color}"/>
+        ${pts.map((p, i) => `<circle class="ln-pt" cx="${n2(p[0])}" cy="${n2(p[1])}" r="4.5" fill="${m.color}"${tipAttr(`${tipBase}\n${LINE_METRICS[i][1]}, ${LINE_METRICS[i][2]}: ${pct(m[LINE_METRICS[i][0]])}`)}/>`).join("")}
+        ${Math.abs(ly - lastY) > 2 ? `<polyline class="ln-leader" points="${n2(xl + 6)},${n2(lastY)} ${n2(xl + 12)},${n2(ly)}" stroke="${m.color}"/>` : ""}
+        <text class="ln-name" x="${n2(xl + 16)}" y="${n2(ly + 4)}"${tipAttr(tipBase)}>${esc(name)}${partial ? "*" : ""} <tspan class="ln-v">${f1(m[LINE_METRICS[LINE_METRICS.length - 1][0]])}</tspan></text>
+      </g>`;
+    }).join("");
+    box.innerHTML = `<svg class="lnchart" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Scores of each model across four measures">${grid.join("")}${axes}${series}</svg>` +
+      (models.some((m) => !isFull(m)) ? `<p class="note">* Scored on part of the cohort.</p>` : "");
+  }
+
+  function setupLbLine() {
+    const box = $("lbLine");
+    const clear = () => { const svg = box.querySelector("svg"); if (svg) { svg.classList.remove("hl"); svg.querySelectorAll(".on").forEach((e) => e.classList.remove("on")); } };
+    box.addEventListener("pointerover", (e) => {
+      const g = e.target.closest(".ln-series");
+      clear();
+      if (!g) return;
+      g.ownerSVGElement.classList.add("hl");
+      g.classList.add("on");
+    });
+    box.addEventListener("pointerleave", clear);
+    box.addEventListener("click", (e) => { const g = e.target.closest(".ln-series"); if (g) openAnalysis(g.dataset.key); });
   }
 
   function openAnalysis(key) {
@@ -1731,15 +1871,15 @@ window.BENCHMARK_DATA = {"metadata":{"title":"AIVA Variant Benchmark","subtitle"
     list.forEach(([c]) => ms.forEach((m) => (max = Math.max(max, share(m, c) || 0))));
     const top = niceMax(max);
     const ticks = [0, top / 4, top / 2, (3 * top) / 4, top].map((t) => +t.toFixed(1));
-    $("critBars").innerHTML = groupedBars(list.map(([c, def]) => ({
-      label: `<span class="mono">${c}</span>`, sub: esc(def), tip: `${c}: ${def}`,
+    $("critBars").innerHTML = verticalBars(list.map(([c, def]) => ({
+      label: `<span class="mono">${c}</span>`, tip: `${c}: ${def}`,
       bars: ms.map((m) => {
         const v = share(m, c);
         if (v == null) return { m, v: null, text: "no criteria recorded" };
         const n = D.criteria_data[m.key][c] || 0;
         return { m, v, text: v > 0 && v < 0.1 ? "<0.1" : v.toFixed(1), tip: `${c} · ${m.name}\n${int(n)} variants, ${v.toFixed(1)}% of evaluated\n${def}` };
       })
-    })), { max: top, ticks, unit: "%" });
+    })), { max: top, ticks, unit: "%", width: $("critBars").clientWidth });
   }
 
   // ---------- agreement ----------
@@ -2630,7 +2770,7 @@ window.BENCHMARK_DATA = {"metadata":{"title":"AIVA Variant Benchmark","subtitle"
   $("vgt").onchange = (e) => { state.vgt = e.target.value; state.vpage = 0; renderVariants(); };
   window.addEventListener("hashchange", () => { applyHash(); normalizeSelection(); renderSelector(); setTab(state.tab); });
   let resizeT;
-  window.addEventListener("resize", () => { clearTimeout(resizeT); resizeT = setTimeout(() => { if (state.tab === "flows") renderFlows(); if (state.tab === "overview") renderStacked(); }, 150); });
+  window.addEventListener("resize", () => { clearTimeout(resizeT); resizeT = setTimeout(() => { if (RENDER[state.tab]) RENDER[state.tab](); }, 150); });
 
   setupTheme();
   setupRefresh();
@@ -2639,6 +2779,7 @@ window.BENCHMARK_DATA = {"metadata":{"title":"AIVA Variant Benchmark","subtitle"
   setupExport();
   setupFlowHover();
   setupPicker();
+  setupLbLine();
   $("drawerClose").onclick = closeDrawer;
   document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeDrawer(); });
   applyHash();
