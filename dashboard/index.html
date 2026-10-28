@@ -372,23 +372,20 @@ tr.lb-divider td { text-transform: none; letter-spacing: 0; font-size: 12px; fon
 .tile-cmp .tc-d { text-align: right; font-weight: 600; }
 .tile-sub .swatch { margin-right: 4px; }
 
-/* Leaderboard line chart */
-.lnchart { display: block; overflow: visible; }
-.ln-grid { stroke: var(--grid); stroke-width: 1; }
-.ln-axis { stroke: var(--axis); stroke-width: 1; }
-.ln-tick { fill: var(--muted); font-size: 11px; }
-.ln-xl { fill: var(--text); font-size: 12px; font-weight: 600; }
-.ln-xs { fill: var(--muted); font-size: 11px; }
-.ln-line { fill: none; stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; }
-.ln-leader { fill: none; stroke-width: 1; }
-.ln-pt { stroke: var(--surface); stroke-width: 2; }
-.ln-name { fill: var(--text); font-size: 12px; font-weight: 500; }
-.ln-v { fill: var(--text-2); font-weight: 400; }
-.ln-series { cursor: pointer; transition: opacity 0.12s; }
-.ln-series.partial .ln-line { stroke-opacity: 0.55; }
-.lnchart.hl .ln-series { opacity: 0.14; }
-.lnchart.hl .ln-series.on { opacity: 1; }
-.lnchart.hl .ln-series.on .ln-line { stroke-width: 3.5; }
+/* Leaderboard scatter */
+.scatter { display: block; overflow: visible; }
+.sc-grid { stroke: var(--grid); stroke-width: 1; }
+.sc-axis { stroke: var(--axis); stroke-width: 1; }
+.sc-tick { fill: var(--muted); font-size: 11px; }
+.sc-axl { fill: var(--text); font-size: 12px; font-weight: 600; }
+.sc-best { fill: var(--good); fill-opacity: 0.07; }
+.sc-best-t { fill: var(--good); font-size: 11px; }
+.sc-lbl { fill: var(--text); font-size: 12px; font-weight: 500; }
+.sc-key { margin-bottom: 10px; }
+.sc-pt { cursor: pointer; transition: opacity 0.12s; }
+.scatter.hl .sc-pt { opacity: 0.25; }
+.scatter.hl .sc-pt.on { opacity: 1; }
+.scatter.hl .sc-pt.on circle { stroke-width: 3; }
 
 /* Grouped vertical bars */
 .vb { display: grid; grid-template-columns: 40px minmax(0, 1fr); column-gap: 8px; }
@@ -637,14 +634,17 @@ footer code { font-size: 12px; }
       <div class="seg" id="familySeg" role="group" aria-label="Filter by provider"></div>
     </div>
     <div class="lb-facts" id="lbFacts"></div>
-    <div class="card" id="lbLineCard" data-static>
+    <div class="card" id="lbScatterCard" data-static>
       <div class="card-head">
         <div>
-          <h3>Where each model scores</h3>
-          <p>One line per model across the four accuracy and F1 measures, all percentages of evaluated variants. Where lines cross, models swap rank between measures. The axis starts at the lowest score shown, not at zero.<span class="ui-hint"> Hover a line to trace it; select it to open the model.</span></p>
+          <h3 id="scTitle"></h3>
+          <p id="scSub"></p>
+        </div>
+        <div class="seg" id="scSeg" role="group" aria-label="Score">
+          <button data-v="5" type="button">5-class</button><button data-v="3" type="button">3-class</button>
         </div>
       </div>
-      <div id="lbLine"></div>
+      <div id="lbScatter"></div>
     </div>
     <div class="card lb-card" data-static>
       <div class="card-head">
@@ -1006,7 +1006,7 @@ window.BENCHMARK_DATA = {"metadata":{"title":"AIVA Variant Benchmark","subtitle"
 
   const state = {
     tab: "leaderboard",
-    rankBy: "macro_f1_5",
+    rankBy: "macro_f1_5", scatterScale: "5",
     focus: null,
     comps: ["baseline_bias", "baseline_intervar"],
     family: "all",
@@ -1441,7 +1441,7 @@ window.BENCHMARK_DATA = {"metadata":{"title":"AIVA Variant Benchmark","subtitle"
     const order = (a, b) => rk.low ? metricVal(a, rk.key) - metricVal(b, rk.key) : metricVal(b, rk.key) - metricVal(a, rk.key);
     const ranked = visible.filter(isFull).sort(order);
     const partial = visible.filter((m) => !isFull(m)).sort(order);
-    renderLbLine([...ranked, ...partial]);
+    renderLbScatter([...ranked, ...partial]);
     const full = D.models.filter(isFull);
     const nProviders = new Set(D.models.map(providerOf)).size;
 
@@ -1508,68 +1508,86 @@ window.BENCHMARK_DATA = {"metadata":{"title":"AIVA Variant Benchmark","subtitle"
     $("lbNote").textContent = "Bold values are the best in each column among ranked models. Selecting a model opens its analysis against BIAS-2015, InterVar and any other models you choose.";
   }
 
-  const LINE_METRICS = [
-    ["exact_accuracy", "Exact accuracy", "5-class"],
-    ["macro_f1_5", "Macro F1", "5-class"],
-    ["directional_accuracy", "Directional accuracy", "3-class"],
-    ["macro_f1_3", "Macro F1", "3-class"]
-  ];
+  // Accuracy against safety: score across, cross-direction errors up (inverted).
+  const SCATTER_X = {
+    "5": { key: "macro_f1_5", label: "Macro F1, 5-class" },
+    "3": { key: "directional_accuracy", label: "Directional accuracy, 3-class" }
+  };
+  const median = (vals) => { const v = vals.slice().sort((a, b) => a - b); const n = v.length; return n ? (n % 2 ? v[(n - 1) / 2] : (v[n / 2 - 1] + v[n / 2]) / 2) : 0; };
 
-  function renderLbLine(models) {
-    const box = $("lbLine");
+  function renderLbScatter(models) {
+    seg("scSeg", state.scatterScale, (v) => { state.scatterScale = v; renderLeaderboard(); });
+    const ax = SCATTER_X[state.scatterScale];
+    $("scTitle").textContent = `Accuracy against safety: ${ax.label}`;
+    $("scSub").innerHTML = `Right is a higher ${ax.label.replace("Macro", "macro").replace("Directional", "directional")}; up is fewer cross-direction errors per 1,000 variants. The shaded corner holds models above the median score and below the median error rate of the ranked models. Hollow dots were scored on part of the cohort.<span class="ui-hint"> Hover a dot for its values; select it to open the model.</span>`;
+    const box = $("lbScatter");
     if (!models.length) { box.innerHTML = `<p class="empty">No models for this filter.</p>`; return; }
     const W = Math.max(300, box.clientWidth || 1000);
     const narrow = W < 640;
-    const H = narrow ? 300 : 360, top = 16, bottom = 46, left = 40, right = narrow ? 118 : 200;
-    const inset = narrow ? 34 : 60;
-    const x0 = left + inset, x1 = W - right - 16;
-    const xs = LINE_METRICS.map((_, i) => x0 + (i * (x1 - x0)) / (LINE_METRICS.length - 1));
-    const vals = models.flatMap((m) => LINE_METRICS.map(([k]) => m[k] ?? 0));
-    const lo = Math.max(0, Math.floor((Math.min(...vals) - 3) / 10) * 10), hi = Math.min(100, Math.ceil((Math.max(...vals) + 2) / 10) * 10);
-    const y = (v) => top + ((hi - v) / Math.max(1, hi - lo)) * (H - top - bottom);
-    const grid = [];
-    for (let t = lo; t <= hi; t += 10) grid.push(`<line class="ln-grid" x1="${left}" x2="${x1 + 8}" y1="${n2(y(t))}" y2="${n2(y(t))}"/><text class="ln-tick" x="${left - 6}" y="${n2(y(t) + 4)}" text-anchor="end">${t}</text>`);
-    const axes = xs.map((x, i) => `<line class="ln-axis" x1="${n2(x)}" x2="${n2(x)}" y1="${top}" y2="${H - bottom}"/>` +
-      `<text class="ln-xl" x="${n2(x)}" y="${H - bottom + 18}" text-anchor="middle">${narrow ? ["Exact", "F1", "Direct.", "F1"][i] : LINE_METRICS[i][1]}</text><text class="ln-xs" x="${n2(x)}" y="${H - bottom + 32}" text-anchor="middle">${narrow ? LINE_METRICS[i][2].replace("-class", "-cl.") : LINE_METRICS[i][2]}</text>`).join("");
+    const H = narrow ? 340 : 440, top = 14, bottom = 52, left = narrow ? 44 : 64, right = narrow ? 8 : 24;
+    const xs = models.map((m) => m[ax.key] ?? 0), es = models.map(per1k);
+    const lo = Math.max(0, Math.floor((Math.min(...xs) - 3) / 10) * 10), hi = Math.min(100, Math.ceil((Math.max(...xs) + 2) / 10) * 10);
+    const ymax = Math.max(2, Math.ceil((Math.max(...es) + 0.4) / 2) * 2);
+    const x = (v) => left + ((v - lo) / Math.max(1, hi - lo)) * (W - left - right);
+    const y = (v) => top + (v / ymax) * (H - top - bottom);
+    const ranked = models.filter(isFull);
+    const mx = median(ranked.map((m) => m[ax.key])), my = median(ranked.map(per1k));
+    const out = [];
+    if (ranked.length >= 3) {
+      out.push(`<rect class="sc-best" x="${n2(x(mx))}" y="${top}" width="${n2(W - right - x(mx))}" height="${n2(y(my) - top)}"/>`);
+      if (!narrow) out.push(`<text class="sc-best-t" x="${n2(W - right - 6)}" y="${n2(y(my) - 6)}" text-anchor="end">Above median score, below median errors</text>`);
+    }
+    for (let t = lo; t <= hi; t += 10) out.push(`<line class="sc-grid" x1="${n2(x(t))}" x2="${n2(x(t))}" y1="${top}" y2="${H - bottom}"/><text class="sc-tick" x="${n2(x(t))}" y="${H - bottom + 16}" text-anchor="middle">${t}%</text>`);
+    const ystep = ymax > 6 ? 2 : 1;
+    for (let t = 0; t <= ymax; t += ystep) out.push(`<line class="sc-grid" x1="${left}" x2="${W - right}" y1="${n2(y(t))}" y2="${n2(y(t))}"/><text class="sc-tick" x="${left - 8}" y="${n2(y(t) + 4)}" text-anchor="end">${t}</text>`);
+    out.push(`<line class="sc-axis" x1="${left}" x2="${W - right}" y1="${H - bottom}" y2="${H - bottom}"/><line class="sc-axis" x1="${left}" x2="${left}" y1="${top}" y2="${H - bottom}"/>`);
+    out.push(`<text class="sc-axl" x="${n2((left + W - right) / 2)}" y="${H - 12}" text-anchor="middle">${ax.label} →</text>`);
+    const yc = (top + H - bottom) / 2;
+    out.push(`<text class="sc-axl" x="14" y="${n2(yc)}" text-anchor="middle" transform="rotate(-90 14 ${n2(yc)})">${narrow ? "↑ Fewer errors / 1,000" : "↑ Fewer cross-direction errors per 1,000"}</text>`);
 
-    // End labels, nudged apart so they never overlap
-    const gap = narrow ? 13 : 15;
-    const lbl = models.map((m) => ({ m, y0: y(m[LINE_METRICS[LINE_METRICS.length - 1][0]] ?? 0) })).sort((a, b) => a.y0 - b.y0);
-    lbl.forEach((l, i) => { l.y = i ? Math.max(l.y0, lbl[i - 1].y + gap) : l.y0; });
-    const overflow = lbl.length ? lbl[lbl.length - 1].y - (H - bottom) : 0;
-    if (overflow > 0) for (let i = lbl.length - 1; i >= 0; i--) { lbl[i].y = Math.min(lbl[i].y, (i === lbl.length - 1 ? H - bottom : lbl[i + 1].y - gap)); }
-    const labelY = Object.fromEntries(lbl.map((l) => [l.m.key, l.y]));
-    const xl = xs[xs.length - 1];
-
-    const series = models.map((m) => {
-      const pts = LINE_METRICS.map(([k], i) => [xs[i], y(m[k] ?? 0)]);
-      const partial = !isFull(m);
-      const ly = labelY[m.key], lastY = pts[pts.length - 1][1];
-      const name = narrow && m.short_name.length > 15 ? m.short_name.slice(0, 14) + "…" : m.short_name;
-      const tipBase = `${m.name}${partial ? ` (scored on ${int(m.evaluated_count)} variants)` : ""}`;
-      return `<g class="ln-series${partial ? " partial" : ""}" data-key="${esc(m.key)}">
-        <polyline class="ln-line" points="${pts.map((p) => p.map(n2).join(",")).join(" ")}" stroke="${m.color}"/>
-        ${pts.map((p, i) => `<circle class="ln-pt" cx="${n2(p[0])}" cy="${n2(p[1])}" r="4.5" fill="${m.color}"${tipAttr(`${tipBase}\n${LINE_METRICS[i][1]}, ${LINE_METRICS[i][2]}: ${pct(m[LINE_METRICS[i][0]])}`)}/>`).join("")}
-        ${Math.abs(ly - lastY) > 2 ? `<polyline class="ln-leader" points="${n2(xl + 6)},${n2(lastY)} ${n2(xl + 12)},${n2(ly)}" stroke="${m.color}"/>` : ""}
-        <text class="ln-name" x="${n2(xl + 16)}" y="${n2(ly + 4)}"${tipAttr(tipBase)}>${esc(name)}${partial ? "*" : ""} <tspan class="ln-v">${f1(m[LINE_METRICS[LINE_METRICS.length - 1][0]])}</tspan></text>
-      </g>`;
-    }).join("");
-    box.innerHTML = `<svg class="lnchart" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Scores of each model across four measures">${grid.join("")}${axes}${series}</svg>` +
-      (models.some((m) => !isFull(m)) ? `<p class="note">* Scored on part of the cohort.</p>` : "");
+    // Labels: try eight positions around each dot, keep the first that collides with nothing
+    measureCtx.font = `500 12px ${getComputedStyle(document.body).fontFamily}`;
+    const pts = models.map((m) => ({ m, cx: x(m[ax.key] ?? 0), cy: y(per1k(m)) }));
+    const boxes = pts.map((p) => [p.cx - 8, p.cy - 8, p.cx + 8, p.cy + 8]);
+    if (ranked.length >= 3) {
+      const cw = measureCtx.measureText("Above median score, below median errors").width;
+      boxes.push([W - right - 6 - cw, y(my) - 18, W - right - 6, y(my) - 2]);
+    }
+    const hit = (b) => boxes.some((o) => !(b[2] < o[0] || b[0] > o[2] || b[3] < o[1] || b[1] > o[3]));
+    // On narrow screens the colour key above the chart names the models instead.
+    if (!narrow) pts.slice().sort((a, b) => a.cy - b.cy || b.cx - a.cx).forEach((p) => {
+      const text = `${p.m.short_name}${isFull(p.m) ? "" : "*"}${narrow ? "" : "  " + f1(p.m[ax.key])}`;
+      const w = measureCtx.measureText(text).width + 4, h = 14;
+      const cands = [[12, 4, "start"], [-12, 4, "end"], [0, -14, "middle"], [0, 22, "middle"], [12, -12, "start"], [12, 20, "start"], [-12, -12, "end"], [-12, 20, "end"]];
+      p.text = text;
+      p.lab = null;
+      for (const [dx, dy, a] of cands) {
+        const lx = p.cx + dx, ly = p.cy + dy;
+        const x0 = a === "start" ? lx : a === "end" ? lx - w : lx - w / 2;
+        const b = [x0, ly - h + 3, x0 + w, ly + 3];
+        if (!hit(b) && b[0] > left && b[2] < W - 2 && b[1] > 0 && b[3] < H - bottom) { boxes.push(b); p.lab = [lx, ly, a]; break; }
+      }
+    });
+    pts.forEach((p) => {
+      const m = p.m, full = isFull(m);
+      const tip = `${m.name}${full ? "" : ` (scored on ${int(m.evaluated_count)} variants)`}\n${ax.label}: ${pct(m[ax.key])}\nCross-direction errors: ${int(m.critical_error_count)} (${per1k(m).toFixed(2)} per 1,000)`;
+      out.push(`<g class="sc-pt" data-key="${esc(m.key)}"${tipAttr(tip)}>
+        <circle cx="${n2(p.cx)}" cy="${n2(p.cy)}" r="7" style="fill:${full ? m.color : "var(--surface)"};stroke:${full ? "var(--surface)" : m.color};stroke-width:2"/>
+        ${p.lab ? `<text class="sc-lbl" x="${n2(p.lab[0])}" y="${n2(p.lab[1])}" text-anchor="${p.lab[2]}">${esc(p.text)}</text>` : ""}
+      </g>`);
+    });
+    const unlabelled = narrow ? pts : pts.filter((p) => !p.lab);
+    const key = unlabelled.length ? `<div class="legend sc-key">${models.map((m) => `<span>${mname(m)}${isFull(m) ? "" : "*"}</span>`).join("")}</div>` : "";
+    box.innerHTML = key + `<svg class="scatter" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(ax.label)} against cross-direction errors for each model">${out.join("")}</svg>` +
+      (models.some((m) => !isFull(m)) ? `<p class="note">* Scored on part of the cohort, not ranked.</p>` : "");
   }
 
-  function setupLbLine() {
-    const box = $("lbLine");
+  function setupLbScatter() {
+    const box = $("lbScatter");
     const clear = () => { const svg = box.querySelector("svg"); if (svg) { svg.classList.remove("hl"); svg.querySelectorAll(".on").forEach((e) => e.classList.remove("on")); } };
-    box.addEventListener("pointerover", (e) => {
-      const g = e.target.closest(".ln-series");
-      clear();
-      if (!g) return;
-      g.ownerSVGElement.classList.add("hl");
-      g.classList.add("on");
-    });
+    box.addEventListener("pointerover", (e) => { const g = e.target.closest(".sc-pt"); clear(); if (g) { g.ownerSVGElement.classList.add("hl"); g.classList.add("on"); } });
     box.addEventListener("pointerleave", clear);
-    box.addEventListener("click", (e) => { const g = e.target.closest(".ln-series"); if (g) openAnalysis(g.dataset.key); });
+    box.addEventListener("click", (e) => { const g = e.target.closest(".sc-pt"); if (g) openAnalysis(g.dataset.key); });
   }
 
   function openAnalysis(key) {
@@ -2779,7 +2797,7 @@ window.BENCHMARK_DATA = {"metadata":{"title":"AIVA Variant Benchmark","subtitle"
   setupExport();
   setupFlowHover();
   setupPicker();
-  setupLbLine();
+  setupLbScatter();
   $("drawerClose").onclick = closeDrawer;
   document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeDrawer(); });
   applyHash();
