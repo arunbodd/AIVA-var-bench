@@ -376,29 +376,42 @@ tr.lb-divider td { text-transform: none; letter-spacing: 0; font-size: 12px; fon
 .lb-all-pill { margin: 0; padding: 2px 10px; border-radius: 999px; font-size: 12px; line-height: 18px; }
 
 /* Leaderboard table: measures as rows, models as columns */
-table.lbt { font-size: 13px; }
-table.lbt th, table.lbt td { padding: 9px 8px; }
+table.lbt { font-size: 13px; border-collapse: separate; border-spacing: 0; }
+table.lbt th, table.lbt td { padding: 8px 8px; border-bottom: 1px solid var(--grid); }
 table.lbt thead th { vertical-align: bottom; border-bottom: 1.5px solid var(--text-2); }
-table.lbt .lbt-first { position: sticky; left: 0; z-index: 1; background: var(--surface); text-align: left; min-width: 220px; }
-table.lbt thead .lbt-first { font-size: 12px; font-weight: 600; color: var(--text); }
-table.lbt th.lbt-model { text-align: center; min-width: 78px; max-width: 110px; }
+table.lbt .lbt-first { position: sticky; left: 0; z-index: 2; background: var(--surface); text-align: left; min-width: 230px; }
+table.lbt thead .lbt-first { font-size: 12px; font-weight: 600; color: var(--text-2); }
+tr.lbt-groups th { border-bottom: 0; padding-bottom: 2px; }
+th.lbt-group { text-align: center; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-2); }
+th.lbt-group > * { display: block; }
+th.lbt-group::after { content: ""; display: block; height: 2px; margin: 4px 6px 0; background: var(--axis); border-radius: 1px; }
+th.lbt-nh { text-align: right; font-size: 12px; font-weight: 600; color: var(--text-2); min-width: 92px; }
+table.lbt th.lbt-model { text-align: center; min-width: 82px; max-width: 112px; white-space: normal; }
 .lbt-name { appearance: none; border: 0; background: none; padding: 0; font: inherit; color: var(--text); cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; width: 100%; }
 .lbt-name:hover .lbt-label { text-decoration: underline; text-underline-offset: 3px; }
 .lbt-rank { font-size: 11px; font-weight: 600; color: var(--muted); font-variant-numeric: tabular-nums; }
-table.lbt th.lbt-model { white-space: normal; }
-.lbt-label { font-size: 12px; font-weight: 600; line-height: 1.3; text-align: center; white-space: normal; overflow-wrap: anywhere; }
+.lbt-label { font-size: 12px; font-weight: 650; line-height: 1.3; text-align: center; white-space: normal; overflow-wrap: anywhere; }
 .lbt-label .swatch { margin-right: 4px; }
+.lbt-meta { font-size: 10.5px; font-weight: 400; color: var(--muted); line-height: 1.3; }
 td.lbt-v { text-align: center; font-variant-numeric: tabular-nums; }
 td.lbt-v.best { font-weight: 700; }
+td.lbt-v.partial { font-style: italic; color: var(--text-2); }
 td.lbt-v.na { color: var(--muted); }
+td.lbt-n { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; color: var(--text-2); font-size: 12px; }
+td.lbt-n.small { color: var(--muted); }
+.lbt-nv { display: inline-block; min-width: 40px; }
+.lbt-nbar { display: inline-block; width: 40px; height: 6px; margin-left: 6px; background: var(--grid); border-radius: 3px; vertical-align: 1px; overflow: hidden; }
+.lbt-nbar span { display: block; height: 100%; background: var(--text-2); border-radius: 3px; }
 .lbt-row { font-weight: 500; }
-.lbt-n { color: var(--muted); font-size: 12px; }
+td.lbt-first.indent { padding-left: 22px; }
+.lbt-abbr { display: inline-block; min-width: 38px; font-weight: 650; }
+.lbt-dag { color: var(--muted); font-weight: 600; margin-left: 2px; }
+tr.lbt-small .lbt-row { color: var(--text-2); }
 tr.lbt-overall td { font-size: 14px; }
 tr.lbt-overall .lbt-row { font-weight: 700; }
-tr.lbt-overall td.lbt-v { font-weight: 600; }
-tr.lbt-sec td { font-size: 12px; font-weight: 600; color: var(--text-2); background: var(--surface-2); padding-top: 8px; padding-bottom: 8px; border-bottom: 1px solid var(--axis); }
-table.lbt tbody tr:not(.lbt-sec):hover td { background-color: var(--surface-2); }
-@media (max-width: 640px) { table.lbt .lbt-first { min-width: 170px; } table.lbt th.lbt-model { min-width: 84px; } }
+tr.lbt-overall td.lbt-v { font-weight: 650; }
+tr.lbt-sec td { font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-2); background: var(--surface); padding-top: 16px; padding-bottom: 6px; border-bottom: 1px solid var(--axis); }
+@media (max-width: 640px) { table.lbt .lbt-first { min-width: 150px; } .lbt-nbar { display: none; } th.lbt-nh, td.lbt-n { min-width: 56px; } }
 
 /* Leaderboard scatter */
 .scatter { display: block; overflow: visible; }
@@ -581,6 +594,12 @@ tr.row-link.focus td:first-child { box-shadow: inset 3px 0 0 var(--mc); }
 .model-name .swatch, .lbl .swatch, .rowh .swatch, .cm-title .swatch { margin-right: 6px; }
 th.selcol { color: var(--text); }
 
+/* Exports render on pure white */
+:root.exporting-root { --surface: #ffffff; }
+
+/* Exports render on pure white */
+:root.exporting-root { --surface: #ffffff; }
+
 /* Figure export */
 .fig-export { position: relative; }
 .fig-export summary { list-style: none; }
@@ -690,8 +709,13 @@ footer code { font-size: 12px; }
           <h3 id="lbTitle"></h3>
           <p id="lbSub"></p>
         </div>
-        <div class="seg" id="lbScaleSeg" role="group" aria-label="Classification scale">
-          <button data-v="3" type="button">3-class</button><button data-v="5" type="button">5-class</button>
+        <div class="controls">
+          <div class="seg" id="lbScaleSeg" role="group" aria-label="Classification scale">
+            <button data-v="3" type="button">3-class</button><button data-v="5" type="button">5-class</button>
+          </div>
+          <div class="seg" id="lbOrderSeg" role="group" aria-label="Column order">
+            <button data-v="rank" type="button">By rank</button><button data-v="provider" type="button">By provider</button>
+          </div>
         </div>
       </div>
       <div class="table-wrap"><table id="leaderboard" class="lbt"></table></div>
@@ -1047,7 +1071,7 @@ window.BENCHMARK_DATA = {"metadata":{"title":"AIVA Variant Benchmark","subtitle"
 
   const state = {
     tab: "leaderboard",
-    rankBy: "macro_f1_5", scatterScale: "5", lbScale: "3", lbCols: null,
+    rankBy: "macro_f1_5", scatterScale: "5", lbScale: "3", lbCols: null, lbOrder: "rank",
     focus: null,
     comps: ["baseline_bias", "baseline_intervar"],
     catMetric: "macro_f1",
@@ -1539,11 +1563,11 @@ window.BENCHMARK_DATA = {"metadata":{"title":"AIVA Variant Benchmark","subtitle"
     $("lbLead").textContent = state.lbCols
       ? `Showing ${visible.length} of ${D.models.length} classifiers, each scored against the ClinGen expert classification of ${int(D.metadata.total_variants)} variants. Ranks and highlights are among the models shown.`
       : `${D.models.length} classifiers from ${nProviders} provider${nProviders === 1 ? "" : "s"}, each scored against the ClinGen expert classification of ${int(D.metadata.total_variants)} variants.`;
-    $("lbTitle").textContent = `F1 score by class and disease category, ${three ? "3-class" : "5-class"}`;
+    $("lbTitle").textContent = `F1 score by expert classification and disease category, ${three ? "3-class" : "5-class"}`;
     $("lbSub").innerHTML = (three
-      ? "Calls grouped as pathogenic or likely pathogenic, VUS, and benign or likely benign. Overall and category rows are macro F1 across the three groups."
-      : "Five ACMG classes. Overall and category rows are macro F1 across the five classes.") +
-      ` Models are ordered by overall F1; the best value in each row is bold and shaded in that model's colour.<span class="ui-hint"> Select a model name to open its analysis.</span>`;
+      ? "Calls grouped as pathogenic or likely pathogenic (P/LP), uncertain significance (VUS), and benign or likely benign (B/LB). Overall and category rows are macro F1 across these three groups."
+      : "The five ACMG classes. Overall and category rows are macro F1 across the five classes.") +
+      ` All values are percentages. The best value in each row is bold and shaded in that model's colour.<span class="ui-hint"> Select a model name to open its analysis.</span>`;
 
     renderLbScatter(cols);
 
@@ -1563,53 +1587,78 @@ window.BENCHMARK_DATA = {"metadata":{"title":"AIVA Variant Benchmark","subtitle"
       `<button type="button" class="lb-fact" data-key="${esc(m.key)}"><span class="lf-label">${label}</span><span class="lf-value">${fmt(m)}</span><span class="lf-model">${mname(m)}</span></button>`).join("");
     $("lbFacts").querySelectorAll(".lb-fact").forEach((b) => b.onclick = () => openAnalysis(b.dataset.key));
 
-    if (!cols.length) { $("leaderboard").innerHTML = `<tbody><tr><td class="empty">No models for this filter.</td></tr></tbody>`; return; }
+    seg("lbOrderSeg", state.lbOrder, (v) => { state.lbOrder = v; renderLeaderboard(); writeHash(); });
+    if (!cols.length) { $("leaderboard").innerHTML = `<tbody><tr><td class="empty">No models selected.</td></tr></tbody>`; return; }
 
-    // Row definitions: label, n, value getter, formatting, whether lower is better
-    const classRows = three
-      ? [["pathogenic", "Pathogenic / Likely Pathogenic"], ["vus", "Variant of Uncertain Significance"], ["benign", "Benign / Likely Benign"]]
-          .map(([k, label]) => ({ label, n: (cols[0].per_class_3[k] || {}).support, get: (m) => (m.per_class_3 || {})[k]?.f1 }))
-      : LABELS.map((l) => ({ label: l, n: (cols[0].per_class_5[l] || {}).support, get: (m) => (m.per_class_5 || {})[l]?.f1 }));
+    // Column order: by overall rank, or grouped by provider (rank order within each group)
+    const groups = byProvider(cols).map(([g, ms]) => [g, ms.slice().sort((a, b) => cols.indexOf(a) - cols.indexOf(b))]);
+    const order = state.lbOrder === "provider" ? groups.flatMap(([, ms]) => ms) : cols;
+    const rankOf = (m) => (isFull(m) ? ranked.indexOf(m) + 1 : null);
+    const SMALL_N = 100;
+
+    // Rows: F1 rows are shaded on one shared scale; other measures are not
     const catKey = three ? "macro_f1_3" : "macro_f1";
-    const catRows = categoriesWithData().sort((a, b) => a.localeCompare(b)).map((c) => ({
-      label: c, n: catCount(c), get: (m) => { const r = (D.categories_data[m.key] || {})[c]; return r && r.count ? r[catKey] : null; }
+    const classRows = three
+      ? [["pathogenic", "P/LP", "Pathogenic or likely pathogenic"], ["vus", "VUS", "Uncertain significance"], ["benign", "B/LB", "Benign or likely benign"]]
+          .map(([k, abbr, label]) => ({ label, abbr, n: (cols[0].per_class_3[k] || {}).support, get: (m) => (m.per_class_3 || {})[k]?.f1, f1: true, indent: true }))
+      : LABELS.map((l) => ({ label: l, abbr: ABBR[l], n: (cols[0].per_class_5[l] || {}).support, get: (m) => (m.per_class_5 || {})[l]?.f1, f1: true, indent: true }));
+    const cats = categoriesWithData().sort((a, b) => catCount(b) - catCount(a));
+    const maxCat = Math.max(1, ...cats.map(catCount));
+    const catRows = cats.map((c) => ({
+      label: c, n: catCount(c), bar: catCount(c) / maxCat, small: catCount(c) < SMALL_N, f1: true,
+      get: (m) => { const r = (D.categories_data[m.key] || {})[c]; return r && r.count ? r[catKey] : null; }
     }));
     const otherRows = [
       { label: "Exact accuracy, 5-class", get: (m) => m.exact_accuracy },
       { label: "Directional accuracy, 3-class", get: (m) => m.directional_accuracy },
-      { label: "Cross-direction errors per 1,000", get: per1k, low: true, fmt: (v) => v.toFixed(2) },
-      { label: "Coverage of cohort", get: (m) => m.coverage_pct, noBest: true },
-      { label: "Latency, s / variant", get: (m) => m.avg_latency_sec || null, low: true, fmt: (v) => v.toFixed(1) }
+      { label: "Cross-direction errors per 1,000 variants", get: per1k, low: true, fmt: (v) => v.toFixed(2) }
     ];
+    const overall = { label: "Overall", n: D.metadata.total_variants, get: (m) => m[overallKey], f1: true, strong: true };
     const sections = [
-      [null, [{ label: "Overall", n: D.metadata.total_variants, get: (m) => m[overallKey], strong: true }, ...classRows]],
-      ["Category breakdown", catRows],
+      ["By expert classification", [overall, ...classRows]],
+      ["By disease category (ClinGen expert panel)", catRows],
       ["Other measures", otherRows]
     ];
 
-    const head = `<thead><tr><th class="lbt-first">Benchmark (F1 score) / Category</th>${cols.map((m, i) => {
-      const rank = isFull(m) ? `#${ranked.indexOf(m) + 1}` : "subset";
-      return `<th class="lbt-model"><button type="button" class="lbt-name" data-key="${esc(m.key)}"${tipAttr(`${m.name}\n${groupOf(m)}${isFull(m) ? "" : `\nScored on ${int(m.evaluated_count)} of ${int(m.total_cohort)} variants; not ranked`}\nSelect to open its analysis`)}><span class="lbt-rank">${rank}</span><span class="lbt-label">${swatch(m)}${esc(m.short_name)}${isFull(m) ? "" : "*"}</span></button></th>`;
+
+    const groupHead = state.lbOrder === "provider"
+      ? `<tr class="lbt-groups"><th class="lbt-first" colspan="2"></th>${groups.map(([g, ms]) => `<th colspan="${ms.length}" class="lbt-group">${esc(g)}</th>`).join("")}</tr>`
+      : "";
+    const head = `<thead>${groupHead}<tr><th class="lbt-first">Measure</th><th class="lbt-nh">Variants</th>${order.map((m) => {
+      const r = rankOf(m);
+      return `<th class="lbt-model"><button type="button" class="lbt-name" data-key="${esc(m.key)}"${tipAttr(`${m.name}\n${groupOf(m)}${isFull(m) ? "" : `\nScored on ${int(m.evaluated_count)} of ${int(m.total_cohort)} variants; not ranked`}\nSelect to open its analysis`)}>
+        <span class="lbt-rank">${r ? "#" + r : "not ranked"}</span>
+        <span class="lbt-label">${swatch(m)}${esc(m.short_name)}${isFull(m) ? "" : "*"}</span>
+        <span class="lbt-meta">${state.lbOrder === "provider" ? esc(m.type) : esc(groupOf(m))}${isFull(m) ? "" : ` · n=${int(m.evaluated_count)}`}</span>
+      </button></th>`;
     }).join("")}</tr></thead>`;
 
     const rowHtml = (r) => {
-      const vals = cols.map((m) => r.get(m));
-      const rankedVals = ranked.map((m) => r.get(m)).filter((v) => v != null);
-      const bestVal = r.noBest || !rankedVals.length ? null : (r.low ? Math.min(...rankedVals) : Math.max(...rankedVals));
-      const fmt = r.fmt || ((v) => f1(v) + "%");
-      return `<tr class="${r.strong ? "lbt-overall" : ""}"><td class="lbt-first"><span class="lbt-row">${esc(r.label)}</span>${r.n != null ? ` <span class="lbt-n">(n=${int(r.n)})</span>` : ""}</td>${cols.map((m, i) => {
-        const v = vals[i];
+      const rankedVals = order.filter(isFull).map((m) => r.get(m)).filter((v) => v != null);
+      const bestVal = !rankedVals.length ? null : (r.low ? Math.min(...rankedVals) : Math.max(...rankedVals));
+      const fmt = r.fmt || ((v) => f1(v));
+      const label = `<td class="lbt-first${r.indent ? " indent" : ""}"><span class="lbt-row">${r.abbr ? `<span class="lbt-abbr">${r.abbr}</span>` : ""}${esc(r.label)}${r.small ? `<sup class="lbt-dag"${tipAttr(`Fewer than ${SMALL_N} variants: interpret with caution`)}>†</sup>` : ""}</span></td>`;
+      const n = r.n != null
+        ? `<td class="lbt-n${r.small ? " small" : ""}"><span class="lbt-nv">${int(r.n)}</span>${r.bar != null ? `<span class="lbt-nbar"><span style="width:${Math.max(2, r.bar * 100)}%"></span></span>` : ""}</td>`
+        : `<td class="lbt-n"></td>`;
+      return `<tr class="${r.strong ? "lbt-overall" : ""}${r.small ? " lbt-small" : ""}">${label}${n}${order.map((m) => {
+        const v = r.get(m);
         if (v == null) return `<td class="lbt-v na">—</td>`;
         const isBest = bestVal != null && isFull(m) && Math.abs(v - bestVal) < 1e-9;
-        return `<td class="lbt-v${isBest ? " best" : ""}"${isBest ? ` style="background:color-mix(in srgb, ${m.color} 15%, transparent)"` : ""}${tipAttr(`${m.name}\n${r.label}: ${fmt(v)}`)}>${fmt(v)}</td>`;
+        // The best value in each row is tinted in the winning model's colour
+        const tint = isBest ? ` style="background:color-mix(in srgb, ${m.color} 18%, var(--surface))"` : "";
+        return `<td class="lbt-v${isBest ? " best" : ""}${isFull(m) ? "" : " partial"}"${tint}${tipAttr(`${m.name}\n${r.label}${r.f1 ? " F1" : ""}: ${fmt(v)}${r.fmt ? "" : "%"}${r.n != null ? `\nn = ${int(r.n)} variants` : ""}${isBest ? "\nBest in row" : ""}`)}>${fmt(v)}</td>`;
       }).join("")}</tr>`;
     };
-    const body = sections.map(([title, rows]) =>
-      (title ? `<tr class="lbt-sec"><td class="lbt-first" colspan="${cols.length + 1}">${title}</td></tr>` : "") + rows.map(rowHtml).join("")).join("");
+    const span = order.length + 2;
+    const body = sections.map(([title, rows]) => `<tr class="lbt-sec"><td class="lbt-first" colspan="${span}">${title}</td></tr>` + rows.map(rowHtml).join("")).join("");
     $("leaderboard").innerHTML = head + `<tbody>${body}</tbody>`;
     $("leaderboard").querySelectorAll(".lbt-name").forEach((b) => b.onclick = () => openAnalysis(b.dataset.key));
-    $("lbNote").textContent = (partial.length ? `* ${partial.map((m) => m.short_name).join(", ")} ${partial.length > 1 ? "were" : "was"} scored on part of the cohort and ${partial.length > 1 ? "are" : "is"} not ranked or shaded. ` : "") +
-      "Category rows use the ClinGen expert panel (VCEP) that curated each variant.";
+    $("lbNote").innerHTML = [
+      partial.length ? `* ${partial.map((m) => esc(m.short_name)).join(", ")} ${partial.length > 1 ? "were" : "was"} scored on part of the cohort, so ${partial.length > 1 ? "they are" : "it is"} not ranked and not eligible for best-in-row.` : "",
+      cats.some((c) => catCount(c) < SMALL_N) ? `† Fewer than ${SMALL_N} variants; F1 on small categories varies widely.` : "",
+      "Categories group variants by the ClinGen expert panel (VCEP) that curated them. Cross-direction errors: a benign or likely benign variant called pathogenic or likely pathogenic, or the reverse."
+    ].filter(Boolean).join("<br>");
   }
 
   // Accuracy against safety: score across, cross-direction errors up (inverted).
@@ -2179,13 +2228,14 @@ window.BENCHMARK_DATA = {"metadata":{"title":"AIVA Variant Benchmark","subtitle"
   function readHash() {
     const [tab, q] = location.hash.slice(1).split("?");
     const p = new URLSearchParams(q || "");
-    return { tab: tab || "leaderboard", m: p.get("m"), c: p.get("c"), r: p.get("r"), s: p.get("s"), show: p.get("show") };
+    return { tab: tab || "leaderboard", m: p.get("m"), c: p.get("c"), r: p.get("r"), s: p.get("s"), show: p.get("show"), order: p.get("order") };
   }
 
   function lbHashQuery() {
     const q = [];
     if (state.lbScale !== "3") q.push("s=" + state.lbScale);
     if (state.lbCols) q.push("show=" + state.lbCols.map(encodeURIComponent).join(","));
+    if (state.lbOrder !== "rank") q.push("order=" + state.lbOrder);
     return q.length ? "?" + q.join("&") : "";
   }
 
@@ -2201,6 +2251,7 @@ window.BENCHMARK_DATA = {"metadata":{"title":"AIVA Variant Benchmark","subtitle"
     if (h.m && byKey(h.m)) state.focus = h.m;
     if (h.c != null) state.comps = h.c.split(",").filter(Boolean);
     if (h.s === "3" || h.s === "5") state.lbScale = h.s;
+    if (h.order === "provider" || h.order === "rank") state.lbOrder = h.order;
     if (h.tab === "leaderboard") {
       const keys = (h.show || "").split(",").filter((k) => byKey(k));
       state.lbCols = keys.length && keys.length < D.models.length ? keys : null;
@@ -2683,6 +2734,8 @@ window.BENCHMARK_DATA = {"metadata":{"title":"AIVA Variant Benchmark","subtitle"
     const html = document.documentElement;
     const prevTheme = html.dataset.theme;
     html.dataset.theme = "light";
+    html.classList.add("exporting-root");
+    html.classList.add("exporting-root");
     // Colours that depend on the theme are computed while rendering.
     if (prevTheme !== "light") rerenderForTheme();
     // Let wide tables lay out at full width instead of scrolling.
@@ -2692,6 +2745,8 @@ window.BENCHMARK_DATA = {"metadata":{"title":"AIVA Variant Benchmark","subtitle"
     card.classList.add("exporting");
     try { return fn(); } finally {
       card.classList.remove("exporting");
+      html.classList.remove("exporting-root");
+      html.classList.remove("exporting-root");
       card.style.width = prevWidth;
       if (prevTheme) html.dataset.theme = prevTheme; else delete html.dataset.theme;
       if (prevTheme !== "light") rerenderForTheme();
