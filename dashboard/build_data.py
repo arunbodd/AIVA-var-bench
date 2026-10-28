@@ -35,57 +35,18 @@ from scripts.metrics import (
     calculate_macro_f1,
 )
 from scripts.generate_results import VCEP_TO_CATEGORY, CATEGORY_ORDER
+from dashboard.registry import read_registry, assign_colors
 
 
-# One fixed colour per model, used by every dashboard figure.
-MODEL_COLORS = {
-    "aiva_opus_rerun": "#eb6834",
-    "aiva_sonnet_rerun": "#6250d6",
-    "aiva_haiku_rerun": "#1baf7a",
-    "claude_code_haiku": "#eda100",
-    "aiva_gemini_pro": "#184f95",
-    "aiva_gemini_flash": "#d55181",
-    "baseline_bias": "#0097a7",
-    "baseline_intervar": "#5c4033",
-}
-# Lighter steps for colours that are too dark to read on the dark theme.
-MODEL_COLORS_DARK = {
-    "baseline_intervar": "#a8835c",
-    "aiva_gemini_pro": "#4f86d0",
-}
-# Models removed from the dashboard (one key per line) and results imported
-# through the local dashboard server (tab-separated: key, name, family, path).
-EXCLUDED_FILE = REPO_ROOT / "dashboard" / "excluded_models.txt"
-IMPORTED_FILE = REPO_ROOT / "dashboard" / "imported_models.tsv"
+# Models removed through the dashboard before the registry existed.
+LEGACY_EXCLUDED_FILE = REPO_ROOT / "dashboard" / "excluded_models.txt"
 
 
-def read_excluded() -> set[str]:
-    if not EXCLUDED_FILE.exists():
+def read_legacy_excluded() -> set[str]:
+    if not LEGACY_EXCLUDED_FILE.exists():
         return set()
-    keys = (line.split("#")[0].strip() for line in EXCLUDED_FILE.read_text(encoding="utf-8").splitlines())
+    keys = (line.split("#")[0].strip() for line in LEGACY_EXCLUDED_FILE.read_text(encoding="utf-8").splitlines())
     return {k for k in keys if k}
-
-
-def read_imported() -> list[dict]:
-    if not IMPORTED_FILE.exists():
-        return []
-    rows = []
-    for line in IMPORTED_FILE.read_text(encoding="utf-8").splitlines():
-        parts = line.split("\t")
-        if len(parts) == 4 and not line.startswith("#"):
-            rows.append(dict(zip(("key", "name", "family", "path"), parts)))
-    return rows
-
-
-# Initial runs superseded by re-runs; they are not shown on the dashboard.
-RETIRED_MODELS = {"aiva_haiku_initial", "aiva_sonnet_initial", "aiva_opus_initial"}
-RETIRED_RESULT_DIRS = {
-    "Results_Claude_Haiku_5_5_Analysis",
-    "Results_Claude_Sonnet_5_5_Analysis",
-    "Results_Claude_Opus_5_5_Analysis",
-}
-
-FALLBACK_COLORS = ["#008300", "#e34948", "#0d366b", "#8c5a2b"]
 
 
 def get_vcep_category(panel: str) -> str:
@@ -127,196 +88,50 @@ def load_unified_data(path: Path) -> tuple[dict, dict]:
     return variants
 
 
-def discover_model_files(repo_root: Path) -> dict[str, dict]:
+def discover_model_files(repo_root: Path) -> tuple[dict[str, dict], list[dict], set[str]]:
     """
-    Auto-discover all model results available in the repository.
-    Returns mapping of model_key -> metadata dict.
+    Read dashboard/models.tsv. Returns (active models with results present,
+    removed models, keys of active models whose results file is missing).
     """
-    discovered = {}
-
-    # 1. Claude-Code Haiku Manual Prompt
-    cc_path = repo_root / "Claude_code_results" / "acmg_classifications_manual_Haiku.json"
-    if cc_path.exists():
-        discovered["claude_code_haiku"] = {
-            "name": "Claude-Code Haiku 5.5",
-            "short_name": "Claude-Code Haiku 5.5",
-            "family": "Anthropic Claude",
-            "is_anthropic": True,
-            "type": "Direct Prompt (Claude Code)",
-            "path": str(cc_path),
-            "format": "json_array",
-            "color": "#D97706",
-            "description": "Direct zero-shot prompting via Claude Code CLI without external clinical retrieval tools.",
-        }
-
-    # 1b. Claude-Code Sonnet Manual Prompt
-    cc_sonnet_path = repo_root / "Claude_code_results" / "acmg_classifications_manual_sonnet.json"
-    if cc_sonnet_path.exists():
-        discovered["claude_code_sonnet"] = {
-            "name": "Claude-Code Sonnet 5.5",
-            "short_name": "Claude-Code Sonnet 5.5",
-            "family": "Anthropic Claude",
-            "is_anthropic": True,
-            "type": "Direct Prompt (Claude Code)",
-            "path": str(cc_sonnet_path),
-            "format": "json_array",
-            "color": "#7C3AED",
-            "description": "Direct prompting of Claude Sonnet 5.5 via Claude Code CLI without external clinical retrieval tools.",
-        }
-
-    # 2. AIVA Claude Haiku Re-Run
-    haiku_rr = repo_root / "Results_Claude_Haiku_5_5_Analysis_rerun" / "haiku_full.jsonl"
-    if haiku_rr.exists():
-        discovered["aiva_haiku_rerun"] = {
-            "name": "AIVA-Haiku-5.5",
-            "short_name": "AIVA-Haiku-5.5",
-            "family": "Anthropic Claude",
-            "is_anthropic": True,
-            "type": "Autonomous Agent (AIVA)",
-            "path": str(haiku_rr),
-            "format": "jsonl",
-            "color": "#2563EB",
-            "description": "AIVA multi-step clinical reasoning engine powered by Claude Haiku 5.5 across full cohort (re-run).",
-        }
-
-    # 3. AIVA Claude Sonnet Re-Run (partial runs are included; coverage is reported)
-    sonnet_rr = repo_root / "Results_Claude_Sonnet_5_5_Analysis_rerun" / "sonnet_full.jsonl"
-    if sonnet_rr.exists():
-        if True:
-            discovered["aiva_sonnet_rerun"] = {
-                "name": "AIVA-Sonnet-5.5",
-                "short_name": "AIVA-Sonnet-5.5",
-                "family": "Anthropic Claude",
-                "is_anthropic": True,
-                "type": "Autonomous Agent (AIVA)",
-                "path": str(sonnet_rr),
-                "format": "jsonl",
-                "color": "#9333EA",
-                "description": "Re-run of Claude Sonnet 5.5 with the revised ACMG criteria engine.",
-            }
-
-    # 4. AIVA Claude Opus Re-Run (partial runs are included; coverage is reported)
-    opus_rr = repo_root / "Results_Claude_Opus_5_5_Analysis_rerun" / "opus_full.jsonl"
-    if opus_rr.exists():
-        if True:
-            discovered["aiva_opus_rerun"] = {
-                "name": "AIVA-Opus-5.5",
-                "short_name": "AIVA-Opus-5.5",
-                "family": "Anthropic Claude",
-                "is_anthropic": True,
-                "type": "Autonomous Agent (AIVA)",
-                "path": str(opus_rr),
-                "format": "jsonl",
-                "color": "#C2410C",
-                "description": "Re-run of Claude Opus 5.5; may cover part of the cohort while in progress.",
-            }
-
-    # 5. AIVA Gemini 3 Pro
-    gemini_pro = repo_root / "Results_Gemini_Pro_Analysis" / "classifications_google_gemini-3-pro-preview_combined.jsonl"
-    if gemini_pro.exists():
-        discovered["aiva_gemini_pro"] = {
-            "name": "AIVA-Gemini-3-Pro",
-            "short_name": "AIVA-Gemini-3-Pro",
-            "family": "Google Gemini",
-            "is_anthropic": False,
-            "type": "Autonomous Agent (AIVA)",
-            "path": str(gemini_pro),
-            "format": "jsonl",
-            "color": "#059669",
-            "description": "AIVA engine powered by Gemini 3 Pro Preview across 8,387 variants.",
-        }
-
-    # 6. AIVA Gemini 3.8 Flash
-    gemini_flash = repo_root / "Results_Gemini_3_8_Flash_Analysis" / "gemini_flash_2627.jsonl"
-    if gemini_flash.exists():
-        discovered["aiva_gemini_flash"] = {
-            "name": "AIVA-Gemini-3.8-Flash",
-            "short_name": "AIVA-Gemini-3.8-Flash",
-            "family": "Google Gemini",
-            "is_anthropic": False,
-            "type": "Autonomous Agent (AIVA)",
-            "path": str(gemini_flash),
-            "format": "jsonl",
-            "color": "#10B981",
-            "description": "AIVA engine powered by Gemini 3.8 Flash (2,627 variant subset).",
-        }
-
-    # 7. Dynamic Scan for other Results_* directories
-    for res_dir in sorted(glob.glob(str(repo_root / "Results_*"))):
-        res_path = Path(res_dir)
-        d_name = res_path.name
-        # Skip re-runs (managed above), retired initial runs, and registered dirs
-        if "_rerun" in d_name.lower() or d_name in RETIRED_RESULT_DIRS or any(d_name in m["path"] for m in discovered.values()):
+    rows = read_registry()
+    assign_colors(rows)
+    legacy_excluded = read_legacy_excluded()
+    discovered, removed, missing = {}, [], set()
+    for row in rows:
+        key = row["key"]
+        if row["status"] != "active" or key in legacy_excluded:
+            removed.append({"key": key, "name": row["name"]})
             continue
-        # Check for jsonl
-        j_files = list(res_path.glob("*.jsonl"))
-        if j_files:
-            target_f = max(j_files, key=lambda f: f.stat().st_size)
-            clean_name = d_name.replace("Results_", "").replace("_Analysis", "").replace("_", " ")
-            key = f"custom_{clean_name.lower().replace(' ', '_')}"
-            discovered[key] = {
-                "name": f"{clean_name} (AIVA)",
-                "short_name": clean_name[:16],
-                "family": "Other Models",
-                "is_anthropic": "claude" in clean_name.lower() or "anthropic" in clean_name.lower(),
-                "type": "Custom Benchmark",
-                "path": str(target_f),
-                "format": "jsonl",
-                "color": "#6B7280",
-                "description": f"Auto-discovered benchmark results from {d_name}.",
-            }
-
-    # 8. Results imported through the dashboard server
-    for row in read_imported():
-        path = REPO_ROOT / row["path"]
-        if path.exists():
-            discovered[row["key"]] = {
-                "name": row["name"],
-                "short_name": row["name"] if len(row["name"]) <= 22 else row["name"][:21] + "…",
-                "family": row["family"],
-                "is_anthropic": row["family"] == "Anthropic Claude",
-                "type": "Imported results",
-                "path": str(path),
-                "format": "jsonl",
-                "color": "",
-                "description": "Imported through the dashboard.",
-            }
-
-    # 9. Classical Baselines
-    discovered["baseline_bias"] = {
-        "name": "BIAS-2015",
-        "short_name": "BIAS-2015",
-        "family": "Classical ACMG Tools",
-        "is_anthropic": False,
-        "type": "Algorithmic Rules",
-        "path": "unified:bias_classification",
-        "format": "unified_field",
-        "color": "#64748B",
-        "description": "Classical rule-based ACMG classification tool (BIAS-2015).",
-    }
-    discovered["baseline_intervar"] = {
-        "name": "InterVar",
-        "short_name": "InterVar",
-        "family": "Classical ACMG Tools",
-        "is_anthropic": False,
-        "type": "Algorithmic Rules",
-        "path": "unified:intervar_classification",
-        "format": "unified_field",
-        "color": "#94A3B8",
-        "description": "Clinical bioinformatics standard rule-based variant classifier (InterVar).",
-    }
-
-    extra = 0
-    for key, info in discovered.items():
-        if key in MODEL_COLORS_DARK:
-            info["color_dark"] = MODEL_COLORS_DARK[key]
-        if key in MODEL_COLORS:
-            info["color"] = MODEL_COLORS[key]
+        fmt = row["format"] or "auto"
+        if fmt == "unified" or row["path"].startswith("data:"):
+            fmt, path = "unified_field", "unified:" + row["path"].split(":", 1)[1]
         else:
-            info["color"] = FALLBACK_COLORS[extra % len(FALLBACK_COLORS)]
-            extra += 1
+            file = repo_root / row["path"]
+            if not file.exists():
+                missing.add(key)
+                print(f"  ! {row['name']}: results file not found ({row['path']})")
+                continue
+            if fmt == "auto":
+                fmt = "json_array" if file.suffix == ".json" else "jsonl"
+            path = str(file)
+        discovered[key] = {
+            "name": row["name"],
+            "short_name": row["name"],
+            "family": row["provider"],
+            "is_anthropic": row["provider"] == "Anthropic",
+            "type": row["method"] or "Unspecified",
+            "path": path,
+            "format": fmt,
+            "color": row["color"],
+            "color_dark": row["color_dark"] or row["color"],
+            "description": row["method"],
+        }
 
-    return discovered
+    registered = {r["path"].split("/")[0] for r in rows}
+    unregistered = sorted(d.name for d in repo_root.glob("Results_*") if d.is_dir() and d.name not in registered and any(d.glob("*.jsonl")))
+    if unregistered:
+        print("  Result folders not in dashboard/models.tsv (not shown): " + ", ".join(unregistered))
+    return discovered, removed, missing
 
 
 STRENGTH_WORDS = ("supporting", "moderate", "strong", "very strong", "very_strong", "stand-alone", "standalone")
@@ -443,10 +258,7 @@ def build_dashboard_dataset():
     total_cohort = len(unified_dict)
     print(f"Loaded {total_cohort} ClinGen expert curated variants.")
 
-    models_info = discover_model_files(REPO_ROOT)
-    excluded = read_excluded()
-    excluded_models = [{"key": k, "name": m["name"]} for k, m in models_info.items() if k in excluded]
-    models_info = {k: m for k, m in models_info.items() if k not in excluded}
+    models_info, excluded_models, missing = discover_model_files(REPO_ROOT)
     print(f"Discovered {len(models_info)} models and baselines:")
     for k, m in models_info.items():
         print(f"  • [{m['family']}] {m['name']} ({m['format']})")
@@ -740,9 +552,16 @@ def build_dashboard_dataset():
     for vid in sample_vids:
         u = unified_dict[vid]
         preds_for_var = {}
+        details = {}
         for m_key in model_keys:
-            if vid in model_predictions[m_key]:
-                preds_for_var[m_key] = model_predictions[m_key][vid]["prediction"]
+            p = model_predictions[m_key].get(vid)
+            if p:
+                preds_for_var[m_key] = p["prediction"]
+                details[m_key] = {
+                    "criteria": p.get("criteria_raw") or p.get("criteria") or [],
+                    "score": p.get("score"),
+                    "confidence": p.get("confidence") or "",
+                }
             else:
                 preds_for_var[m_key] = "Pending"
 
@@ -756,7 +575,10 @@ def build_dashboard_dataset():
             "ground_truth": u["ground_truth"],
             "ground_truth_direction": u["ground_truth_direction"],
             "ground_truth_criteria": u["criteria_met"][:5],
+            "expert_criteria": u["criteria_met_raw"],
+            "expert_points": sum(criterion_points(c) for c in u["criteria_met_raw"]),
             "predictions": preds_for_var,
+            "details": details,
         })
 
     # -------------------------------------------------------------------------
@@ -829,7 +651,7 @@ def build_dashboard_dataset():
         "live_jobs": live_jobs,
     }
 
-    carry_over_archived_models(payload, excluded)
+    carry_over_archived_models(payload, missing)
 
     out_file = REPO_ROOT / "dashboard" / "data" / "benchmark_data.json"
     out_file.parent.mkdir(parents=True, exist_ok=True)
@@ -859,33 +681,25 @@ def load_previous_dataset() -> dict:
     return data
 
 
-def carry_over_archived_models(payload: dict, excluded: set[str]) -> None:
+def carry_over_archived_models(payload: dict, missing: set[str]) -> None:
     """
-    Keep models whose raw result files are not in this checkout (for example
-    runs excluded by .gitignore) by copying their computed results from the
-    previous build. They are flagged "archived" and lack variant-level
-    comparisons against models that were added later.
+    Keep registered models whose results file is not in this checkout (for
+    example a run excluded by .gitignore) by copying their computed results
+    from the previous build. They are flagged "archived" and lack
+    variant-level comparisons against models that were added later.
     """
     previous = load_previous_dataset()
     current = {m["key"] for m in payload["models"]}
-    for m in previous.get("models", []):
-        listed = {x["key"] for x in payload["metadata"]["excluded_models"]}
-        if m["key"] in excluded and m["key"] not in current and m["key"] not in listed:
-            payload["metadata"]["excluded_models"].append({"key": m["key"], "name": m["name"]})
     archived = [m for m in previous.get("models", [])
-                if m["key"] not in current and m["key"] not in excluded and m["key"] not in RETIRED_MODELS
-                and not m.get("imported")
+                if m["key"] in missing and m["key"] not in current
                 and m["key"] in previous.get("confusion_matrices", {})]
-    if not archived:
-        return
 
     for m in archived:
         k = m["key"]
-        color = MODEL_COLORS.get(k, m.get("color", FALLBACK_COLORS[0]))
-        m = dict(m, archived=True, color=color, color_dark=MODEL_COLORS_DARK.get(k, color))
+        m = dict(m, archived=True)
         payload["models"].append(m)
         payload["confusion_matrices"][k] = previous["confusion_matrices"][k]
-        for section in ("categories_data", "criteria_data", "safety_data"):
+        for section in ("categories_data", "criteria_data", "safety_data", "cross_direction"):
             if k in previous.get(section, {}):
                 payload[section][k] = previous[section][k]
         cats = payload["categories_data"].get(k, {})

@@ -1,0 +1,44 @@
+# Benchmark dashboard
+
+`index.html` is a self-contained page: open it directly, serve it with
+GitHub Pages, or run the local server for editing.
+
+## Adding a model
+
+1. Put the results file in the repository (AIVA JSONL output, or a Claude
+   Code JSON array).
+2. Add one line to `models.tsv` (tab-separated):
+
+   | column | example |
+   |---|---|
+   | key | `aiva_gpt_sol` |
+   | name | `AIVA-GPT-Sol` |
+   | provider | `Anthropic`, `OpenAI`, `Google`, `Rule-based` or `Other` |
+   | method | `AIVA agent` |
+   | path | `Results_GPT_Sol_Analysis/sol_full.jsonl` |
+   | format | `jsonl`, `json_array`, or `auto` (by extension) |
+   | color | optional; empty takes the provider's next colour |
+   | color_dark | optional lighter colour for the dark theme |
+   | status | `active`, or `removed` to hide the model |
+
+3. Rebuild and commit:
+
+   ```bash
+   python scripts/update_dashboard.py
+   git add dashboard/models.tsv dashboard/index.html <results file>
+   ```
+
+`.gitignore` excludes `*.json` and `*.jsonl` by default; add a `!path`
+exception for the new results file, or commit it with `git add -f`.
+
+## Local server
+
+```bash
+python dashboard/server.py
+```
+
+Serves the page at http://localhost:8050 and enables the Models dialog
+(remove and restore write `status` in `models.tsv`), "Import results" with
+"Save to the repository" (writes `imported_results/` and a `models.tsv` row),
+and "Rebuild data". Each change rebuilds `index.html`; commit and push to
+publish it.

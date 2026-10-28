@@ -140,7 +140,7 @@ main.wrap { padding-top: 24px; padding-bottom: 48px; }
 .tile-sub strong { color: var(--text); font-weight: 600; }
 
 /* Form controls */
-.seg { display: inline-flex; border: 1px solid var(--border-strong); border-radius: 6px; padding: 2px; gap: 2px; background: var(--surface); }
+.seg { flex-wrap: wrap; max-width: 100%; display: inline-flex; border: 1px solid var(--border-strong); border-radius: 6px; padding: 2px; gap: 2px; background: var(--surface); }
 .seg button { appearance: none; border: 0; background: none; padding: 3px 10px; border-radius: 4px; font-size: 12px; font-weight: 500; color: var(--text-2); cursor: pointer; white-space: nowrap; }
 .seg button:hover { color: var(--text); }
 .seg button[aria-pressed="true"] { background: var(--surface-2); color: var(--text); box-shadow: inset 0 0 0 1px var(--border); }
@@ -300,6 +300,24 @@ footer { color: var(--muted); font-size: 12px; padding-top: 24px; }
 .mchip[aria-pressed="true"] { color: var(--text); border-color: var(--border-strong); background: var(--surface-2); font-weight: 500; }
 .mchip[aria-pressed="true"] .swatch { opacity: 1; }
 
+.mchip .x { margin-left: 6px; color: var(--muted); font-size: 13px; line-height: 1; }
+.mchip:hover .x { color: var(--critical); }
+.picker { position: relative; }
+.picker-btn { padding: 2px 10px; font-size: 12px; line-height: 18px; border-radius: 999px; }
+.picker-pop { position: absolute; z-index: 40; top: calc(100% + 6px); left: 0; width: min(360px, calc(100vw - 32px)); background: var(--surface); border: 1px solid var(--border-strong); border-radius: 10px; box-shadow: 0 12px 32px rgba(0, 0, 0, 0.16); padding: 10px; }
+@media (max-width: 640px) { .picker-pop { position: fixed; left: 16px; right: 16px; top: auto; width: auto; } }
+.picker-pop input[type="search"] { width: 100%; }
+.picker-list { max-height: 340px; overflow-y: auto; margin-top: 8px; }
+.pk-group + .pk-group { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--grid); }
+.pk-head { display: flex; justify-content: space-between; align-items: center; font-size: 11px; font-weight: 600; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.04em; padding: 2px 4px 4px; }
+.pk-all { appearance: none; border: 0; background: none; color: var(--focus); font-size: 12px; cursor: pointer; text-transform: none; letter-spacing: 0; font-weight: 500; }
+.pk-item { display: grid; grid-template-columns: auto auto minmax(0, 1fr); align-items: center; column-gap: 6px; padding: 5px 4px; border-radius: 6px; font-size: 13px; cursor: pointer; }
+.pk-item:hover { background: var(--surface-2); }
+.pk-item small { grid-column: 3; font-size: 11px; color: var(--muted); }
+.pk-item .swatch { margin: 0; }
+.pk-item.off { opacity: 0.45; cursor: default; }
+.picker-note { margin: 8px 4px 0; font-size: 11px; color: var(--muted); }
+
 /* Tiles: focus vs comparators */
 .tile-cmps { margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--grid); display: grid; gap: 3px; }
 .tile-cmp { display: grid; grid-template-columns: auto minmax(0, 1fr) auto 64px; align-items: center; font-size: 12px; color: var(--text-2); font-variant-numeric: tabular-nums; }
@@ -373,16 +391,62 @@ footer { color: var(--muted); font-size: 12px; padding-top: 24px; }
 .st-axis .ticks span:first-child { transform: none; }
 .st-axis .ticks span:last-child { transform: translateX(-100%); }
 
+/* Variant consensus and drawer */
+.cons { display: flex; align-items: center; gap: 8px; min-width: 150px; }
+.cons-bar { display: flex; width: 90px; height: 10px; border-radius: 3px; overflow: hidden; gap: 1px; background: var(--grid); }
+.cons-bar span { display: block; height: 100%; }
+.cons-txt { font-size: 12px; color: var(--text-2); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(560px, 100vw); background: var(--surface); border-left: 1px solid var(--border-strong); box-shadow: -12px 0 40px rgba(0, 0, 0, 0.18); z-index: 90; display: flex; flex-direction: column; transform: translateX(16px); opacity: 0; transition: transform 0.15s, opacity 0.15s; }
+.drawer.open { transform: none; opacity: 1; }
+.drawer-head { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; padding: 18px 20px 12px; border-bottom: 1px solid var(--border); }
+.drawer-head h3 { margin: 0; font-size: 15px; font-weight: 600; word-break: break-word; }
+.drawer-head p { margin: 4px 0 0; font-size: 12px; color: var(--text-2); }
+.drawer-body { padding: 16px 20px 24px; overflow-y: auto; }
+.dr-expert { display: grid; gap: 4px; padding-bottom: 14px; margin-bottom: 6px; border-bottom: 1px solid var(--grid); }
+.dr-lbl { font-size: 12px; color: var(--text-2); font-weight: 600; }
+.dr-table td { vertical-align: top; }
+.dr-table tr.sel td:first-child { font-weight: 600; }
+.ev-top { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.pts { font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pts.na { font-weight: 400; color: var(--muted); }
+.crit { display: block; font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 11px; color: var(--text-2); line-height: 1.5; margin-top: 2px; }
+tr.grp-row td { font-size: 11px; font-weight: 600; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.04em; background: var(--surface-2); padding: 5px 10px; }
+#varTable tr.row-link:focus-visible td { background: var(--surface-2); }
+
+/* Wide tables: first column stays put while scrolling sideways */
+#varTable th:first-child, #varTable td:first-child,
+#agreeHeat th:first-child, #agreeHeat td:first-child,
+#xdirTable th:first-child, #xdirTable td:first-child { position: sticky; left: 0; z-index: 1; background: var(--surface); }
+#leaderboard th:nth-child(2), #leaderboard td:nth-child(2) { position: sticky; left: 0; z-index: 1; background: var(--surface); }
+tr.row-link.focus td:nth-child(2), tr.row-link:hover td:nth-child(2) { background: var(--surface-2); }
+
+/* Phones: wide tables become one card per row */
+@media (max-width: 640px) {
+  table.cards thead { display: none; }
+  table.cards, table.cards tbody, table.cards tr, table.cards td { display: block; width: 100%; }
+  table.cards tr { border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; margin-bottom: 10px; }
+  table.cards tr.grp-row { border: 0; padding: 0; }
+  table.cards td { border: 0; padding: 4px 0; display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; text-align: right; position: static !important; background: none !important; }
+  table.cards td::before { content: attr(data-label); color: var(--text-2); font-size: 12px; text-align: left; flex-shrink: 0; }
+  table.cards td:not([data-label])::before { content: none; }
+  table.cards td.rank { display: none; }
+  table.cards .model-cell, table.cards .disease { min-width: 0; max-width: none; text-align: right; }
+  table.cards .inline-bar .track { display: none; }
+  .table-wrap:has(table.cards) { margin: 0; padding: 0; }
+}
+
+table.heat.compact td.h { min-width: 26px; height: 26px; padding: 0; }
+table.heat.compact th.colh { min-width: 26px; max-width: 56px; font-size: 10px; }
+
 /* Cross-direction list */
 #xdirCard { scroll-margin-top: 110px; }
 .xdir-filter { order: 10; flex-basis: 100%; font-size: 12px; color: var(--text-2); display: flex; align-items: center; gap: 8px; }
 .xdir-filter .pill { margin: 0; }
 #xdirTable td { vertical-align: top; }
+#xdirTable td.mono { min-width: 140px; max-width: 190px; word-break: break-all; }
+#xdirTable .ev { min-width: 130px; }
 #xdirTable .ev { display: flex; flex-direction: column; gap: 3px; min-width: 150px; }
 #xdirTable .ev-top { display: flex; align-items: center; gap: 8px; }
-#xdirTable .pts { font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
-#xdirTable .pts.na { font-weight: 400; color: var(--muted); }
-#xdirTable .crit { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 11px; color: var(--text-2); line-height: 1.5; }
 #xdirTable .dir { white-space: nowrap; font-size: 12px; font-weight: 600; }
 table.cm td.xdir.link { cursor: pointer; }
 table.cm td.xdir.link:hover { box-shadow: inset 0 0 0 3px var(--critical); }
@@ -410,6 +474,8 @@ table.cm td.xdir.link:hover { box-shadow: inset 0 0 0 3px var(--critical); }
 #safetyTable tr.sel td { font-weight: 600; }
 tr.row-link.focus td { background: var(--surface-2); }
 tr.row-link.focus td:first-child { box-shadow: inset 3px 0 0 var(--mc); }
+.grp-toggle { appearance: none; border: 0; background: none; padding: 0; font: inherit; color: inherit; text-transform: inherit; letter-spacing: inherit; cursor: pointer; }
+.grp-n { font-weight: 400; color: var(--muted); text-transform: none; letter-spacing: 0; margin-left: 4px; }
 .pill-strong { color: var(--text); border-color: var(--text-2); }
 .model-name .swatch, .lbl .swatch, .rowh .swatch, .cm-title .swatch { margin-right: 6px; }
 th.selcol { color: var(--text); }
@@ -464,7 +530,18 @@ footer code { font-size: 12px; }
   <div class="selbar">
     <div class="wrap">
       <label class="sel-focus"><span>Model</span><select id="focusSel" aria-label="Model"></select></label>
-      <div class="sel-comps"><span class="sel-lbl">compared with</span><div class="chips" id="compChips" role="group" aria-label="Comparison models"></div></div>
+      <div class="sel-comps">
+        <span class="sel-lbl">compared with</span>
+        <div class="chips" id="compChips" role="group" aria-label="Comparison models"></div>
+        <div class="picker">
+          <button type="button" class="btn picker-btn" id="pickerBtn" aria-haspopup="true" aria-expanded="false">Add or remove</button>
+          <div class="picker-pop" id="pickerPop" hidden>
+            <input type="search" id="pickerQ" placeholder="Search models" aria-label="Search models">
+            <div class="picker-list" id="pickerList"></div>
+            <p class="picker-note" id="pickerNote"></p>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -504,11 +581,14 @@ footer code { font-size: 12px; }
       <div class="card-head">
         <div>
           <h3>Leaderboard</h3>
-          <p>Every classifier scored against ClinGen expert-panel classifications.<span class="ui-hint"> Select a column to sort; select a row to make it the focus model.</span></p>
+          <p>Every classifier scored against ClinGen expert-panel classifications. Ranks are across all providers.<span class="ui-hint"> Select a column to sort; select a row to make it the focus model.</span></p>
         </div>
-        <div class="seg" id="familySeg" role="group" aria-label="Filter by family"></div>
+        <div class="controls">
+          <label class="check"><input type="checkbox" id="lbGroup" checked> Group by provider</label>
+          <div class="seg" id="familySeg" role="group" aria-label="Filter by provider"></div>
+        </div>
       </div>
-      <div class="table-wrap"><table id="leaderboard"></table></div>
+      <div class="table-wrap"><table id="leaderboard" class="cards"></table></div>
       <p class="note" id="lbNote"></p>
     </div>
   </section>
@@ -630,7 +710,7 @@ footer code { font-size: 12px; }
         </div>
         <div class="xdir-filter" id="xdirFilter" hidden></div>
       </div>
-      <div class="table-wrap"><table id="xdirTable"></table></div>
+      <div class="table-wrap"><table id="xdirTable" class="cards"></table></div>
       <p class="note">Expert points are computed from the expert panel's criteria on the ClinGen point scale (supporting 1, moderate 2, strong 4, very strong 8; benign evidence negative; a strength modifier such as PM2_Supporting overrides the default). Model points are the score each model reported with its call; Gemini-3-Pro, BIAS-2015 and InterVar do not report one. For reference, ≥10 points is pathogenic, 6–9 likely pathogenic, 0–5 VUS, −1 to −6 likely benign, ≤−7 benign.</p>
     </div>
   </section>
@@ -670,7 +750,7 @@ footer code { font-size: 12px; }
     </div>
     <div class="card" data-static>
       <div class="card-head">
-        <div><h3 id="agreeTitle"></h3><p>All pairs. Shading is scaled to the observed range.</p></div>
+        <div><h3 id="agreeTitle"></h3><p>All pairs, ordered so models that agree sit together. Shading is scaled to the observed range; with more than 10 models, values show on hover.</p></div>
         <div class="controls">
           <div class="seg" id="agreeSeg" role="group" aria-label="Agreement level">
             <button data-v="exact_pct" type="button">Exact, 5-class</button><button data-v="dir_pct" type="button">Directional, 3-class</button>
@@ -707,7 +787,7 @@ footer code { font-size: 12px; }
           <span><span class="chip m-cross">B</span> Cross-direction</span>
         </div>
       </div>
-      <div class="table-wrap"><table id="varTable"></table></div>
+      <div class="table-wrap"><table id="varTable" class="cards"></table></div>
       <div class="pager" id="pager"></div>
     </div>
   </section>
@@ -727,12 +807,12 @@ footer code { font-size: 12px; }
         <span id="dropText"><strong>Choose a file</strong> or drop it here</span>
       </div>
       <label class="field">Display name <input type="text" id="impName" placeholder="e.g. Claude Sonnet 5.5 (AIVA re-run)"></label>
-      <label class="field">Family
+      <label class="field">Provider
         <select id="impFamily">
-          <option>Anthropic Claude</option>
-          <option>Google Gemini</option>
-          <option>OpenAI GPT</option>
-          <option>Classical ACMG Tools</option>
+          <option>Anthropic</option>
+          <option>OpenAI</option>
+          <option>Google</option>
+          <option>Rule-based</option>
           <option>Other</option>
         </select>
       </label>
@@ -767,6 +847,14 @@ footer code { font-size: 12px; }
   </form>
 </dialog>
 
+<aside class="drawer" id="drawer" hidden aria-labelledby="drawerTitle">
+  <div class="drawer-head">
+    <div><h3 id="drawerTitle"></h3><p id="drawerSub"></p></div>
+    <button type="button" class="btn" id="drawerClose">Close</button>
+  </div>
+  <div class="drawer-body" id="drawerBody"></div>
+</aside>
+
 <div id="tip" hidden></div>
 <div class="toast" id="toast" hidden></div>
 
@@ -783,7 +871,9 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
   const ABBR = { "Pathogenic": "P", "Likely Pathogenic": "LP", "Uncertain Significance": "VUS", "Likely Benign": "LB", "Benign": "B" };
   const DIR = { "Pathogenic": "pathogenic", "Likely Pathogenic": "pathogenic", "Uncertain Significance": "vus", "Likely Benign": "benign", "Benign": "benign" };
   const DIR_LABEL = { pathogenic: "P/LP", vus: "VUS", benign: "B/LB" };
-  const FAMILY_SHORT = { "Anthropic Claude": "Claude", "Google Gemini": "Gemini", "Classical ACMG Tools": "Rule-based", "OpenAI GPT": "GPT" };
+  const FAMILY_SHORT = {};
+  const PROVIDER_ORDER = ["Anthropic", "OpenAI", "Google", "Rule-based", "Other"];
+  const MAX_COMPARE = 5;
   const CRITERIA = {
     pathogenic: [
       ["PVS1", "Null variant in a gene where loss of function is a known mechanism"],
@@ -823,7 +913,7 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
     focus: null,
     comps: ["baseline_bias", "baseline_intervar"],
     lbSort: { key: "macro_f1_5", desc: true },
-    family: "all",
+    family: "all", lbGroup: true, lbCollapsed: [],
     catMetric: "macro_f1",
     flowScale: "5", flowCat: "all",
     cmScale: "5", cmMode: "count",
@@ -951,22 +1041,66 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
 
   function normalizeSelection() {
     if (!byKey(state.focus)) state.focus = defaultFocus();
-    state.comps = [...new Set(state.comps)].filter((k) => byKey(k) && k !== state.focus);
+    state.comps = [...new Set(state.comps)].filter((k) => byKey(k) && k !== state.focus).slice(0, MAX_COMPARE);
   }
+
+  const providerOf = (m) => (PROVIDER_ORDER.includes(m.family) ? m.family : "Other");
+  const byProvider = (models) => PROVIDER_ORDER.map((p) => [p, models.filter((m) => providerOf(m) === p)]).filter(([, ms]) => ms.length);
 
   function renderSelector() {
     normalizeSelection();
-    $("focusSel").innerHTML = D.models.map((m) => `<option value="${esc(m.key)}">${esc(m.name)}${isFull(m) ? "" : " (subset)"}</option>`).join("");
+    $("focusSel").innerHTML = byProvider(D.models).map(([p, ms]) => `<optgroup label="${esc(p)}">${ms.map((m) =>
+      `<option value="${esc(m.key)}">${esc(m.name)}${isFull(m) ? "" : " (subset)"}</option>`).join("")}</optgroup>`).join("");
     $("focusSel").value = state.focus;
-    $("compChips").innerHTML = D.models.filter((m) => m.key !== state.focus).map((m) =>
-      `<button type="button" class="mchip" data-key="${esc(m.key)}" aria-pressed="${state.comps.includes(m.key)}">${swatch(m)}${esc(m.short_name)}</button>`).join("");
-    $("compChips").querySelectorAll(".mchip").forEach((b) => b.onclick = () => {
-      const k = b.dataset.key;
-      state.comps = state.comps.includes(k) ? state.comps.filter((x) => x !== k) : [...state.comps, k];
-      onSelectionChange();
-    });
+    $("compChips").innerHTML = state.comps.map(byKey).filter(Boolean).map((m) =>
+      `<button type="button" class="mchip" data-key="${esc(m.key)}" aria-pressed="true"${tipAttr("Remove from comparison")}>${swatch(m)}${esc(m.short_name)}<span class="x" aria-hidden="true">×</span></button>`).join("");
+    $("compChips").querySelectorAll(".mchip").forEach((b) => b.onclick = () => toggleComp(b.dataset.key));
+    $("pickerBtn").textContent = state.comps.length ? "Add or remove" : "Add models";
+    renderPicker();
     const legend = selModels().map((m) => `<span>${mname(m)}</span>`).join("");
     document.querySelectorAll("[data-legend]").forEach((el) => (el.innerHTML = legend));
+  }
+
+  function toggleComp(k) {
+    if (state.comps.includes(k)) state.comps = state.comps.filter((x) => x !== k);
+    else if (state.comps.length >= MAX_COMPARE) { toast(`Compare up to ${MAX_COMPARE} models at once; remove one first.`); return; }
+    else state.comps = [...state.comps, k];
+    onSelectionChange();
+  }
+
+  function renderPicker() {
+    const q = ($("pickerQ").value || "").trim().toLowerCase();
+    const full = state.comps.length >= MAX_COMPARE;
+    const others = D.models.filter((m) => m.key !== state.focus && (!q || `${m.name} ${m.family} ${m.type}`.toLowerCase().includes(q)));
+    $("pickerList").innerHTML = byProvider(others).map(([p, ms]) => {
+      const allOn = ms.every((m) => state.comps.includes(m.key));
+      return `<div class="pk-group"><div class="pk-head"><span>${esc(p)}</span><button type="button" class="pk-all" data-provider="${esc(p)}">${allOn ? "Clear" : "Select all"}</button></div>${ms.map((m) => {
+        const on = state.comps.includes(m.key);
+        return `<label class="pk-item${!on && full ? " off" : ""}"><input type="checkbox" data-key="${esc(m.key)}"${on ? " checked" : ""}${!on && full ? " disabled" : ""}>${swatch(m)}<span>${esc(m.name)}</span><small>${esc(m.type)}${isFull(m) ? "" : " · subset"}</small></label>`;
+      }).join("")}</div>`;
+    }).join("") || `<p class="empty">No models match.</p>`;
+    $("pickerNote").textContent = `${state.comps.length} of ${MAX_COMPARE} comparison slots used. Charts stay readable and colours distinguishable with up to ${MAX_COMPARE + 1} models.`;
+    $("pickerList").querySelectorAll("input[data-key]").forEach((c) => c.onchange = () => toggleComp(c.dataset.key));
+    $("pickerList").querySelectorAll(".pk-all").forEach((b) => b.onclick = () => {
+      const ms = others.filter((m) => providerOf(m) === b.dataset.provider).map((m) => m.key);
+      if (ms.every((k) => state.comps.includes(k))) state.comps = state.comps.filter((k) => !ms.includes(k));
+      else {
+        const add = ms.filter((k) => !state.comps.includes(k));
+        const room = MAX_COMPARE - state.comps.length;
+        if (add.length > room) toast(`Added ${room} of ${add.length}: compare up to ${MAX_COMPARE} models at once.`);
+        state.comps = [...state.comps, ...add.slice(0, room)];
+      }
+      onSelectionChange();
+    });
+  }
+
+  function setupPicker() {
+    const pop = $("pickerPop"), btn = $("pickerBtn");
+    const close = () => { pop.hidden = true; btn.setAttribute("aria-expanded", "false"); };
+    btn.onclick = () => { pop.hidden = !pop.hidden; btn.setAttribute("aria-expanded", String(!pop.hidden)); if (!pop.hidden) { renderPicker(); $("pickerQ").focus(); } };
+    $("pickerQ").oninput = renderPicker;
+    document.addEventListener("click", (e) => { if (!pop.hidden && !e.target.closest(".picker")) close(); });
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !pop.hidden) { close(); btn.focus(); } });
   }
 
   function setFocus(key) {
@@ -1182,10 +1316,11 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
       const ind = active ? `<span class="sort-ind" aria-hidden="true">${desc ? "▼" : "▲"}</span>` : "";
       return `<th class="r"${active ? ` aria-sort="${desc ? "descending" : "ascending"}"` : ""}><button class="th-sort" data-sort="${c.key}" style="align-items:flex-end"><span>${c.label}${ind}</span><span class="th-sub">${c.sub}</span></button></th>`;
     }).join("")}</tr></thead>`;
-    let rank = 0;
-    const body = rows.map((m) => {
+    const rankOf = {};
+    rows.filter(isFull).forEach((m, i) => (rankOf[m.key] = i + 1));
+    const rowHtml = (m) => {
       const partial = !isFull(m);
-      if (!partial) rank++;
+      const rank = rankOf[m.key];
       const role = m.key === state.focus ? "focus" : state.comps.includes(m.key) ? "comp" : "";
       const cov = partial
         ? `<span${tipAttr(`Scored on ${int(m.evaluated_count)} of ${int(m.total_cohort)} variants. Not directly comparable with full-cohort rows.`)}>${pct(m.coverage_pct)}<span class="pill">subset</span></span>`
@@ -1193,17 +1328,29 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
       const tags = (m.imported ? '<span class="pill">imported</span>' : "") + (m.archived ? `<span class="pill"${tipAttr("Carried over from an earlier build; raw results are not in this repository.")}>archived</span>` : "") + (role === "focus" ? '<span class="pill pill-strong">focus</span>' : "");
       return `<tr class="row-link ${role}" data-key="${esc(m.key)}" style="--mc:${m.color}">
         <td class="rank">${partial ? "—" : rank}</td>
-        <td><div class="model-cell"><span class="model-name">${swatch(m)}${esc(m.name)}${tags}</span><span class="model-meta">${esc(m.type)}</span></div></td>
-        <td class="r num"><span class="inline-bar"><span>${f1(m.macro_f1_5)}</span><span class="track"><span class="fill" style="width:${m.macro_f1_5}%;background:${m.color}"></span></span></span></td>
-        <td class="r num">${f1(m.exact_accuracy)}</td>
-        <td class="r num">${f1(m.directional_accuracy)}</td>
-        <td class="r num">${f1(m.macro_f1_3)}</td>
-        <td class="r num"${tipAttr(`${int(m.false_pathogenic_count)} benign truth called P/LP\n${int(m.false_benign_count)} pathogenic truth called B/LB\n${Number(m.critical_error_rate).toFixed(2)}% of evaluated variants`)}>${int(m.critical_error_count)}</td>
-        <td class="r num">${cov}</td>
-        <td class="r num">${m.avg_latency_sec ? Number(m.avg_latency_sec).toFixed(1) : "—"}</td>
+        <td data-label="Model"><div class="model-cell"><span class="model-name">${swatch(m)}${esc(m.name)}${tags}</span><span class="model-meta">${esc(m.type)}</span></div></td>
+        <td class="r num" data-label="Macro F1, 5-class"><span class="inline-bar"><span>${f1(m.macro_f1_5)}</span><span class="track"><span class="fill" style="width:${m.macro_f1_5}%;background:${m.color}"></span></span></span></td>
+        <td class="r num" data-label="Exact acc., 5-class">${f1(m.exact_accuracy)}</td>
+        <td class="r num" data-label="Directional acc., 3-class">${f1(m.directional_accuracy)}</td>
+        <td class="r num" data-label="Macro F1, 3-class">${f1(m.macro_f1_3)}</td>
+        <td class="r num" data-label="Cross-direction errors"${tipAttr(`${int(m.false_pathogenic_count)} benign truth called P/LP\n${int(m.false_benign_count)} pathogenic truth called B/LB\n${Number(m.critical_error_rate).toFixed(2)}% of evaluated variants`)}>${int(m.critical_error_count)}</td>
+        <td class="r num" data-label="Coverage">${cov}</td>
+        <td class="r num" data-label="Latency, s / variant">${m.avg_latency_sec ? Number(m.avg_latency_sec).toFixed(1) : "—"}</td>
       </tr>`;
-    }).join("");
+    };
+    const grouped = state.lbGroup && state.family === "all";
+    const body = grouped
+      ? byProvider(rows).map(([p, ms]) => {
+          const shut = state.lbCollapsed.includes(p);
+          return `<tr class="grp-row lb-grp"><td colspan="${LB_COLS.length + 2}"><button type="button" class="grp-toggle" data-provider="${esc(p)}" aria-expanded="${!shut}">${shut ? "▸" : "▾"} ${esc(p)} <span class="grp-n">${ms.length} model${ms.length === 1 ? "" : "s"}</span></button></td></tr>` + (shut ? "" : ms.map(rowHtml).join(""));
+        }).join("")
+      : rows.map(rowHtml).join("");
     $("leaderboard").innerHTML = head + `<tbody>${body}</tbody>`;
+    $("leaderboard").querySelectorAll(".grp-toggle").forEach((b) => b.onclick = () => {
+      const p = b.dataset.provider;
+      state.lbCollapsed = state.lbCollapsed.includes(p) ? state.lbCollapsed.filter((x) => x !== p) : [...state.lbCollapsed, p];
+      renderLeaderboard();
+    });
     $("leaderboard").querySelectorAll(".th-sort").forEach((b) => b.onclick = () => {
       const k = b.dataset.sort, col = LB_COLS.find((c) => c.key === k);
       if (state.lbSort.key === k) state.lbSort.desc = !state.lbSort.desc; else state.lbSort = { key: k, desc: !col.low };
@@ -1470,14 +1617,14 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
     const crit = (list) => `<span class="crit">${(list || []).map(esc).join(", ") || "none cited"}</span>`;
     const head = `<thead><tr><th>Model</th><th>Error</th><th>Gene</th><th>Variant</th><th>Disease</th><th>Expert classification</th><th>Model call</th><th>Confidence</th></tr></thead>`;
     const body = rows.length ? rows.map((r) => `<tr>
-      <td style="white-space:nowrap">${mname(r.m)}</td>
-      <td class="dir">${DIR_LABEL_LONG[r.direction]}</td>
-      <td><strong>${esc(r.gene)}</strong></td>
-      <td class="mono">${esc(r.variant)}</td>
-      <td class="disease"><span class="d" title="${esc(r.disease)}">${esc(r.disease)}</span><span class="c">${esc(r.category)}${r.expert_panel ? " · " + esc(r.expert_panel) : ""}</span></td>
-      <td><div class="ev"><div class="ev-top"><span class="chip truth"${tipAttr(r.ground_truth)}>${ABBR[r.ground_truth] || esc(r.ground_truth)}</span>${pts(r.expert_points, true)}</div>${crit(r.expert_criteria)}</div></td>
-      <td><div class="ev"><div class="ev-top"><span class="chip m-cross"${tipAttr(r.predicted)}>${ABBR[r.predicted] || esc(r.predicted)}</span>${pts(r.model_points, false)}</div>${crit(r.model_criteria)}</div></td>
-      <td class="model-meta">${esc(r.confidence) || "—"}</td></tr>`).join("")
+      <td style="white-space:nowrap" data-label="Model">${mname(r.m)}</td>
+      <td class="dir" data-label="Error">${DIR_LABEL_LONG[r.direction]}</td>
+      <td data-label="Gene"><strong>${esc(r.gene)}</strong></td>
+      <td class="mono" data-label="Variant">${esc(r.variant)}</td>
+      <td class="disease" data-label="Disease"><span class="d" title="${esc(r.disease)}">${esc(r.disease)}</span><span class="c">${esc(r.category)}${r.expert_panel ? " · " + esc(r.expert_panel) : ""}</span></td>
+      <td data-label="Expert"><div class="ev"><div class="ev-top"><span class="chip truth"${tipAttr(r.ground_truth)}>${ABBR[r.ground_truth] || esc(r.ground_truth)}</span>${pts(r.expert_points, true)}</div>${crit(r.expert_criteria)}</div></td>
+      <td data-label="Model call"><div class="ev"><div class="ev-top"><span class="chip m-cross"${tipAttr(r.predicted)}>${ABBR[r.predicted] || esc(r.predicted)}</span>${pts(r.model_points, false)}</div>${crit(r.model_criteria)}</div></td>
+      <td class="model-meta" data-label="Confidence">${esc(r.confidence) || "—"}</td></tr>`).join("")
       : `<tr><td colspan="8" class="empty">No cross-direction errors for this selection.</td></tr>`;
     $("xdirTable").innerHTML = head + `<tbody>${body}</tbody>`;
   }
@@ -1534,7 +1681,18 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
     $("agreeNote").textContent = missing.length ? `Not available for ${missing.map((m) => m.short_name).join(", ")}: one of the pair was carried over from an earlier build without variant-level results.` : "";
 
     seg("agreeSeg", state.agree, (v) => { state.agree = v; renderAgreement(); });
-    const models = D.models.filter((m) => D.concordance[m.key]);
+    // Order models so similar ones sit together: start from the focus model,
+    // then repeatedly take the model that agrees most with the previous one.
+    const pool = D.models.filter((m) => D.concordance[m.key]);
+    const agreeOf = (a, b) => { const r = D.concordance[a.key]?.[b.key]; return r && r.overlap ? r[state.agree] : -1; };
+    const models = [];
+    let cur = pool.find((m) => m.key === state.focus) || pool[0];
+    while (cur) {
+      models.push(cur);
+      const rest = pool.filter((m) => !models.includes(m));
+      cur = rest.sort((a, b) => agreeOf(cur, b) - agreeOf(cur, a))[0];
+    }
+    const compact = models.length > 10;
     const vals = [];
     models.forEach((a) => models.forEach((b) => { if (a !== b) { const v = D.concordance[a.key]?.[b.key]; if (v && v.overlap) vals.push(v[state.agree]); } }));
     const lo = vals.length ? Math.floor(Math.min(...vals)) : 0, hi = vals.length ? Math.ceil(Math.max(...vals)) : 100;
@@ -1546,9 +1704,10 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
       const r = D.concordance[a.key]?.[b.key];
       if (a === b || !r || !r.overlap) return `<td class="h" style="color:var(--muted)">—</td>`;
       const v = r[state.agree];
-      return `<td class="h" style="${heatStyle((v - lo) / Math.max(1, hi - lo))}"${tipAttr(`${a.short_name} vs ${b.short_name}\n${pct(v)} agreement\n${int(r.overlap)} shared variants`)}>${f1(v)}</td>`;
+      return `<td class="h" style="${heatStyle((v - lo) / Math.max(1, hi - lo))}"${tipAttr(`${a.short_name} vs ${b.short_name}\n${pct(v)} agreement\n${int(r.overlap)} shared variants`)}>${compact ? "" : f1(v)}</td>`;
     }).join("")}</tr>`).join("");
     $("agreeHeat").innerHTML = head + `<tbody>${body}</tbody>`;
+    $("agreeHeat").classList.toggle("compact", compact);
   }
 
   // ---------- variants ----------
@@ -1571,17 +1730,29 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
     $("varIntro").textContent = `${int(vs.length)} of ${int(D.metadata.total_variants)} cohort variants, sampled across disease categories, are embedded for inspection. Selected models are listed first.`;
   }
 
+  // Calls from every model with a prediction for the variant.
+  function variantCalls(v) {
+    return D.models.map((m) => ({ m, p: v.predictions[m.key] })).filter((x) => ABBR[x.p]);
+  }
+
+  function consensusCell(v) {
+    const calls = variantCalls(v);
+    if (!calls.length) return `<span class="model-meta">no calls</span>`;
+    const counts = LABELS.map((l) => calls.filter((x) => x.p === l).length);
+    const exact = counts[LABELS.indexOf(v.ground_truth)] || 0;
+    const tip = `${calls.length} models\n` + LABELS.map((l, i) => counts[i] ? `${ABBR[l]}: ${counts[i]}` : "").filter(Boolean).join(" · ") + `\n${exact} of ${calls.length} match the expert (${ABBR[v.ground_truth]})`;
+    return `<div class="cons"${tipAttr(tip)}><div class="cons-bar">${counts.map((c, i) => c ? `<span style="width:${(c / calls.length) * 100}%;background:${CLASS_COLORS_5[i]}"></span>` : "").join("")}</div><span class="cons-txt">${exact}/${calls.length} exact</span></div>`;
+  }
+
   function renderVariants() {
     seg("vonlySeg", state.vonly, (v) => { state.vonly = v; state.vpage = 0; renderVariants(); });
-    const has = (m) => (D.explorer_variants || []).some((v) => v.predictions && v.predictions[m.key]);
-    const sel = selModels();
-    const models = [...sel, ...D.models.filter((m) => !sel.includes(m))].filter(has);
+    const sel = selModels().filter((m) => (D.explorer_variants || []).some((v) => v.predictions && v.predictions[m.key]));
     const q = state.vq.trim().toLowerCase();
     const list = (D.explorer_variants || []).filter((v) => {
       if (state.vcat !== "all" && v.category !== state.vcat) return false;
       if (state.vgt !== "all" && v.ground_truth !== state.vgt) return false;
       if (q && !(`${v.gene} ${v.variation} ${v.disease} ${v.category}`.toLowerCase().includes(q))) return false;
-      const calls = models.map((m) => v.predictions[m.key]).filter((p) => ABBR[p]);
+      const calls = variantCalls(v).map((x) => x.p);
       if (state.vonly === "disagree" && new Set(calls).size < 2) return false;
       if (state.vonly === "cross" && !calls.some((p) => matchClass(v.ground_truth, p) === "m-cross")) return false;
       return true;
@@ -1589,21 +1760,65 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
     const pages = Math.max(1, Math.ceil(list.length / PAGE));
     state.vpage = Math.min(state.vpage, pages - 1);
     const slice = list.slice(state.vpage * PAGE, state.vpage * PAGE + PAGE);
-    const head = `<thead><tr><th>Gene</th><th>Variant</th><th>Disease</th><th class="c">Expert</th>${models.map((m) => `<th class="colh${sel.includes(m) ? " selcol" : ""}"${tipAttr(m.name)}>${swatch(m)}<br>${esc(m.short_name)}</th>`).join("")}</tr></thead>`;
-    const body = slice.length ? slice.map((v) => `<tr>
-      <td><strong>${esc(v.gene)}</strong></td>
-      <td class="mono">${esc(v.variation)}</td>
-      <td class="disease"><span class="d" title="${esc(v.disease)}">${esc(v.disease)}</span><span class="c">${esc(v.category)}${v.expert_panel ? " · " + esc(v.expert_panel) : ""}</span></td>
-      <td class="c"><span class="chip truth"${tipAttr(`${v.ground_truth}${(v.ground_truth_criteria || []).length ? "\nExpert criteria: " + v.ground_truth_criteria.join(", ") : ""}`)}>${ABBR[v.ground_truth] || "—"}</span></td>
-      ${models.map((m) => { const p = v.predictions[m.key]; return `<td class="c"><span class="chip ${matchClass(v.ground_truth, p)}"${tipAttr(`${m.name}\n${p || "No call"}`)}>${ABBR[p] || "—"}</span></td>`; }).join("")}</tr>`).join("")
-      : `<tr><td colspan="${models.length + 4}" class="empty">No variants match these filters.</td></tr>`;
+    const nAll = D.models.filter((m) => (D.explorer_variants || []).some((v) => v.predictions && ABBR[v.predictions[m.key]])).length;
+    const head = `<thead><tr><th>Gene</th><th>Variant</th><th>Disease</th><th class="c">Expert</th>${sel.map((m) => `<th class="colh selcol"${tipAttr(m.name)}>${swatch(m)}<br>${esc(m.short_name)}</th>`).join("")}<th${tipAttr("Calls from every model, coloured by class")}>All ${nAll} models</th></tr></thead>`;
+    const body = slice.length ? slice.map((v) => `<tr class="row-link" tabindex="0" data-id="${esc(v.id)}">
+      <td data-label="Gene"><strong>${esc(v.gene)}</strong></td>
+      <td class="mono" data-label="Variant">${esc(v.variation)}</td>
+      <td class="disease" data-label="Disease"><span class="d" title="${esc(v.disease)}">${esc(v.disease)}</span><span class="c">${esc(v.category)}${v.expert_panel ? " · " + esc(v.expert_panel) : ""}</span></td>
+      <td class="c" data-label="Expert"><span class="chip truth"${tipAttr(v.ground_truth)}>${ABBR[v.ground_truth] || "—"}</span></td>
+      ${sel.map((m) => { const p = v.predictions[m.key]; return `<td class="c" data-label="${esc(m.short_name)}"><span class="chip ${matchClass(v.ground_truth, p)}"${tipAttr(`${m.name}\n${p || "No call"}`)}>${ABBR[p] || "—"}</span></td>`; }).join("")}
+      <td data-label="All models">${consensusCell(v)}</td></tr>`).join("")
+      : `<tr><td colspan="${sel.length + 5}" class="empty">No variants match these filters.</td></tr>`;
     $("varTable").innerHTML = head + `<tbody>${body}</tbody>`;
+    $("varTable").querySelectorAll("tr.row-link").forEach((tr) => {
+      tr.onclick = () => openDrawer(tr.dataset.id);
+      tr.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openDrawer(tr.dataset.id); } };
+    });
     const from = list.length ? state.vpage * PAGE + 1 : 0, to = Math.min(list.length, (state.vpage + 1) * PAGE);
     $("pager").innerHTML = `<span>${from}–${to} of ${int(list.length)}</span>
       <button class="btn" id="pgPrev" type="button" ${state.vpage === 0 ? "disabled" : ""}>Previous</button>
       <button class="btn" id="pgNext" type="button" ${state.vpage >= pages - 1 ? "disabled" : ""}>Next</button>`;
     $("pgPrev").onclick = () => { state.vpage--; renderVariants(); };
     $("pgNext").onclick = () => { state.vpage++; renderVariants(); };
+  }
+
+  // ---------- variant drawer ----------
+  let drawerReturn = null;
+  function openDrawer(id) {
+    const v = (D.explorer_variants || []).find((x) => x.id === id);
+    if (!v) return;
+    drawerReturn = document.activeElement;
+    $("drawerTitle").textContent = `${v.gene} · ${v.variation}`;
+    $("drawerSub").textContent = `${v.disease} · ${v.category}${v.expert_panel ? " · " + v.expert_panel : ""}`;
+    const pts = (n, computed) => n == null ? `<span class="pts na">score not reported</span>` : `<span class="pts"${computed ? tipAttr("Computed from the expert criteria") : ""}>${n > 0 ? "+" : ""}${n} pts</span>`;
+    const crit = (list) => `<span class="crit">${(list || []).map(esc).join(", ") || "none cited"}</span>`;
+    const sel = selModels().map((m) => m.key);
+    const rows = byProvider(D.models).map(([p, ms]) => {
+      const items = ms.filter((m) => ABBR[v.predictions[m.key]]);
+      if (!items.length) return "";
+      return `<tr class="grp-row"><td colspan="3">${esc(p)}</td></tr>` + items.map((m) => {
+        const p2 = v.predictions[m.key], d = (v.details || {})[m.key] || {};
+        return `<tr class="${sel.includes(m.key) ? "sel" : ""}"><td>${mname(m)}</td>
+          <td><div class="ev-top"><span class="chip ${matchClass(v.ground_truth, p2)}"${tipAttr(p2)}>${ABBR[p2]}</span>${pts(d.score, false)}</div>${crit(d.criteria)}</td>
+          <td class="model-meta">${esc(d.confidence) || "—"}</td></tr>`;
+      }).join("");
+    }).join("");
+    $("drawerBody").innerHTML = `<div class="dr-expert"><div class="dr-lbl">Expert classification</div>
+        <div class="ev-top"><span class="chip truth">${ABBR[v.ground_truth] || "—"}</span><span>${esc(v.ground_truth)}</span>${pts(v.expert_points, true)}</div>${crit(v.expert_criteria)}</div>
+      <div class="table-wrap"><table class="dr-table"><thead><tr><th>Model</th><th>Call, score and criteria</th><th>Confidence</th></tr></thead><tbody>${rows}</tbody></table></div>
+      <p class="note">Selected models in bold. Chip colours: green exact match, grey same direction, outlined adjacent to VUS, red cross-direction.</p>`;
+    const dr = $("drawer");
+    dr.hidden = false;
+    requestAnimationFrame(() => dr.classList.add("open"));
+    $("drawerClose").focus();
+  }
+  function closeDrawer() {
+    const dr = $("drawer");
+    if (dr.hidden) return;
+    dr.classList.remove("open");
+    dr.hidden = true;
+    if (drawerReturn) drawerReturn.focus();
   }
 
   // ---------- tabs & URL ----------
@@ -1707,7 +1922,7 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
     D.models.push({
       key, name, short_name: name.length > 22 ? name.slice(0, 21) + "…" : name, family,
       color: ["#008300", "#e34948", "#0d366b", "#8c5a2b"][D.models.filter((x) => x.imported).length % 4],
-      is_anthropic: family === "Anthropic Claude", type: "Imported results", imported: true,
+      is_anthropic: family === "Anthropic", type: "Imported results", imported: true,
       evaluated_count: n, total_cohort: total, coverage_pct: +((n / total) * 100).toFixed(1),
       exact_accuracy: +((diag(m5) / n) * 100).toFixed(2), directional_accuracy: +((diag(m3) / n) * 100).toFixed(2),
       macro_f1_5: macro(pc5), macro_f1_3: macro(pc3),
@@ -1748,7 +1963,7 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
           $("impGo").disabled = true; $("impGo").textContent = "Saving and rebuilding…";
           try {
             parseRecords(String(reader.result));
-            const data = await postModels("import", { name, family: $("impFamily").value, content: String(reader.result) });
+            const data = await postModels("import", { name, provider: $("impFamily").value, content: String(reader.result) });
             dlg.close();
             state.tab = "overview";
             state.focus = data.changed_key;
@@ -2321,6 +2536,7 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
   // ---------- wiring ----------
   document.querySelectorAll(".tab").forEach((b) => (b.onclick = () => setTab(b.dataset.tab)));
   $("focusSel").onchange = (e) => setFocus(e.target.value);
+  $("lbGroup").onchange = (e) => { state.lbGroup = e.target.checked; renderLeaderboard(); };
   $("catMetric").onchange = (e) => { state.catMetric = e.target.value; renderCatMetric(); };
   $("flowCat").onchange = (e) => { state.flowCat = e.target.value; renderFlows(); };
   $("xdirModel").onchange = (e) => { state.errModel = e.target.value; state.errCell = null; renderCross(); };
@@ -2338,6 +2554,9 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
   setupModels();
   setupExport();
   setupFlowHover();
+  setupPicker();
+  $("drawerClose").onclick = closeDrawer;
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeDrawer(); });
   applyHash();
   renderAll();
 })();

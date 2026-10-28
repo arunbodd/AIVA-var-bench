@@ -8,8 +8,8 @@ Provides:
 - Live background job monitoring endpoint (`/api/live`)
 - On-demand benchmark data refresh endpoint (`/api/refresh`)
 - Model management (`POST /api/models/remove|restore|import`): changes are
-  written to dashboard/excluded_models.txt, dashboard/imported_models.tsv and
-  imported_results/, then the dataset and index.html are rebuilt
+  written to the model registry (dashboard/models.tsv) and imported_results/,
+  then the dataset and index.html are rebuilt
 
 Usage:
     python dashboard/server.py             # Starts server on port 8050
@@ -29,10 +29,11 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(REPO_ROOT))
+from dashboard.registry import PROVIDERS, read_registry, set_status, upsert  # noqa: E402
 DASHBOARD_DIR = REPO_ROOT / "dashboard"
 DATA_FILE = DASHBOARD_DIR / "data" / "benchmark_data.json"
-EXCLUDED_FILE = DASHBOARD_DIR / "excluded_models.txt"
-IMPORTED_FILE = DASHBOARD_DIR / "imported_models.tsv"
+LEGACY_EXCLUDED_FILE = DASHBOARD_DIR / "excluded_models.txt"
 IMPORTED_DIR = REPO_ROOT / "imported_results"
 MAX_UPLOAD_BYTES = 200 * 1024 * 1024
 
@@ -52,11 +53,10 @@ def read_lines(path: Path) -> list[str]:
     return path.read_text(encoding="utf-8").splitlines() if path.exists() else []
 
 
-def set_excluded(key: str, excluded: bool) -> None:
-    keys = [k for k in (line.strip() for line in read_lines(EXCLUDED_FILE)) if k and k != key]
-    if excluded:
-        keys.append(key)
-    EXCLUDED_FILE.write_text("".join(k + "\n" for k in keys), encoding="utf-8")
+def clear_legacy_exclusion(key: str) -> None:
+    keys = [k for k in (line.strip() for line in read_lines(LEGACY_EXCLUDED_FILE)) if k and k != key]
+    if LEGACY_EXCLUDED_FILE.exists():
+        LEGACY_EXCLUDED_FILE.write_text("".join(k + "\n" for k in keys), encoding="utf-8")
 
 
 def slugify(text: str) -> str:
@@ -128,19 +128,37 @@ class DashboardHandler(http.server.SimpleHTTPRequestHandler):
             if not name or not content:
                 return self.send_json({"error": "name and content are required"}, 400)
             key = "imported_" + slugify(name)
+            # Keep an existing key when the name matches a registered model.
+            for row in read_registry():
+                if row["name"].lower() == name.lower():
+                    key = row["key"]
+            is_array = content.lstrip().startswith("[")
+            rel = f"imported_results/{key}.{'json' if is_array else 'jsonl'}"
             IMPORTED_DIR.mkdir(exist_ok=True)
-            rel = f"imported_results/{key}.jsonl"
             (REPO_ROOT / rel).write_text(content, encoding="utf-8")
-            family = str(body.get("family") or "Other").replace("\t", " ")
-            rows = [line for line in read_lines(IMPORTED_FILE) if not line.startswith(key + "\t")]
-            rows.append("\t".join([key, name.replace("\t", " "), family, rel]))
-            IMPORTED_FILE.write_text("".join(r + "\n" for r in rows), encoding="utf-8")
-            set_excluded(key, False)
+            provider = str(body.get("provider") or "Other")
+            existing = next((r for r in read_registry() if r["key"] == key), {})
+            upsert({
+                "key": key,
+                "name": name,
+                "provider": provider if provider in PROVIDERS else "Other",
+                "method": existing.get("method") or "Imported",
+                "path": rel,
+                "format": "json_array" if is_array else "jsonl",
+                "color": existing.get("color", ""),
+                "color_dark": existing.get("color_dark", ""),
+                "status": "active",
+            })
+            clear_legacy_exclusion(key)
         else:
             key = str(body.get("key") or "").strip()
             if not re.fullmatch(r"[A-Za-z0-9_\-]+", key):
                 return self.send_json({"error": "Invalid model key"}, 400)
-            set_excluded(key, path.endswith("remove"))
+            restore = path.endswith("restore")
+            if not set_status(key, "active" if restore else "removed"):
+                return self.send_json({"error": f"{key} is not in dashboard/models.tsv"}, 404)
+            if restore:
+                clear_legacy_exclusion(key)
 
         print(f"[Server] {path} {key}: rebuilding dataset and index.html...")
         res = rebuild()
