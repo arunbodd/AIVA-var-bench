@@ -49,8 +49,13 @@ MODEL_COLORS = {
     "claude_code_haiku": "#eda100",
     "aiva_gemini_pro": "#184f95",
     "aiva_gemini_flash": "#d55181",
-    "baseline_bias": "#7a7873",
-    "baseline_intervar": "#b9b7b0",
+    "baseline_bias": "#0097a7",
+    "baseline_intervar": "#5c4033",
+}
+# Lighter steps for colours that are too dark to read on the dark theme.
+MODEL_COLORS_DARK = {
+    "baseline_intervar": "#a8835c",
+    "aiva_gemini_pro": "#4f86d0",
 }
 # Models removed from the dashboard (one key per line) and results imported
 # through the local dashboard server (tab-separated: key, name, family, path).
@@ -326,6 +331,8 @@ def discover_model_files(repo_root: Path) -> dict[str, dict]:
 
     extra = 0
     for key, info in discovered.items():
+        if key in MODEL_COLORS_DARK:
+            info["color_dark"] = MODEL_COLORS_DARK[key]
         if key in MODEL_COLORS:
             info["color"] = MODEL_COLORS[key]
         else:
@@ -516,6 +523,7 @@ def build_dashboard_dataset():
             "is_anthropic": m_info["is_anthropic"],
             "type": m_info["type"],
             "color": m_info["color"],
+            "color_dark": m_info.get("color_dark", m_info["color"]),
             "description": m_info["description"],
             "evaluated_count": n_eval,
             "total_cohort": total_cohort,
@@ -823,7 +831,8 @@ def carry_over_archived_models(payload: dict, excluded: set[str]) -> None:
 
     for m in archived:
         k = m["key"]
-        m = dict(m, archived=True, color=MODEL_COLORS.get(k, m.get("color", FALLBACK_COLORS[0])))
+        color = MODEL_COLORS.get(k, m.get("color", FALLBACK_COLORS[0]))
+        m = dict(m, archived=True, color=color, color_dark=MODEL_COLORS_DARK.get(k, color))
         payload["models"].append(m)
         payload["confusion_matrices"][k] = previous["confusion_matrices"][k]
         for section in ("categories_data", "criteria_data", "safety_data"):

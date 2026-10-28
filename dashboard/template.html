@@ -378,11 +378,10 @@ footer { color: var(--muted); font-size: 12px; padding-top: 24px; }
 @media (min-width: 1024px) { .flow-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .flow-svg { width: 100%; }
 .sankey { display: block; overflow: visible; }
-.sk-link { fill-opacity: 0.26; transition: fill-opacity 0.12s; }
-.sk-link.diag { fill-opacity: 0.78; }
+.sk-link { fill-opacity: 0.32; transition: fill-opacity 0.12s; }
+.sk-link.diag { fill-opacity: 0.82; }
 .sankey.hl .sk-link { fill-opacity: 0.07; }
 .sankey.hl .sk-link.on { fill-opacity: 0.9; }
-.sk-node { fill: var(--text-2); }
 .sk-lbl { fill: var(--text); font-size: 12px; font-weight: 600; }
 .sk-cnt { fill: var(--text-2); font-size: 11px; }
 .sk-head { fill: var(--muted); font-size: 11px; }
@@ -540,11 +539,12 @@ footer code { font-size: 12px; }
   <section class="view" id="view-flows" role="tabpanel" hidden>
     <div class="view-head">
       <h2>Classification flows</h2>
-      <p>Where each expert classification (left) ends up in the model's call (right). Band width is the number of variants; darker bands are exact matches. Hover a band or a class to trace it.</p>
+      <p>Where each expert classification (left) ends up in the model's call (right). Bands take the colour of the expert class; band width is the number of variants, and the strongest bands are exact matches. Hover a band or a class to trace it.</p>
     </div>
     <div class="card">
       <div class="card-head">
         <div><h3 id="flowTitle"></h3><p id="flowSub"></p></div>
+        <div class="legend st-legend" id="flowLegend"></div>
         <div class="controls">
           <div class="seg" id="flowScaleSeg" role="group" aria-label="Class granularity">
             <button data-v="5" type="button">5-class</button><button data-v="3" type="button">3-class</button>
@@ -894,6 +894,26 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
       (archived.length ? ` ${archived.map((m) => esc(m.name)).join(" and ")} ${archived.length > 1 ? "are" : "is"} carried over from an earlier build because the raw results are not in this repository; variant-level comparisons with later runs are unavailable for ${archived.length > 1 ? "them" : "it"}.` : "");
   }
 
+  // ---------- model colours ----------
+  // Each model carries a light-theme colour and, where needed, a lighter
+  // step for the dark theme; m.color always holds the one in use.
+  function isDarkTheme() {
+    const surface = getComputedStyle(document.documentElement).getPropertyValue("--surface").trim() || "#ffffff";
+    return hexLum(surface) < 0.2;
+  }
+  function applyThemeColors() {
+    const dark = isDarkTheme();
+    D.models.forEach((m) => {
+      if (!m.color_light) m.color_light = m.color;
+      m.color = dark && m.color_dark ? m.color_dark : m.color_light;
+    });
+  }
+  function rerenderForTheme() {
+    applyThemeColors();
+    renderSelector();
+    RENDER[state.tab]();
+  }
+
   // ---------- model selection ----------
   const selModels = () => [state.focus, ...state.comps].map(byKey).filter(Boolean);
   const focusModel = () => byKey(state.focus);
@@ -1226,6 +1246,11 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
     return state.flowScale === "5" ? mat : collapse3(mat);
   }
 
+  // Diverging class palette: pathogenic (red) through VUS (neutral grey) to benign (blue).
+  const CLASS_COLORS_5 = ["#b2182b", "#ef8a62", "#9e9d97", "#67a9cf", "#2166ac"];
+  const CLASS_COLORS_3 = ["#b2182b", "#9e9d97", "#2166ac"];
+  const classColors = (k) => (k === 5 ? CLASS_COLORS_5 : CLASS_COLORS_3);
+
   function sankeySvg(m, mat, width) {
     const five = mat.length === 5;
     const short = five ? LABELS.map((l) => ABBR[l]) : ["P/LP", "VUS", "B/LB"];
@@ -1252,18 +1277,18 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
         lOff[i] += v * sc; rOff[j] += v * sc;
         const kind = i === j ? "diag" : dirOf[i] === dirOf[j] ? "near" : (dirOf[i] === "v" || dirOf[j] === "v") ? "near" : "cross";
         const d = `M${n2(x0)},${n2(a)} C${n2(xm)},${n2(a)} ${n2(xm)},${n2(b)} ${n2(x1)},${n2(b)} L${n2(x1)},${n2(b + h)} C${n2(xm)},${n2(b + h)} ${n2(xm)},${n2(a + h)} ${n2(x0)},${n2(a + h)} Z`;
-        links.push(`<path class="sk-link ${kind}" d="${d}" fill="${m.color}" data-s="${i}" data-t="${j}"${tipAttr(`${m.short_name}\nExpert ${full[i]} → model ${full[j]}\n${int(v)} variants · ${pct(v / rowT[i] * 100)} of expert ${short[i]}${kind === "cross" ? "\nCross-direction error" : ""}`)}/>`);
+        links.push(`<path class="sk-link ${kind}" d="${d}" fill="${classColors(k)[i]}" data-s="${i}" data-t="${j}"${tipAttr(`${m.short_name}\nExpert ${full[i]} → model ${full[j]}\n${int(v)} variants · ${pct(v / rowT[i] * 100)} of expert ${short[i]}${kind === "cross" ? "\nCross-direction error" : ""}`)}/>`);
       }
     }
     const nodes = [];
     for (let i = 0; i < k; i++) {
       const h = Math.max(1, rowT[i] * sc), y = ly[i];
-      nodes.push(`<rect class="sk-node" x="${Lx}" y="${n2(y)}" width="${nodeW}" height="${n2(h)}" data-side="s" data-i="${i}"${tipAttr(`Expert ${full[i]}\n${int(rowT[i])} variants`)}/>`);
+      nodes.push(`<rect class="sk-node" x="${Lx}" y="${n2(y)}" width="${nodeW}" height="${n2(h)}" fill="${classColors(k)[i]}" data-side="s" data-i="${i}"${tipAttr(`Expert ${full[i]}\n${int(rowT[i])} variants`)}/>`);
       nodes.push(`<text class="sk-lbl" x="${Lx - 8}" y="${n2(y + h / 2 - 1)}" text-anchor="end">${short[i]}</text><text class="sk-cnt" x="${Lx - 8}" y="${n2(y + h / 2 + 12)}" text-anchor="end">${int(rowT[i])}</text>`);
     }
     for (let j = 0; j < k; j++) {
       const h = Math.max(1, colT[j] * sc), y = ry[j];
-      nodes.push(`<rect class="sk-node" x="${Rx}" y="${n2(y)}" width="${nodeW}" height="${n2(h)}" data-side="t" data-i="${j}"${tipAttr(`Model ${full[j]}\n${int(colT[j])} variants`)}/>`);
+      nodes.push(`<rect class="sk-node" x="${Rx}" y="${n2(y)}" width="${nodeW}" height="${n2(h)}" fill="${classColors(k)[j]}" data-side="t" data-i="${j}"${tipAttr(`Model ${full[j]}\n${int(colT[j])} variants`)}/>`);
       nodes.push(`<text class="sk-lbl" x="${Rx + nodeW + 8}" y="${n2(y + h / 2 - 1)}">${short[j]}</text><text class="sk-cnt" x="${Rx + nodeW + 8}" y="${n2(y + h / 2 + 12)}">${int(colT[j])}</text>`);
     }
     const heads = `<text class="sk-head" x="${Lx + nodeW}" y="14" text-anchor="end">Expert</text><text class="sk-head" x="${Rx}" y="14">Model</text>`;
@@ -1277,6 +1302,9 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
     if (state.flowCat !== "all" && !cats.includes(state.flowCat)) state.flowCat = "all";
     $("flowCat").value = state.flowCat;
     $("flowTitle").textContent = `Expert classification to model call, ${state.flowScale}-class`;
+    const legendLabels = state.flowScale === "5" ? LABELS : ["Pathogenic or likely pathogenic", "Uncertain significance", "Benign or likely benign"];
+    $("flowLegend").innerHTML = `<span>Bands coloured by expert class:</span>` + legendLabels.map((l, i) =>
+      `<span><span class="swatch" style="background:${classColors(legendLabels.length)[i]}"></span>${l}</span>`).join("");
     $("flowSub").textContent = state.flowCat === "all" ? `All ${int(D.metadata.total_variants)} cohort variants.` : `${state.flowCat}.`;
     const grid = $("flows");
     const ms = selModels();
@@ -1545,6 +1573,7 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
   }
 
   function renderAll() {
+    applyThemeColors();
     renderChrome();
     renderSelector();
     setTab(state.tab);
@@ -1772,7 +1801,9 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
       if (cur === "system") delete document.documentElement.dataset.theme;
       else document.documentElement.dataset.theme = cur;
       $("themeBtn").textContent = "Theme: " + cur[0].toUpperCase() + cur.slice(1);
+      if (state.focus) rerenderForTheme();
     };
+    window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { if (cur === "system" && state.focus) rerenderForTheme(); });
     $("themeBtn").onclick = () => {
       cur = order[(order.indexOf(cur) + 1) % order.length];
       try { localStorage.setItem("aiva-theme", cur); } catch (_) { /* storage unavailable */ }
@@ -1991,7 +2022,7 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
     const prevTheme = html.dataset.theme;
     html.dataset.theme = "light";
     // Colours that depend on the theme are computed while rendering.
-    if (prevTheme !== "light") RENDER[state.tab]();
+    if (prevTheme !== "light") rerenderForTheme();
     // Let wide tables lay out at full width instead of scrolling.
     const prevWidth = card.style.width;
     const extra = Math.max(0, ...[...card.querySelectorAll(".table-wrap")].map((w) => w.scrollWidth - w.clientWidth));
@@ -2001,7 +2032,7 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
       card.classList.remove("exporting");
       card.style.width = prevWidth;
       if (prevTheme) html.dataset.theme = prevTheme; else delete html.dataset.theme;
-      if (prevTheme !== "light") RENDER[state.tab]();
+      if (prevTheme !== "light") rerenderForTheme();
     }
   }
 
