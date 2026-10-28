@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>AIVA Variant Benchmark</title>
+<title>AIVA Bench</title>
 <link rel="icon" type="image/png" href="__MAMIDI_ICON__">
 <style id="fontFaces">__FONT_FACES__</style>
 <style>
@@ -102,7 +102,7 @@ button, input, select { font: inherit; color: inherit; }
 
 /* Header */
 .app-header { background: var(--page); }
-.app-header .wrap { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding-top: 22px; padding-bottom: 16px; }
+.app-header .wrap { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding-top: 22px; padding-bottom: 6px; }
 .brand { display: flex; align-items: center; gap: 14px; min-width: 0; }
 .brand-logo { display: block; flex-shrink: 0; border-radius: 50%; box-shadow: 0 1px 3px rgba(19, 71, 52, 0.18); }
 .brand-logo img { display: block; width: 48px; height: 48px; border-radius: 50%; }
@@ -304,6 +304,21 @@ footer { color: var(--muted); font-size: 12px; padding-top: 24px; }
 
 /* Leaderboard landing */
 body[data-tab="leaderboard"] .selbar { display: none; }
+
+/* Benchmark sections: Variant Classification, Variant Ranking */
+.sections { display: flex; gap: 4px; margin-bottom: -1px; overflow-x: auto; scrollbar-width: none; }
+.section-tab {
+  appearance: none; border: 1px solid transparent; border-bottom: 0; background: none; cursor: pointer;
+  padding: 10px 18px; font-size: 15px; font-weight: 600; color: var(--text-2); white-space: nowrap;
+}
+.section-tab:hover { color: var(--text); }
+.section-tab[aria-selected="true"] { color: var(--text); background: var(--surface); border-color: var(--border-strong); box-shadow: inset 0 3px 0 var(--accent); }
+.app-header { border-bottom: 1px solid var(--border-strong); }
+.tab-bar { background: var(--surface); }
+body[data-section="ranking"] .tab-bar, body[data-section="ranking"] .cls-only, body[data-section="ranking"] footer { display: none; }
+.rank-empty { padding: 48px 24px; text-align: center; }
+.rank-empty h3 { margin: 0; font-size: 18px; font-weight: 700; }
+.rank-empty p { margin: 6px auto 0; color: var(--text-2); max-width: 52ch; }
 .lb-hero { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 24px; }
 .lb-hero h2 { margin: 0; font-size: 32px; font-weight: 700; letter-spacing: -0.025em; line-height: 1.15; }
 .lb-hero p { margin: 4px 0 0; color: var(--text-2); max-width: 70ch; }
@@ -635,16 +650,22 @@ footer code { font-size: 12px; }
     <div class="brand">
       <a class="brand-logo" href="https://mamidi.ai/" target="_blank" rel="noopener"><img src="__MAMIDI_LOGO__" alt="Mamidi Health" width="48" height="48"></a>
       <div class="brand-text">
-        <h1>AIVA Variant Benchmark</h1>
+        <h1>AIVA Bench</h1>
         <p id="subtitle"></p>
       </div>
     </div>
     <div class="actions">
       <button class="btn" id="themeBtn" type="button">Theme: System</button>
       <button class="btn" id="refreshBtn" type="button" hidden>Rebuild data</button>
-      <button class="btn" id="modelsBtn" type="button">Models</button>
-      <button class="btn btn-primary" id="importBtn" type="button">Import results</button>
+      <button class="btn cls-only" id="modelsBtn" type="button">Models</button>
+      <button class="btn btn-primary cls-only" id="importBtn" type="button">Import results</button>
     </div>
+  </div>
+  <div class="wrap">
+    <nav class="sections" role="tablist" aria-label="Benchmarks">
+      <button class="section-tab" role="tab" type="button" data-section="classification">Variant Classification</button>
+      <button class="section-tab" role="tab" type="button" data-section="ranking">Variant Ranking</button>
+    </nav>
   </div>
 </header>
 
@@ -967,6 +988,14 @@ footer code { font-size: 12px; }
     </div>
   </section>
 
+  <!-- VARIANT RANKING -->
+  <section class="view" id="view-ranking" role="tabpanel" hidden>
+    <div class="card rank-empty" data-static>
+      <h3>No ranking results yet</h3>
+      <p>Variant ranking results will appear here once they are added to the repository.</p>
+    </div>
+  </section>
+
   <footer id="footer"></footer>
 </main>
 
@@ -1084,7 +1113,7 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
   };
 
   const state = {
-    tab: "leaderboard",
+    tab: "leaderboard", clsTab: "leaderboard", clsSubtitle: "",
     rankBy: "macro_f1_5", scatterScale: "5", lbScale: "3", lbCols: null, lbOrder: "rank",
     focus: null,
     comps: ["baseline_bias", "baseline_intervar"],
@@ -1174,7 +1203,7 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
   // ---------- header / footer ----------
   function renderChrome() {
     const md = D.metadata;
-    $("subtitle").textContent = `ACMG classification against ClinGen expert curations · ${int(md.total_variants)} variants · ${D.models.length} classifiers`;
+    state.clsSubtitle = `ACMG classification against ClinGen expert curations · ${int(md.total_variants)} variants · ${D.models.length} classifiers`;
     const archived = D.models.filter((m) => m.archived);
     $("footer").innerHTML = `Dataset built ${esc(md.evaluation_date)}. Ground truth: ClinGen Evidence Repository expert-panel classifications. ` +
       `Rebuild with <code>python scripts/update_dashboard.py</code>.` +
@@ -2228,8 +2257,10 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
     safety: renderSafety,
     criteria: renderCriteria,
     agreement: renderAgreement,
-    variants: () => { renderVariantFilters(); renderVariants(); }
+    variants: () => { renderVariantFilters(); renderVariants(); },
+    ranking: () => {}
   };
+  const sectionOf = (tab) => (tab === "ranking" ? "ranking" : "classification");
 
   function readHash() {
     const [tab, q] = location.hash.slice(1).split("?");
@@ -2246,7 +2277,7 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
   }
 
   function writeHash() {
-    const h = state.tab === "leaderboard"
+    const h = state.tab === "ranking" ? "#ranking" : state.tab === "leaderboard"
       ? `#leaderboard${lbHashQuery()}`
       : `#${state.tab}?m=${encodeURIComponent(state.focus)}&c=${state.comps.map(encodeURIComponent).join(",")}`;
     if (location.hash !== h) history.replaceState(null, "", h);
@@ -2268,7 +2299,12 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
   function setTab(tab) {
     if (!RENDER[tab]) tab = "leaderboard";
     state.tab = tab;
+    if (tab !== "ranking") state.clsTab = tab;
+    const section = sectionOf(tab);
     document.body.dataset.tab = tab;
+    document.body.dataset.section = section;
+    document.querySelectorAll(".section-tab").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.section === section)));
+    $("subtitle").textContent = section === "ranking" ? "" : state.clsSubtitle;
     document.querySelectorAll(".tab").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.tab === tab)));
     document.querySelectorAll(".view").forEach((v) => (v.hidden = v.id !== "view-" + tab));
     RENDER[tab]();
@@ -2977,6 +3013,7 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
 
   // ---------- wiring ----------
   document.querySelectorAll(".tab").forEach((b) => (b.onclick = () => setTab(b.dataset.tab)));
+  document.querySelectorAll(".section-tab").forEach((b) => (b.onclick = () => setTab(b.dataset.section === "ranking" ? "ranking" : state.clsTab || "leaderboard")));
   $("focusSel").onchange = (e) => setFocus(e.target.value);
   $("catMetric").onchange = (e) => { state.catMetric = e.target.value; renderCatMetric(); };
   $("flowCat").onchange = (e) => { state.flowCat = e.target.value; renderFlows(); };
