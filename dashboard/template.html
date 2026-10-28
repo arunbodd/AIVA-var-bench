@@ -286,6 +286,52 @@ footer { color: var(--muted); font-size: 12px; padding-top: 24px; }
 .card-head > .controls + .fig-export, .card-head > .seg + .fig-export, .card-head > .field + .fig-export { margin-left: 0; }
 @media (max-width: 767px) { .tab-bar { position: static; } }
 
+/* Leaderboard landing */
+body[data-tab="leaderboard"] .selbar { display: none; }
+.lb-hero { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 24px; }
+.lb-hero h2 { margin: 0; font-size: 26px; font-weight: 650; letter-spacing: -0.02em; }
+.lb-hero p { margin: 4px 0 0; color: var(--text-2); max-width: 70ch; }
+.lb-facts { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+.lb-fact { appearance: none; text-align: left; font: inherit; color: inherit; cursor: pointer; display: grid; gap: 2px; padding: 12px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; }
+.lb-fact:hover { border-color: var(--border-strong); background: var(--surface-2); }
+.lf-label { font-size: 12px; color: var(--text-2); }
+.lf-value { font-size: 22px; font-weight: 600; letter-spacing: -0.01em; line-height: 1.25; }
+.lf-model { font-size: 13px; color: var(--text-2); }
+.lb-card { padding-bottom: 12px; }
+table.lb td { padding-top: 13px; padding-bottom: 13px; }
+.lb-rank { display: inline-block; min-width: 24px; font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--muted); }
+.lb-rank.top { color: var(--text); }
+table.lb .model-name { font-size: 14px; }
+table.lb th { vertical-align: bottom; }
+table.lb th .th-sort, table.lb th.r > span { display: inline-flex; flex-direction: column; }
+table.lb th.r > span + .th-sub { display: block; }
+table.lb th.lb-active-h { color: var(--text); width: 30%; }
+table.lb td:nth-child(2) { min-width: 240px; }
+table.lb .model-meta { white-space: nowrap; }
+.lb-bar { display: flex; align-items: center; gap: 10px; min-width: 200px; }
+.lb-track { flex: 1; height: 10px; border-radius: 5px; background: var(--grid); overflow: hidden; }
+.lb-fill { display: block; height: 100%; border-radius: 5px; }
+.lb-val { min-width: 44px; text-align: right; font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; }
+table.lb td.lb-active { padding-left: 16px; }
+table.lb td.lb-best { font-weight: 700; }
+table.lb tr.row-link:focus-visible td { background: var(--surface-2); }
+table.lb tr.row-link:hover td:nth-child(2) .model-name { text-decoration: underline; text-underline-offset: 3px; }
+tr.lb-divider td { text-transform: none; letter-spacing: 0; font-size: 12px; font-weight: 500; }
+@media (max-width: 640px) {
+  .lb-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .lb-fact { padding: 10px 12px; }
+  .lf-value { font-size: 18px; }
+  .lf-model { font-size: 12px; }
+  table.cards.lb td.rank { display: flex; justify-content: flex-start; padding-bottom: 0; }
+  table.cards.lb td.rank::before { content: "Rank"; margin-right: 8px; align-self: center; }
+  table.cards.lb td:nth-child(2) { justify-content: flex-start; text-align: left; padding-bottom: 6px; }
+  table.cards.lb td:nth-child(2)::before { content: none; }
+  table.cards.lb td:nth-child(2) .model-cell { text-align: left; }
+  table.cards.lb td::before { font-weight: 400; }
+  table.cards.lb .model-meta { white-space: normal; }
+  table.lb .lb-bar { min-width: 0; width: 60%; }
+}
+
 /* Model selection bar */
 .selbar { border-top: 1px solid var(--border); }
 .selbar .wrap { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding-top: 8px; padding-bottom: 8px; }
@@ -517,7 +563,8 @@ footer code { font-size: 12px; }
 <div class="tab-bar">
   <div class="wrap">
     <nav class="tabs" role="tablist" aria-label="Dashboard sections">
-      <button class="tab" role="tab" data-tab="overview">Overview</button>
+      <button class="tab" role="tab" data-tab="leaderboard">Leaderboard</button>
+      <button class="tab" role="tab" data-tab="overview">Model analysis</button>
       <button class="tab" role="tab" data-tab="categories">Disease categories</button>
       <button class="tab" role="tab" data-tab="flows">Classification flows</button>
       <button class="tab" role="tab" data-tab="confusion">Confusion matrices</button>
@@ -548,8 +595,30 @@ footer code { font-size: 12px; }
 
 <main class="wrap">
 
+  <!-- LEADERBOARD -->
+  <section class="view" id="view-leaderboard" role="tabpanel">
+    <div class="lb-hero">
+      <div>
+        <h2>Leaderboard</h2>
+        <p id="lbLead"></p>
+      </div>
+      <div class="seg" id="familySeg" role="group" aria-label="Filter by provider"></div>
+    </div>
+    <div class="lb-facts" id="lbFacts"></div>
+    <div class="card lb-card" data-static>
+      <div class="card-head">
+        <div>
+          <h3 id="lbTitle"></h3>
+          <p>Percentages of evaluated variants. Cross-direction errors are per 1,000 variants.<span class="ui-hint"> Select a column heading to re-rank; select a model to open its analysis.</span></p>
+        </div>
+      </div>
+      <div class="table-wrap"><table id="leaderboard" class="cards lb"></table></div>
+      <p class="note" id="lbNote"></p>
+    </div>
+  </section>
+
   <!-- OVERVIEW -->
-  <section class="view" id="view-overview" role="tabpanel">
+  <section class="view" id="view-overview" role="tabpanel" hidden>
     <div class="tiles" id="tiles"></div>
     <div class="card">
       <div class="card-head">
@@ -576,20 +645,6 @@ footer code { font-size: 12px; }
         </div>
         <div id="ovClass"></div>
       </div>
-    </div>
-    <div class="card" data-static>
-      <div class="card-head">
-        <div>
-          <h3>Leaderboard</h3>
-          <p>Every classifier scored against ClinGen expert-panel classifications. Ranks are across all providers.<span class="ui-hint"> Select a column to sort; select a row to make it the focus model.</span></p>
-        </div>
-        <div class="controls">
-          <label class="check"><input type="checkbox" id="lbGroup" checked> Group by provider</label>
-          <div class="seg" id="familySeg" role="group" aria-label="Filter by provider"></div>
-        </div>
-      </div>
-      <div class="table-wrap"><table id="leaderboard" class="cards"></table></div>
-      <p class="note" id="lbNote"></p>
     </div>
   </section>
 
@@ -909,11 +964,11 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
   };
 
   const state = {
-    tab: "overview",
+    tab: "leaderboard",
+    rankBy: "macro_f1_5",
     focus: null,
     comps: ["baseline_bias", "baseline_intervar"],
-    lbSort: { key: "macro_f1_5", desc: true },
-    family: "all", lbGroup: true, lbCollapsed: [],
+    family: "all",
     catMetric: "macro_f1",
     flowScale: "5", flowCat: "all",
     cmScale: "5", cmMode: "count",
@@ -1288,78 +1343,103 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
     })));
   }
 
-  const LB_COLS = [
+  const RANK_METRICS = [
     { key: "macro_f1_5", label: "Macro F1", sub: "5-class" },
-    { key: "exact_accuracy", label: "Exact acc.", sub: "5-class" },
-    { key: "directional_accuracy", label: "Directional acc.", sub: "3-class" },
+    { key: "exact_accuracy", label: "Exact accuracy", sub: "5-class" },
+    { key: "directional_accuracy", label: "Directional accuracy", sub: "3-class" },
     { key: "macro_f1_3", label: "Macro F1", sub: "3-class" },
-    { key: "critical_error_count", label: "Cross-direction", sub: "errors", low: true },
-    { key: "coverage_pct", label: "Coverage", sub: "of cohort" },
-    { key: "avg_latency_sec", label: "Latency", sub: "s / variant", low: true }
+    { key: "per1k", label: "Cross-direction", sub: "per 1,000", low: true }
   ];
+  const per1k = (m) => (m.evaluated_count ? (m.critical_error_count / m.evaluated_count) * 1000 : 0);
+  const metricVal = (m, k) => (k === "per1k" ? per1k(m) : m[k] ?? 0);
+  const metricTxt = (m, k) => (k === "per1k" ? per1k(m).toFixed(2) : f1(m[k]));
 
   function renderFamilySeg() {
-    const fams = [...new Set(D.models.map((m) => m.family))];
-    $("familySeg").innerHTML = `<button data-v="all" type="button">All</button>` + fams.map((f) => `<button data-v="${esc(f)}" type="button">${esc(shortFam(f))}</button>`).join("");
+    const fams = byProvider(D.models).map(([p]) => p);
+    $("familySeg").innerHTML = `<button data-v="all" type="button">All providers</button>` + fams.map((f) => `<button data-v="${esc(f)}" type="button">${esc(f)}</button>`).join("");
     seg("familySeg", state.family, (v) => { state.family = v; renderFamilySeg(); renderLeaderboard(); });
   }
 
   function renderLeaderboard() {
-    const { key, desc } = state.lbSort;
-    const rows = D.models.filter((m) => state.family === "all" || m.family === state.family).slice().sort((a, b) => {
-      let va = a[key] ?? 0, vb = b[key] ?? 0;
-      if (key === "avg_latency_sec") { va = va || Infinity; vb = vb || Infinity; }
-      return (isFull(b) - isFull(a)) || (desc ? vb - va : va - vb);
+    const rk = RANK_METRICS.find((x) => x.key === state.rankBy) || RANK_METRICS[0];
+    const visible = D.models.filter((m) => state.family === "all" || providerOf(m) === state.family);
+    const order = (a, b) => rk.low ? metricVal(a, rk.key) - metricVal(b, rk.key) : metricVal(b, rk.key) - metricVal(a, rk.key);
+    const ranked = visible.filter(isFull).sort(order);
+    const partial = visible.filter((m) => !isFull(m)).sort(order);
+    const full = D.models.filter(isFull);
+    const nProviders = byProvider(D.models).length;
+
+    $("lbLead").textContent = `${D.models.length} classifiers from ${nProviders} provider${nProviders === 1 ? "" : "s"}, each scored against the ClinGen expert classification of ${int(D.metadata.total_variants)} variants.`;
+    $("lbTitle").textContent = `Ranked by ${rk.key === "per1k" ? "cross-direction errors per 1,000 variants" : rk.label + ", " + rk.sub}`;
+
+    // Key facts across the full cohort
+    const best = (k, low) => full.length ? full.reduce((a, b) => ((low ? metricVal(b, k) < metricVal(a, k) : metricVal(b, k) > metricVal(a, k)) ? b : a)) : null;
+    const claude = full.filter((m) => m.is_anthropic);
+    const facts = [
+      ["Highest macro F1", best("macro_f1_5"), (m) => pct(m.macro_f1_5)],
+      ["Highest directional accuracy", best("directional_accuracy"), (m) => pct(m.directional_accuracy)],
+      ["Fewest cross-direction errors", best("per1k", true), (m) => `${int(m.critical_error_count)} of ${int(m.evaluated_count)}`]
+    ];
+    if (claude.length) {
+      const c = claude.reduce((a, b) => (b.macro_f1_5 > a.macro_f1_5 ? b : a));
+      facts.splice(1, 0, ["Highest Claude macro F1", c, (m) => pct(m.macro_f1_5)]);
+    }
+    $("lbFacts").innerHTML = facts.filter(([, m]) => m).map(([label, m, fmt]) =>
+      `<button type="button" class="lb-fact" data-key="${esc(m.key)}"><span class="lf-label">${label}</span><span class="lf-value">${fmt(m)}</span><span class="lf-model">${mname(m)}</span></button>`).join("");
+    $("lbFacts").querySelectorAll(".lb-fact").forEach((b) => b.onclick = () => openAnalysis(b.dataset.key));
+
+    // Best value in each metric column among ranked rows
+    const bestOf = {};
+    RANK_METRICS.forEach((x) => {
+      const vals = ranked.map((m) => metricVal(m, x.key));
+      if (vals.length) bestOf[x.key] = x.low ? Math.min(...vals) : Math.max(...vals);
     });
-    const head = `<thead><tr><th class="rank">#</th><th>Model</th>${LB_COLS.map((c) => {
-      const active = c.key === key;
-      const ind = active ? `<span class="sort-ind" aria-hidden="true">${desc ? "▼" : "▲"}</span>` : "";
-      return `<th class="r"${active ? ` aria-sort="${desc ? "descending" : "ascending"}"` : ""}><button class="th-sort" data-sort="${c.key}" style="align-items:flex-end"><span>${c.label}${ind}</span><span class="th-sub">${c.sub}</span></button></th>`;
-    }).join("")}</tr></thead>`;
-    const rankOf = {};
-    rows.filter(isFull).forEach((m, i) => (rankOf[m.key] = i + 1));
-    const rowHtml = (m) => {
-      const partial = !isFull(m);
-      const rank = rankOf[m.key];
-      const role = m.key === state.focus ? "focus" : state.comps.includes(m.key) ? "comp" : "";
-      const cov = partial
-        ? `<span${tipAttr(`Scored on ${int(m.evaluated_count)} of ${int(m.total_cohort)} variants. Not directly comparable with full-cohort rows.`)}>${pct(m.coverage_pct)}<span class="pill">subset</span></span>`
-        : pct(m.coverage_pct);
-      const tags = (m.imported ? '<span class="pill">imported</span>' : "") + (m.archived ? `<span class="pill"${tipAttr("Carried over from an earlier build; raw results are not in this repository.")}>archived</span>` : "") + (role === "focus" ? '<span class="pill pill-strong">focus</span>' : "");
-      return `<tr class="row-link ${role}" data-key="${esc(m.key)}" style="--mc:${m.color}">
-        <td class="rank">${partial ? "—" : rank}</td>
-        <td data-label="Model"><div class="model-cell"><span class="model-name">${swatch(m)}${esc(m.name)}${tags}</span><span class="model-meta">${esc(m.type)}</span></div></td>
-        <td class="r num" data-label="Macro F1, 5-class"><span class="inline-bar"><span>${f1(m.macro_f1_5)}</span><span class="track"><span class="fill" style="width:${m.macro_f1_5}%;background:${m.color}"></span></span></span></td>
-        <td class="r num" data-label="Exact acc., 5-class">${f1(m.exact_accuracy)}</td>
-        <td class="r num" data-label="Directional acc., 3-class">${f1(m.directional_accuracy)}</td>
-        <td class="r num" data-label="Macro F1, 3-class">${f1(m.macro_f1_3)}</td>
-        <td class="r num" data-label="Cross-direction errors"${tipAttr(`${int(m.false_pathogenic_count)} benign truth called P/LP\n${int(m.false_benign_count)} pathogenic truth called B/LB\n${Number(m.critical_error_rate).toFixed(2)}% of evaluated variants`)}>${int(m.critical_error_count)}</td>
-        <td class="r num" data-label="Coverage">${cov}</td>
+    const barMax = rk.low ? Math.max(1, ...visible.map((m) => per1k(m))) : 100;
+
+    const head = `<thead><tr><th class="rank">Rank</th><th>Model</th>${RANK_METRICS.map((x) => {
+      const on = x.key === rk.key;
+      return `<th class="r${on ? " lb-active-h" : ""}"${on ? ' aria-sort="' + (rk.low ? "ascending" : "descending") + '"' : ""}><button class="th-sort" data-rank="${x.key}" style="align-items:flex-end"><span>${x.label}${on ? `<span class="sort-ind" aria-hidden="true"> ${rk.low ? "▲" : "▼"}</span>` : ""}</span><span class="th-sub">${x.sub}${on && x.low ? ", lower is better" : ""}</span></button></th>`;
+    }).join("")}<th class="r">Coverage</th><th class="r"><span>Latency</span><span class="th-sub">s / variant</span></th></tr></thead>`;
+
+    const row = (m, rank) => {
+      const v = metricVal(m, rk.key);
+      const w = rk.low ? (v / barMax) * 100 : v;
+      const tags = (m.imported ? '<span class="pill">imported</span>' : "") + (m.archived ? `<span class="pill"${tipAttr("Carried over from an earlier build; raw results are not in this repository.")}>archived</span>` : "");
+      return `<tr class="row-link" tabindex="0" data-key="${esc(m.key)}" style="--mc:${m.color}">
+        <td class="rank"><span class="lb-rank${rank && rank <= 3 ? " top" : ""}">${rank || "—"}</span></td>
+        <td data-label="Model"><div class="model-cell"><span class="model-name">${swatch(m)}${esc(m.name)}${tags}</span><span class="model-meta">${esc(providerOf(m))} · ${esc(m.type)}</span></div></td>
+        ${RANK_METRICS.map((x) => {
+          const isBest = isFull(m) && bestOf[x.key] != null && Math.abs(metricVal(m, x.key) - bestOf[x.key]) < 1e-9;
+          const tip = x.key === "per1k" ? tipAttr(`${int(m.false_pathogenic_count)} B/LB called P/LP\n${int(m.false_benign_count)} P/LP called B/LB\n${int(m.critical_error_count)} of ${int(m.evaluated_count)} variants`) : "";
+          if (x.key === rk.key) {
+            return `<td class="lb-active${isBest ? " lb-best" : ""}" data-label="${x.label}, ${x.sub}"${tip}><div class="lb-bar"><span class="lb-track"><span class="lb-fill" style="width:${Math.max(0.5, w)}%;background:${m.color}"></span></span><span class="lb-val">${metricTxt(m, x.key)}</span></div></td>`;
+          }
+          return `<td class="r num${isBest ? " lb-best" : ""}" data-label="${x.label}, ${x.sub}"${tip}>${metricTxt(m, x.key)}</td>`;
+        }).join("")}
+        <td class="r num" data-label="Coverage">${isFull(m) ? "100%" : `<span${tipAttr(`Scored on ${int(m.evaluated_count)} of ${int(m.total_cohort)} variants`)}>${pct(m.coverage_pct)}</span>`}</td>
         <td class="r num" data-label="Latency, s / variant">${m.avg_latency_sec ? Number(m.avg_latency_sec).toFixed(1) : "—"}</td>
       </tr>`;
     };
-    const grouped = state.lbGroup && state.family === "all";
-    const body = grouped
-      ? byProvider(rows).map(([p, ms]) => {
-          const shut = state.lbCollapsed.includes(p);
-          return `<tr class="grp-row lb-grp"><td colspan="${LB_COLS.length + 2}"><button type="button" class="grp-toggle" data-provider="${esc(p)}" aria-expanded="${!shut}">${shut ? "▸" : "▾"} ${esc(p)} <span class="grp-n">${ms.length} model${ms.length === 1 ? "" : "s"}</span></button></td></tr>` + (shut ? "" : ms.map(rowHtml).join(""));
-        }).join("")
-      : rows.map(rowHtml).join("");
-    $("leaderboard").innerHTML = head + `<tbody>${body}</tbody>`;
-    $("leaderboard").querySelectorAll(".grp-toggle").forEach((b) => b.onclick = () => {
-      const p = b.dataset.provider;
-      state.lbCollapsed = state.lbCollapsed.includes(p) ? state.lbCollapsed.filter((x) => x !== p) : [...state.lbCollapsed, p];
-      renderLeaderboard();
+    const cols = RANK_METRICS.length + 4;
+    const body = ranked.map((m, i) => row(m, i + 1)).join("") +
+      (partial.length ? `<tr class="grp-row lb-divider"><td colspan="${cols}">Scored on part of the cohort, not ranked</td></tr>` + partial.map((m) => row(m, null)).join("") : "");
+    $("leaderboard").innerHTML = head + `<tbody>${body || `<tr><td colspan="${cols}" class="empty">No models for this provider.</td></tr>`}</tbody>`;
+    $("leaderboard").querySelectorAll(".th-sort").forEach((b) => b.onclick = () => { state.rankBy = b.dataset.rank; renderLeaderboard(); writeHash(); });
+    $("leaderboard").querySelectorAll("tr.row-link").forEach((tr) => {
+      tr.onclick = () => openAnalysis(tr.dataset.key);
+      tr.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openAnalysis(tr.dataset.key); } };
     });
-    $("leaderboard").querySelectorAll(".th-sort").forEach((b) => b.onclick = () => {
-      const k = b.dataset.sort, col = LB_COLS.find((c) => c.key === k);
-      if (state.lbSort.key === k) state.lbSort.desc = !state.lbSort.desc; else state.lbSort = { key: k, desc: !col.low };
-      renderLeaderboard();
-    });
-    $("leaderboard").querySelectorAll("tr.row-link").forEach((tr) => tr.onclick = () => setFocus(tr.dataset.key));
-    const partial = D.models.filter((m) => !isFull(m));
-    $("lbNote").textContent = "Accuracy and F1 values are percentages. Cross-direction errors: B/LB truth called P/LP, or P/LP truth called B/LB." +
-      (partial.length ? ` ${partial.map((m) => m.short_name).join(", ")} ${partial.length > 1 ? "were" : "was"} scored on part of the cohort and ${partial.length > 1 ? "are" : "is"} listed after the full-cohort ranking.` : "");
+    $("lbNote").textContent = "Bold values are the best in each column among ranked models. Selecting a model opens its analysis against BIAS-2015, InterVar and any other models you choose.";
+  }
+
+  function openAnalysis(key) {
+    if (!byKey(key)) return;
+    state.comps = state.comps.filter((k) => k !== key);
+    state.focus = key;
+    normalizeSelection();
+    renderSelector();
+    setTab("overview");
+    window.scrollTo({ top: 0 });
   }
 
   // ---------- categories ----------
@@ -1823,7 +1903,8 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
 
   // ---------- tabs & URL ----------
   const RENDER = {
-    overview: () => { renderTiles(); renderStacked(); renderOvMetrics(); renderOvClass(); renderFamilySeg(); renderLeaderboard(); },
+    leaderboard: () => { renderFamilySeg(); renderLeaderboard(); },
+    overview: () => { renderTiles(); renderStacked(); renderOvMetrics(); renderOvClass(); },
     categories: renderCategories,
     flows: renderFlows,
     confusion: renderConfusion,
@@ -1836,11 +1917,13 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
   function readHash() {
     const [tab, q] = location.hash.slice(1).split("?");
     const p = new URLSearchParams(q || "");
-    return { tab: tab || "overview", m: p.get("m"), c: p.get("c") };
+    return { tab: tab || "leaderboard", m: p.get("m"), c: p.get("c"), r: p.get("r") };
   }
 
   function writeHash() {
-    const h = `#${state.tab}?m=${encodeURIComponent(state.focus)}&c=${state.comps.map(encodeURIComponent).join(",")}`;
+    const h = state.tab === "leaderboard"
+      ? `#leaderboard${state.rankBy !== "macro_f1_5" ? "?r=" + state.rankBy : ""}`
+      : `#${state.tab}?m=${encodeURIComponent(state.focus)}&c=${state.comps.map(encodeURIComponent).join(",")}`;
     if (location.hash !== h) history.replaceState(null, "", h);
   }
 
@@ -1848,12 +1931,14 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
     const h = readHash();
     if (h.m && byKey(h.m)) state.focus = h.m;
     if (h.c != null) state.comps = h.c.split(",").filter(Boolean);
-    state.tab = RENDER[h.tab] ? h.tab : "overview";
+    if (h.r && RANK_METRICS.some((x) => x.key === h.r)) state.rankBy = h.r;
+    state.tab = RENDER[h.tab] ? h.tab : "leaderboard";
   }
 
   function setTab(tab) {
-    if (!RENDER[tab]) tab = "overview";
+    if (!RENDER[tab]) tab = "leaderboard";
     state.tab = tab;
+    document.body.dataset.tab = tab;
     document.querySelectorAll(".tab").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.tab === tab)));
     document.querySelectorAll(".view").forEach((v) => (v.hidden = v.id !== "view-" + tab));
     RENDER[tab]();
@@ -2536,7 +2621,6 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
   // ---------- wiring ----------
   document.querySelectorAll(".tab").forEach((b) => (b.onclick = () => setTab(b.dataset.tab)));
   $("focusSel").onchange = (e) => setFocus(e.target.value);
-  $("lbGroup").onchange = (e) => { state.lbGroup = e.target.checked; renderLeaderboard(); };
   $("catMetric").onchange = (e) => { state.catMetric = e.target.value; renderCatMetric(); };
   $("flowCat").onchange = (e) => { state.flowCat = e.target.value; renderFlows(); };
   $("xdirModel").onchange = (e) => { state.errModel = e.target.value; state.errCell = null; renderCross(); };
