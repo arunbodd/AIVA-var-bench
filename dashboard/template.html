@@ -373,6 +373,21 @@ footer { color: var(--muted); font-size: 12px; padding-top: 24px; }
 .st-axis .ticks span:first-child { transform: none; }
 .st-axis .ticks span:last-child { transform: translateX(-100%); }
 
+/* Cross-direction list */
+#xdirCard { scroll-margin-top: 110px; }
+.xdir-filter { order: 10; flex-basis: 100%; font-size: 12px; color: var(--text-2); display: flex; align-items: center; gap: 8px; }
+.xdir-filter .pill { margin: 0; }
+#xdirTable td { vertical-align: top; }
+#xdirTable .ev { display: flex; flex-direction: column; gap: 3px; min-width: 150px; }
+#xdirTable .ev-top { display: flex; align-items: center; gap: 8px; }
+#xdirTable .pts { font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+#xdirTable .pts.na { font-weight: 400; color: var(--muted); }
+#xdirTable .crit { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 11px; color: var(--text-2); line-height: 1.5; }
+#xdirTable .dir { white-space: nowrap; font-size: 12px; font-weight: 600; }
+table.cm td.xdir.link { cursor: pointer; }
+table.cm td.xdir.link:hover { box-shadow: inset 0 0 0 3px var(--critical); }
+.b2b-side .bar.link { cursor: pointer; }
+
 /* Sankey */
 .flow-grid { display: grid; gap: 24px; grid-template-columns: minmax(0, 1fr); }
 @media (min-width: 1024px) { .flow-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
@@ -560,7 +575,7 @@ footer code { font-size: 12px; }
   <section class="view" id="view-confusion" role="tabpanel" hidden>
     <div class="view-head">
       <h2>Confusion matrices</h2>
-      <p>Rows are the expert classification, columns the model's call. Shading, in each model's colour, is the share of the row. Outlined cells are cross-direction errors.</p>
+      <p>Rows are the expert classification, columns the model's call. Shading, in each model's colour, is the share of the row. Outlined cells are cross-direction errors; select one to list its variants.</p>
     </div>
     <div class="card">
       <div class="card-head">
@@ -594,7 +609,7 @@ footer code { font-size: 12px; }
     <div class="grid-2">
       <div class="card">
         <div class="card-head">
-          <div><h3>Errors by direction</h3><p>Variant counts for the selected models, fewest total errors first.</p></div>
+          <div><h3>Errors by direction</h3><p>Variant counts for the selected models, fewest total errors first.<span class="ui-hint"> Select a bar to list its variants.</span></p></div>
         </div>
         <div id="b2b"></div>
       </div>
@@ -603,12 +618,20 @@ footer code { font-size: 12px; }
         <div class="table-wrap"><table id="safetyTable"></table></div>
       </div>
     </div>
-    <div class="card" data-static>
+    <div class="card" id="xdirCard">
       <div class="card-head">
-        <div><h3>Error cases</h3><p>Up to 10 cases per direction are stored for each model, with the ACMG criteria the model cited.</p></div>
-        <label class="field">Model <select id="safetyModel"></select></label>
+        <div><h3>Cross-direction variants</h3><p id="xdirSub"></p></div>
+        <div class="controls">
+          <select id="xdirModel" aria-label="Model"></select>
+          <div class="seg" id="xdirSeg" role="group" aria-label="Direction">
+            <button data-v="all" type="button">Both directions</button><button data-v="P→B" type="button">P/LP → B/LB</button><button data-v="B→P" type="button">B/LB → P/LP</button>
+          </div>
+          <button class="btn" id="xdirCsv" type="button">Download CSV</button>
+        </div>
+        <div class="xdir-filter" id="xdirFilter" hidden></div>
       </div>
-      <div class="table-wrap"><table id="caseTable"></table></div>
+      <div class="table-wrap"><table id="xdirTable"></table></div>
+      <p class="note">Expert points are computed from the expert panel's criteria on the ClinGen point scale (supporting 1, moderate 2, strong 4, very strong 8; benign evidence negative; a strength modifier such as PM2_Supporting overrides the default). Model points are the score each model reported with its call; Gemini-3-Pro, BIAS-2015 and InterVar do not report one. For reference, ≥10 points is pathogenic, 6–9 likely pathogenic, 0–5 VUS, −1 to −6 likely benign, ≤−7 benign.</p>
     </div>
   </section>
 
@@ -804,7 +827,7 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
     catMetric: "macro_f1",
     flowScale: "5", flowCat: "all",
     cmScale: "5", cmMode: "count",
-    safetyModel: null,
+    errModel: "selected", errDir: "all", errCell: null,
     critGroup: "pathogenic",
     agree: "exact_pct",
     vq: "", vcat: "all", vgt: "all", vonly: "all", vpage: 0
@@ -954,7 +977,6 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
   }
 
   function onSelectionChange() {
-    state.safetyModel = state.focus;
     renderSelector();
     RENDER[state.tab]();
     writeHash();
@@ -1354,7 +1376,8 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
         const share = sum ? v / sum : 0;
         const x = (dirOf(i) === "p" && dirOf(j) === "b") || (dirOf(i) === "b" && dirOf(j) === "p");
         const shown = state.cmMode === "count" ? int(v) : (share * 100).toFixed(1);
-        return `<td class="h${i === j ? " diag" : ""}${x && v > 0 ? " xdir" : ""}" style="${modelHeat(m.color, share)}"${tipAttr(`${m.short_name}\nExpert: ${full[i]}\nModel: ${full[j]}\n${int(v)} variants, ${(share * 100).toFixed(1)}% of row`)}>${shown}</td>`;
+        const link = x && v > 0 && (D.cross_direction || {})[m.key];
+        return `<td class="h${i === j ? " diag" : ""}${x && v > 0 ? " xdir" : ""}${link ? " link" : ""}"${link ? ` data-key="${esc(m.key)}" data-i="${i}" data-j="${j}" data-five="${five ? 1 : 0}"` : ""} style="${modelHeat(m.color, share)}"${tipAttr(`${m.short_name}\nExpert: ${full[i]}\nModel: ${full[j]}\n${int(v)} variants, ${(share * 100).toFixed(1)}% of row${link ? "\nSelect to list these variants" : ""}`)}>${shown}</td>`;
       }).join("")}</tr>`;
     }).join("");
     return `<div class="table-wrap"><table class="heat cm">${head}<tbody>${body}</tbody></table></div>`;
@@ -1365,6 +1388,13 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
     seg("cmModeSeg", state.cmMode, (v) => { state.cmMode = v; renderConfusion(); });
     $("cmSub").textContent = state.cmMode === "count" ? "Cell values are variant counts." : "Cell values are the percentage of the row.";
     $("cmGrid").innerHTML = selModels().map((m) => `<div><p class="cm-title">${mname(m)}</p>${confusionTable(m)}</div>`).join("");
+    $("cmGrid").querySelectorAll("td.link").forEach((td) => td.onclick = () => {
+      const i = +td.dataset.i, j = +td.dataset.j, five = td.dataset.five === "1";
+      const groups = [["Pathogenic", "Likely Pathogenic"], ["Uncertain Significance"], ["Likely Benign", "Benign"]];
+      const gt = five ? [LABELS[i]] : groups[i], pred = five ? [LABELS[j]] : groups[j];
+      const short = (l) => l.map((x) => ABBR[x]).join("/");
+      showCross(td.dataset.key, null, { gt, pred, label: `expert ${short(gt)} → model ${short(pred)}` });
+    });
     const ms = selModels();
     const head = `<thead><tr><th>Class</th><th>Model</th><th class="r">Precision</th><th class="r">Recall</th><th class="r">F1</th><th class="r">Support</th></tr></thead>`;
     const body = LABELS.map((l) => ms.map((m, i) => {
@@ -1385,8 +1415,8 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
         const fp = m.false_pathogenic_count, fb = m.false_benign_count;
         const wp = (fp / max) * 82, wb = (fb / max) * 82;
         return `<div class="b2b-row"><span class="lbl">${mname(m)}</span>
-          <div class="b2b-side left">${fp ? `<span class="bar" style="width:${wp}%;background:${m.color}"${tipAttr(`${m.name}\n${fp} benign or likely benign variants called P/LP`)}></span>` : ""}<span class="cnt" style="right:${wp}%;padding-right:6px">${fp}</span></div>
-          <div class="b2b-side right">${fb ? `<span class="bar" style="width:${wb}%;background:${m.color}"${tipAttr(`${m.name}\n${fb} pathogenic or likely pathogenic variants called B/LB`)}></span>` : ""}<span class="cnt" style="left:${wb}%;padding-left:6px">${fb}</span></div>
+          <div class="b2b-side left">${fp ? `<span class="bar link" data-key="${esc(m.key)}" data-dir="B→P" style="width:${wp}%;background:${m.color}"${tipAttr(`${m.name}\n${fp} benign or likely benign variants called P/LP\nSelect to list them`)}></span>` : ""}<span class="cnt" style="right:${wp}%;padding-right:6px">${fp}</span></div>
+          <div class="b2b-side right">${fb ? `<span class="bar link" data-key="${esc(m.key)}" data-dir="P→B" style="width:${wb}%;background:${m.color}"${tipAttr(`${m.name}\n${fb} pathogenic or likely pathogenic variants called B/LB\nSelect to list them`)}></span>` : ""}<span class="cnt" style="left:${wb}%;padding-left:6px">${fb}</span></div>
         </div>`;
       }).join("")}</div>`;
 
@@ -1397,27 +1427,70 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
       return `<tr class="${on ? "sel" : ""}"><td>${mname(m)}</td><td class="r num">${per1k(m.false_pathogenic_count, m)}</td><td class="r num">${per1k(m.false_benign_count, m)}</td><td class="r num"><strong>${per1k(m.critical_error_count, m)}</strong></td><td class="r num">${int(m.evaluated_count)}</td></tr>`;
     }).join("")}</tbody>`;
 
-    const withCases = D.models.filter((m) => D.safety_data && D.safety_data[m.key]);
-    if (!withCases.find((m) => m.key === state.safetyModel)) state.safetyModel = (withCases.find((m) => m.key === state.focus) || withCases[0] || {}).key;
-    $("safetyModel").innerHTML = withCases.map((m) => `<option value="${esc(m.key)}">${esc(m.name)} (${m.critical_error_count})</option>`).join("");
-    if (state.safetyModel) $("safetyModel").value = state.safetyModel;
-    renderCases();
+    $("b2b").querySelectorAll(".bar.link").forEach((bar) => bar.onclick = () => showCross(bar.dataset.key, bar.dataset.dir, null));
+    renderCross();
   }
 
-  function renderCases() {
-    const s = (D.safety_data || {})[state.safetyModel];
-    if (!s) { $("caseTable").innerHTML = `<tbody><tr><td class="empty">No cases stored.</td></tr></tbody>`; return; }
-    const cases = [
-      ...(s.top_false_pathogenic || []).map((c) => ({ ...c, kind: "B/LB → P/LP" })),
-      ...(s.top_false_benign || []).map((c) => ({ ...c, kind: "P/LP → B/LB" }))
-    ];
-    if (!cases.length) { $("caseTable").innerHTML = `<tbody><tr><td class="empty">This model made no cross-direction errors.</td></tr></tbody>`; return; }
-    $("caseTable").innerHTML = `<thead><tr><th>Error</th><th>Gene</th><th>Variant</th><th>Disease</th><th class="c">Expert</th><th class="c">Model</th><th>Criteria cited</th></tr></thead><tbody>${cases.map((c) =>
-      `<tr><td style="white-space:nowrap">${c.kind}</td><td><strong>${esc(c.gene)}</strong></td><td class="mono">${esc(c.variant)}</td>
-        <td class="disease"><span class="d" title="${esc(c.disease)}">${esc(c.disease)}</span></td>
-        <td class="c"><span class="chip truth">${ABBR[c.ground_truth] || esc(c.ground_truth)}</span></td>
-        <td class="c"><span class="chip m-cross">${ABBR[c.predicted] || esc(c.predicted)}</span></td>
-        <td class="mono">${(c.criteria || []).map(esc).join(", ") || "—"}</td></tr>`).join("")}</tbody>`;
+  // ---------- cross-direction variants ----------
+  const DIR_LABEL_LONG = { "P→B": "P/LP → B/LB", "B→P": "B/LB → P/LP" };
+
+  function crossRows() {
+    const keys = state.errModel === "selected" ? selModels().map((m) => m.key) : [state.errModel];
+    const rows = [];
+    keys.forEach((k) => ((D.cross_direction || {})[k] || []).forEach((r) => rows.push({ ...r, m: byKey(k) })));
+    return rows.filter((r) => r.m
+      && (state.errDir === "all" || r.direction === state.errDir)
+      && (!state.errCell || (state.errCell.gt.includes(r.ground_truth) && state.errCell.pred.includes(r.predicted))));
+  }
+
+  function showCross(key, dir, cell) {
+    state.errModel = key;
+    state.errDir = dir || "all";
+    state.errCell = cell;
+    setTab("safety");
+    $("xdirCard").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function renderCross() {
+    if (state.errModel !== "selected" && !byKey(state.errModel)) state.errModel = "selected";
+    $("xdirModel").innerHTML = `<option value="selected">Selected models</option>` + D.models.filter((m) => (D.cross_direction || {})[m.key]).map((m) =>
+      `<option value="${esc(m.key)}">${esc(m.name)} (${int(m.critical_error_count)})</option>`).join("");
+    $("xdirModel").value = state.errModel;
+    seg("xdirSeg", state.errDir, (v) => { state.errDir = v; renderCross(); });
+    const f = $("xdirFilter");
+    f.hidden = !state.errCell;
+    if (state.errCell) {
+      f.innerHTML = `<span class="pill">Cell: ${esc(state.errCell.label)}</span><button type="button" class="btn" id="xdirClear">Show all cells</button>`;
+      $("xdirClear").onclick = () => { state.errCell = null; renderCross(); };
+    }
+    const rows = crossRows();
+    const scope = state.errModel === "selected" ? "the selected models" : byKey(state.errModel).name;
+    $("xdirSub").textContent = `${int(rows.length)} variant${rows.length === 1 ? "" : "s"} for ${scope}, with the expert's and the model's ACMG criteria and points.`;
+    const pts = (v, computed) => v == null ? `<span class="pts na">not reported</span>` : `<span class="pts"${computed ? tipAttr("Computed from the expert criteria") : ""}>${v > 0 ? "+" : ""}${v} pts</span>`;
+    const crit = (list) => `<span class="crit">${(list || []).map(esc).join(", ") || "none cited"}</span>`;
+    const head = `<thead><tr><th>Model</th><th>Error</th><th>Gene</th><th>Variant</th><th>Disease</th><th>Expert classification</th><th>Model call</th><th>Confidence</th></tr></thead>`;
+    const body = rows.length ? rows.map((r) => `<tr>
+      <td style="white-space:nowrap">${mname(r.m)}</td>
+      <td class="dir">${DIR_LABEL_LONG[r.direction]}</td>
+      <td><strong>${esc(r.gene)}</strong></td>
+      <td class="mono">${esc(r.variant)}</td>
+      <td class="disease"><span class="d" title="${esc(r.disease)}">${esc(r.disease)}</span><span class="c">${esc(r.category)}${r.expert_panel ? " · " + esc(r.expert_panel) : ""}</span></td>
+      <td><div class="ev"><div class="ev-top"><span class="chip truth"${tipAttr(r.ground_truth)}>${ABBR[r.ground_truth] || esc(r.ground_truth)}</span>${pts(r.expert_points, true)}</div>${crit(r.expert_criteria)}</div></td>
+      <td><div class="ev"><div class="ev-top"><span class="chip m-cross"${tipAttr(r.predicted)}>${ABBR[r.predicted] || esc(r.predicted)}</span>${pts(r.model_points, false)}</div>${crit(r.model_criteria)}</div></td>
+      <td class="model-meta">${esc(r.confidence) || "—"}</td></tr>`).join("")
+      : `<tr><td colspan="8" class="empty">No cross-direction errors for this selection.</td></tr>`;
+    $("xdirTable").innerHTML = head + `<tbody>${body}</tbody>`;
+  }
+
+  function crossCsv() {
+    const cols = ["model", "direction", "gene", "variant", "disease", "category", "expert_panel", "expert_classification", "expert_criteria", "expert_points_computed", "model_classification", "model_criteria", "model_points_reported", "confidence", "variant_id"];
+    const q = (v) => { const t = v == null ? "" : String(v); return /[",\n]/.test(t) ? `"${t.replace(/"/g, '""')}"` : t; };
+    const lines = [cols.join(",")].concat(crossRows().map((r) => [
+      r.m.name, DIR_LABEL_LONG[r.direction], r.gene, r.variant, r.disease, r.category, r.expert_panel, r.ground_truth,
+      (r.expert_criteria || []).join(" "), r.expert_points, r.predicted, (r.model_criteria || []).join(" "), r.model_points, r.confidence, r.id
+    ].map(q).join(",")));
+    const scope = state.errModel === "selected" ? selModels().map((m) => m.short_name).join(" ") : byKey(state.errModel).short_name;
+    download(new Blob([lines.join("\n") + "\n"], { type: "text/csv" }), `${slug("aiva cross-direction " + scope + (state.errDir === "all" ? "" : " " + DIR_LABEL_LONG[state.errDir]))}.csv`);
   }
 
   // ---------- criteria ----------
@@ -2197,7 +2270,11 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
     if (!card.hasAttribute("data-static")) parts.push(selModels().map((m) => m.short_name).join(" vs "));
     if (card.querySelector("#flows") && state.flowCat !== "all") parts.push(state.flowCat);
     if (card.querySelector("#cmGrid")) parts.push(state.cmScale + "-class", state.cmMode === "count" ? "counts" : "row-pct");
-    if (card.querySelector("#caseTable")) { const m = byKey(state.safetyModel); if (m) parts.push(m.short_name); }
+    if (card.querySelector("#xdirTable")) {
+      if (state.errModel !== "selected") parts.push(byKey(state.errModel)?.short_name || "");
+      if (state.errDir !== "all") parts.push(DIR_LABEL_LONG[state.errDir]);
+      if (state.errCell) parts.push(state.errCell.label);
+    }
     if (card.querySelector("#agreeHeat")) parts.push(state.agree === "exact_pct" ? "exact" : "directional");
     return slug(parts.join(" ")).slice(0, 140).replace(/-$/, "");
   }
@@ -2246,7 +2323,8 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
   $("focusSel").onchange = (e) => setFocus(e.target.value);
   $("catMetric").onchange = (e) => { state.catMetric = e.target.value; renderCatMetric(); };
   $("flowCat").onchange = (e) => { state.flowCat = e.target.value; renderFlows(); };
-  $("safetyModel").onchange = (e) => { state.safetyModel = e.target.value; renderCases(); };
+  $("xdirModel").onchange = (e) => { state.errModel = e.target.value; state.errCell = null; renderCross(); };
+  $("xdirCsv").onclick = crossCsv;
   $("vq").oninput = (e) => { state.vq = e.target.value; state.vpage = 0; renderVariants(); };
   $("vcat").onchange = (e) => { state.vcat = e.target.value; state.vpage = 0; renderVariants(); };
   $("vgt").onchange = (e) => { state.vgt = e.target.value; state.vpage = 0; renderVariants(); };

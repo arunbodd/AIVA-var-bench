@@ -116,10 +116,13 @@ def load_unified_data(path: Path) -> tuple[dict, dict]:
                     "ground_truth": gt_norm,
                     "ground_truth_direction": get_direction(gt_norm),
                     "criteria_met": [normalize_criterion(c) for c in (item.get("criteria_met") or [])],
+                    "criteria_met_raw": list(item.get("criteria_met") or []),
                     "intervar_classification": normalize_classification(item.get("intervar_classification", "")),
                     "intervar_criteria": [normalize_criterion(c) for c in (item.get("intervar_criteria") or [])],
+                    "intervar_criteria_raw": list(item.get("intervar_criteria") or []),
                     "bias_classification": normalize_classification(item.get("bias_classification", "")),
                     "bias_criteria": [normalize_criterion(c) for c in (item.get("bias_criteria") or [])],
+                    "bias_criteria_raw": list(item.get("bias_criteria") or []),
                 }
     return variants
 
@@ -301,6 +304,46 @@ def discover_model_files(repo_root: Path) -> dict[str, dict]:
     return discovered
 
 
+STRENGTH_WORDS = ("supporting", "moderate", "strong", "very strong", "very_strong", "stand-alone", "standalone")
+
+
+def with_strength(code: str, strength: str) -> str:
+    s = strength.strip().lower()
+    if "_" in code or s not in STRENGTH_WORDS:
+        return code
+    return f"{code}_{strength.strip().replace(' ', '_')}"
+
+
+def criterion_points(criterion: str) -> int:
+    """
+    Points for one ACMG criterion on the ClinGen/Tavtigian (2020) scale:
+    supporting 1, moderate 2, strong 4, very strong 8 (BA1 stand-alone 8),
+    negative for benign evidence. An explicit strength modifier
+    (e.g. PM2_Supporting) overrides the criterion's default strength.
+    """
+    low = criterion.strip().lower().replace(" ", "_").replace("-", "_")
+    base = normalize_criterion(criterion).upper()
+    if not base:
+        return 0
+    if "very" in low or "stand" in low:
+        pts = 8
+    elif "_strong" in low:
+        pts = 4
+    elif "_moderate" in low:
+        pts = 2
+    elif "_supporting" in low:
+        pts = 1
+    elif base.startswith(("PVS", "BA")):
+        pts = 8
+    elif base.startswith(("PS", "BS")):
+        pts = 4
+    elif base.startswith("PM"):
+        pts = 2
+    else:
+        pts = 1
+    return -pts if base.startswith("B") else pts
+
+
 def load_model_predictions(model_info: dict, unified_dict: dict) -> dict[str, dict]:
     """
     Load variant_id -> {prediction, criteria, time_ms, raw} for a given model.
@@ -317,6 +360,8 @@ def load_model_predictions(model_info: dict, unified_dict: dict) -> dict[str, di
             preds[vid] = {
                 "prediction": p_raw,
                 "criteria": v.get(crit_field, []),
+                "criteria_raw": v.get(crit_field + "_raw", []),
+                "score": None,
                 "execution_time_ms": 0,
                 "error": None,
             }
@@ -329,8 +374,12 @@ def load_model_predictions(model_info: dict, unified_dict: dict) -> dict[str, di
             vid = item.get("id")
             if not vid:
                 continue
-            crit = list(item.get("criteria", {}).get("met", {}).keys())
+            met = item.get("criteria", {}).get("met", {}) or {}
+            crit = list(met.keys())
             preds[vid] = {
+                # Strength is the prefix of each criterion's note, e.g. "Supporting: ..."
+                "criteria_raw": [with_strength(k, str(v).split(":")[0]) for k, v in met.items()],
+                "score": item.get("acmg_points"),
                 "prediction": normalize_classification(item.get("classification", "")),
                 "criteria": [normalize_criterion(c) for c in crit],
                 "execution_time_ms": item.get("execution_time_ms", 0),
@@ -363,6 +412,8 @@ def load_model_predictions(model_info: dict, unified_dict: dict) -> dict[str, di
                     "error": err,
                     "confidence": item.get("aiva_confidence", ""),
                     "evidence": item.get("aiva_evidence", {}),
+                    "criteria_raw": list(item.get("aiva_criteria") or item.get("criteria") or []),
+                    "score": item.get("aiva_acmg_score"),
                 }
         return preds
 
@@ -401,6 +452,7 @@ def build_dashboard_dataset():
     models_categories = {}
     models_criteria = {}
     models_safety = {}
+    models_cross = {}
     models_latency = {}
 
     all_criteria_set = set([
@@ -576,6 +628,28 @@ def build_dashboard_dataset():
             }
         models_categories[m_key] = cat_metrics
 
+        # Every cross-direction error, with expert and model evidence
+        def cross_record(vid, direction):
+            u = unified_dict[vid]
+            p = preds[vid]
+            return {
+                "id": vid,
+                "direction": direction,
+                "gene": u["gene"],
+                "variant": u["variation"],
+                "disease": u["disease"],
+                "category": u["category"],
+                "expert_panel": u["expert_panel"],
+                "ground_truth": u["ground_truth"],
+                "expert_criteria": u["criteria_met_raw"],
+                "expert_points": sum(criterion_points(c) for c in u["criteria_met_raw"]),
+                "predicted": p["prediction"],
+                "model_criteria": p.get("criteria_raw") or p.get("criteria") or [],
+                "model_points": p.get("score"),
+                "confidence": p.get("confidence") or "",
+            }
+        models_cross[m_key] = [cross_record(v, "B→P") for v in false_pathogenic_ids] + [cross_record(v, "P→B") for v in false_benign_ids]
+
         # Criteria frequencies
         models_criteria[m_key] = {
             c: crit_counter.get(c, 0) for c in sorted(all_criteria_set)
@@ -734,6 +808,7 @@ def build_dashboard_dataset():
         "categories_data": models_categories,
         "criteria_data": models_criteria,
         "safety_data": models_safety,
+        "cross_direction": models_cross,
         "concordance": concordance_matrix,
         "explorer_variants": explorer_variants,
         "live_jobs": live_jobs,
