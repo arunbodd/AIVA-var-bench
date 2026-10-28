@@ -372,6 +372,9 @@ tr.lb-divider td { text-transform: none; letter-spacing: 0; font-size: 12px; fon
 .tile-cmp .tc-d { text-align: right; font-weight: 600; }
 .tile-sub .swatch { margin-right: 4px; }
 
+.lb-pick { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin-top: -6px; }
+.lb-all-pill { margin: 0; padding: 2px 10px; border-radius: 999px; font-size: 12px; line-height: 18px; }
+
 /* Leaderboard table: measures as rows, models as columns */
 table.lbt { font-size: 13px; }
 table.lbt th, table.lbt td { padding: 9px 8px; }
@@ -654,7 +657,19 @@ footer code { font-size: 12px; }
         <h2>Leaderboard</h2>
         <p id="lbLead"></p>
       </div>
-      <div class="seg" id="familySeg" role="group" aria-label="Filter by provider"></div>
+    </div>
+    <div class="lb-pick">
+      <span class="sel-lbl">Showing</span>
+      <div class="chips" id="lbChips" role="group" aria-label="Models shown"></div>
+      <div class="picker">
+        <button type="button" class="btn picker-btn" id="lbPickBtn" aria-haspopup="true" aria-expanded="false">Choose models</button>
+        <div class="picker-pop" id="lbPickPop" hidden>
+          <input type="search" id="lbPickQ" placeholder="Search models" aria-label="Search models">
+          <div class="picker-list" id="lbPickList"></div>
+          <p class="picker-note">The leaderboard, scatter and headline facts show only the selected models.</p>
+        </div>
+      </div>
+      <button type="button" class="btn picker-btn" id="lbAllBtn" hidden>Show all</button>
     </div>
     <div class="lb-facts" id="lbFacts"></div>
     <div class="card" id="lbScatterCard" data-static>
@@ -1032,10 +1047,9 @@ window.BENCHMARK_DATA = {"metadata":{"title":"AIVA Variant Benchmark","subtitle"
 
   const state = {
     tab: "leaderboard",
-    rankBy: "macro_f1_5", scatterScale: "5", lbScale: "3",
+    rankBy: "macro_f1_5", scatterScale: "5", lbScale: "3", lbCols: null,
     focus: null,
     comps: ["baseline_bias", "baseline_intervar"],
-    family: "all",
     catMetric: "macro_f1",
     flowScale: "5", flowCat: "all",
     cmScale: "5", cmMode: "count",
@@ -1454,24 +1468,77 @@ window.BENCHMARK_DATA = {"metadata":{"title":"AIVA Variant Benchmark","subtitle"
   const metricVal = (m, k) => (k === "per1k" ? per1k(m) : m[k] ?? 0);
   const metricTxt = (m, k) => (k === "per1k" ? per1k(m).toFixed(2) : f1(m[k]));
 
-  function renderFamilySeg() {
-    const fams = byProvider(D.models).map(([p]) => p);
-    if (state.family !== "all" && !fams.includes(state.family)) state.family = "all";
-    $("familySeg").innerHTML = `<button data-v="all" type="button">All</button>` + fams.map((f) => `<button data-v="${esc(f)}" type="button">${esc(f)}</button>`).join("");
-    seg("familySeg", state.family, (v) => { state.family = v; renderFamilySeg(); renderLeaderboard(); });
+  // Models shown on the leaderboard page: null means all.
+  const lbShown = () => (state.lbCols ? D.models.filter((m) => state.lbCols.includes(m.key)) : D.models.slice());
+
+  function setLbCols(keys) {
+    const valid = keys.filter((k) => byKey(k));
+    state.lbCols = !valid.length || valid.length === D.models.length ? null : valid;
+    renderLeaderboard();
+    writeHash();
+  }
+
+  function toggleLbCol(key) {
+    const cur = lbShown().map((m) => m.key);
+    if (cur.includes(key)) {
+      if (cur.length === 1) { toast("Keep at least one model."); return; }
+      setLbCols(cur.filter((k) => k !== key));
+    } else setLbCols([...cur, key]);
+  }
+
+  function renderLbPicker() {
+    const shown = lbShown();
+    const all = !state.lbCols;
+    $("lbChips").innerHTML = all
+      ? `<span class="pill lb-all-pill">All ${D.models.length} models</span>`
+      : shown.map((m) => `<button type="button" class="mchip" data-key="${esc(m.key)}" aria-pressed="true"${tipAttr("Remove from the leaderboard")}>${swatch(m)}${esc(m.short_name)}<span class="x" aria-hidden="true">×</span></button>`).join("");
+    $("lbChips").querySelectorAll(".mchip").forEach((b) => b.onclick = () => toggleLbCol(b.dataset.key));
+    $("lbAllBtn").hidden = all;
+    $("lbPickBtn").textContent = all ? "Choose models" : "Add or remove";
+    const q = ($("lbPickQ").value || "").trim().toLowerCase();
+    const keys = shown.map((m) => m.key);
+    const list = D.models.filter((m) => !q || `${m.name} ${m.family} ${m.type}`.toLowerCase().includes(q));
+    $("lbPickList").innerHTML = byProvider(list).map(([g, ms]) => {
+      const allOn = ms.every((m) => keys.includes(m.key));
+      return `<div class="pk-group"><div class="pk-head"><span>${esc(g)}</span><button type="button" class="pk-all" data-group="${esc(g)}">${allOn ? "Clear" : "Select all"}</button></div>${ms.map((m) =>
+        `<label class="pk-item"><input type="checkbox" data-key="${esc(m.key)}"${keys.includes(m.key) ? " checked" : ""}>${swatch(m)}<span>${esc(m.name)}</span><small>${esc(m.type)}${isFull(m) ? "" : " · subset"}</small></label>`).join("")}</div>`;
+    }).join("") || `<p class="empty">No models match.</p>`;
+    $("lbPickList").querySelectorAll("input[data-key]").forEach((c) => c.onchange = () => toggleLbCol(c.dataset.key));
+    $("lbPickList").querySelectorAll(".pk-all").forEach((b) => b.onclick = () => {
+      const ms = list.filter((m) => groupOf(m) === b.dataset.group).map((m) => m.key);
+      const cur = lbShown().map((m) => m.key);
+      if (ms.every((k) => cur.includes(k))) {
+        const rest = cur.filter((k) => !ms.includes(k));
+        if (!rest.length) { toast("Keep at least one model."); return; }
+        setLbCols(rest);
+      } else setLbCols([...new Set([...cur, ...ms])]);
+    });
+  }
+
+  function setupLbPicker() {
+    const pop = $("lbPickPop"), btn = $("lbPickBtn");
+    const close = () => { pop.hidden = true; btn.setAttribute("aria-expanded", "false"); };
+    btn.onclick = () => { pop.hidden = !pop.hidden; btn.setAttribute("aria-expanded", String(!pop.hidden)); if (!pop.hidden) { renderLbPicker(); $("lbPickQ").focus(); } };
+    $("lbPickQ").oninput = renderLbPicker;
+    $("lbAllBtn").onclick = () => setLbCols([]);
+    document.addEventListener("click", (e) => { if (!pop.hidden && !e.target.closest(".lb-pick .picker")) close(); });
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !pop.hidden) { close(); btn.focus(); } });
   }
 
   function renderLeaderboard() {
+    renderLbPicker();
     seg("lbScaleSeg", state.lbScale, (v) => { state.lbScale = v; renderLeaderboard(); writeHash(); });
     const three = state.lbScale === "3";
     const overallKey = three ? "macro_f1_3" : "macro_f1_5";
-    const visible = D.models.filter((m) => state.family === "all" || groupOf(m) === state.family);
+    const visible = lbShown();
     const ranked = visible.filter(isFull).sort((a, b) => b[overallKey] - a[overallKey]);
     const partial = visible.filter((m) => !isFull(m)).sort((a, b) => b[overallKey] - a[overallKey]);
     const cols = [...ranked, ...partial];
-    const full = D.models.filter(isFull);
+    const full = ranked;
     const nProviders = new Set(D.models.map(providerOf)).size;
-    $("lbLead").textContent = `${D.models.length} classifiers from ${nProviders} provider${nProviders === 1 ? "" : "s"}, each scored against the ClinGen expert classification of ${int(D.metadata.total_variants)} variants.`;
+    $("lbLead").textContent = state.lbCols
+      ? `Showing ${visible.length} of ${D.models.length} classifiers, each scored against the ClinGen expert classification of ${int(D.metadata.total_variants)} variants. Ranks and highlights are among the models shown.`
+      : `${D.models.length} classifiers from ${nProviders} provider${nProviders === 1 ? "" : "s"}, each scored against the ClinGen expert classification of ${int(D.metadata.total_variants)} variants.`;
     $("lbTitle").textContent = `F1 score by class and disease category, ${three ? "3-class" : "5-class"}`;
     $("lbSub").innerHTML = (three
       ? "Calls grouped as pathogenic or likely pathogenic, VUS, and benign or likely benign. Overall and category rows are macro F1 across the three groups."
@@ -2098,7 +2165,7 @@ window.BENCHMARK_DATA = {"metadata":{"title":"AIVA Variant Benchmark","subtitle"
 
   // ---------- tabs & URL ----------
   const RENDER = {
-    leaderboard: () => { renderFamilySeg(); renderLeaderboard(); },
+    leaderboard: renderLeaderboard,
     overview: () => { renderTiles(); renderStacked(); renderOvMetrics(); renderOvClass(); },
     categories: renderCategories,
     flows: renderFlows,
@@ -2112,12 +2179,19 @@ window.BENCHMARK_DATA = {"metadata":{"title":"AIVA Variant Benchmark","subtitle"
   function readHash() {
     const [tab, q] = location.hash.slice(1).split("?");
     const p = new URLSearchParams(q || "");
-    return { tab: tab || "leaderboard", m: p.get("m"), c: p.get("c"), r: p.get("r"), s: p.get("s") };
+    return { tab: tab || "leaderboard", m: p.get("m"), c: p.get("c"), r: p.get("r"), s: p.get("s"), show: p.get("show") };
+  }
+
+  function lbHashQuery() {
+    const q = [];
+    if (state.lbScale !== "3") q.push("s=" + state.lbScale);
+    if (state.lbCols) q.push("show=" + state.lbCols.map(encodeURIComponent).join(","));
+    return q.length ? "?" + q.join("&") : "";
   }
 
   function writeHash() {
     const h = state.tab === "leaderboard"
-      ? `#leaderboard${state.lbScale !== "3" ? "?s=" + state.lbScale : ""}`
+      ? `#leaderboard${lbHashQuery()}`
       : `#${state.tab}?m=${encodeURIComponent(state.focus)}&c=${state.comps.map(encodeURIComponent).join(",")}`;
     if (location.hash !== h) history.replaceState(null, "", h);
   }
@@ -2127,6 +2201,10 @@ window.BENCHMARK_DATA = {"metadata":{"title":"AIVA Variant Benchmark","subtitle"
     if (h.m && byKey(h.m)) state.focus = h.m;
     if (h.c != null) state.comps = h.c.split(",").filter(Boolean);
     if (h.s === "3" || h.s === "5") state.lbScale = h.s;
+    if (h.tab === "leaderboard") {
+      const keys = (h.show || "").split(",").filter((k) => byKey(k));
+      state.lbCols = keys.length && keys.length < D.models.length ? keys : null;
+    }
     state.tab = RENDER[h.tab] ? h.tab : "leaderboard";
   }
 
@@ -2851,6 +2929,7 @@ window.BENCHMARK_DATA = {"metadata":{"title":"AIVA Variant Benchmark","subtitle"
   setupFlowHover();
   setupPicker();
   setupLbScatter();
+  setupLbPicker();
   $("drawerClose").onclick = closeDrawer;
   document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeDrawer(); });
   applyHash();
