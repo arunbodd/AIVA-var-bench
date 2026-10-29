@@ -28,6 +28,7 @@ Results_Claude_Sonnet_5_5_Analysis_rerun/partial_1454/
 !Results_Claude_Opus_5_5_Analysis_rerun/opus_metrics.json
 !Results_Claude_Sonnet_5_5_Analysis/sonnet_full.jsonl
 !Results_Claude_Opus_5_5_Analysis/opus_full.jsonl
+!Results_GPT_6_1_Sol_Analysis/sol_full.jsonl
 
 # ─── Large database archives & tables ───
 *.tar
