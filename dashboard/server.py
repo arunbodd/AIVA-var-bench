@@ -148,6 +148,7 @@ class DashboardHandler(http.server.SimpleHTTPRequestHandler):
                 "color": existing.get("color", ""),
                 "color_dark": existing.get("color_dark", ""),
                 "status": "active",
+                "section": existing.get("section", ""),
             })
             clear_legacy_exclusion(key)
         else:

@@ -15,13 +15,28 @@ results file. Columns (tab-separated):
     color       optional hex colour; empty picks the provider's next colour
     color_dark  optional lighter colour for the dark theme
     status      active, or removed to hide the model
+    section     leaderboard section: aiva (AIVA agent runs), agent (other
+                agents such as Claude Code or Antigravity) or automated
+                (rule-based pipelines); empty derives it from provider/method
 """
 
 from pathlib import Path
 
 REGISTRY_FILE = Path(__file__).resolve().parent / "models.tsv"
-COLUMNS = ["key", "name", "provider", "method", "path", "format", "color", "color_dark", "status"]
+COLUMNS = ["key", "name", "provider", "method", "path", "format", "color", "color_dark", "status", "section"]
 PROVIDERS = ["Anthropic", "OpenAI", "Google", "Rule-based", "Other"]
+SECTIONS = ["aiva", "agent", "automated"]
+
+
+def section_of(row: dict) -> str:
+    """Explicit `section`, else automated for rule-based, aiva for AIVA runs, agent otherwise."""
+    if row.get("section") in SECTIONS:
+        return row["section"]
+    if row.get("provider") == "Rule-based" or "rules" in row.get("method", "").lower():
+        return "automated"
+    if "aiva" in f"{row.get('method', '')} {row.get('name', '')}".lower():
+        return "aiva"
+    return "agent"
 
 # Colours handed out, in order, to models whose row leaves `color` empty.
 PROVIDER_COLORS = {
@@ -44,6 +59,7 @@ def read_registry(path: Path = REGISTRY_FILE) -> list[dict]:
         row = dict(zip(COLUMNS, (p.strip() for p in parts[: len(COLUMNS)])))
         row["status"] = row["status"] or "active"
         row["provider"] = row["provider"] if row["provider"] in PROVIDERS else "Other"
+        row["section"] = section_of(row)
         rows.append(row)
     return rows
 

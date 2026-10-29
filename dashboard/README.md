@@ -23,6 +23,7 @@ Ranking** (`#ranking`, an empty state until ranking results are added).
    | color | optional; empty takes the provider's next colour |
    | color_dark | optional lighter colour for the dark theme |
    | status | `active`, or `removed` to hide the model |
+   | section | leaderboard section: `aiva`, `agent` (Claude Code, Antigravity, …) or `automated` (rule-based); empty derives it |
 
 3. Rebuild and commit:
 

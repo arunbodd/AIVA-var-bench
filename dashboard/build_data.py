@@ -132,6 +132,7 @@ def discover_model_files(repo_root: Path) -> tuple[dict[str, dict], list[dict], 
             "color": row["color"],
             "color_dark": row["color_dark"] or row["color"],
             "description": row["method"],
+            "section": row["section"],
         }
 
     registered = {r["path"].split("/")[0] for r in rows}
@@ -370,6 +371,7 @@ def build_dashboard_dataset():
             "color": m_info["color"],
             "color_dark": m_info.get("color_dark", m_info["color"]),
             "description": m_info["description"],
+            "section": m_info["section"],
             "evaluated_count": n_eval,
             "total_cohort": total_cohort,
             "coverage_pct": round(n_eval / total_cohort * 100, 1),

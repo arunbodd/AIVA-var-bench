@@ -322,12 +322,6 @@ body[data-section="ranking"] .tab-bar, body[data-section="ranking"] .cls-only, b
 .lb-hero { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 24px; }
 .lb-hero h2 { margin: 0; font-size: 32px; font-weight: 700; letter-spacing: -0.025em; line-height: 1.15; }
 .lb-hero p { margin: 4px 0 0; color: var(--text-2); max-width: 70ch; }
-.lb-facts { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
-.lb-fact { appearance: none; text-align: left; font: inherit; color: inherit; cursor: pointer; display: grid; gap: 2px; padding: 12px 16px; background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 0 14px 14px 0; }
-.lb-fact:hover { border-color: var(--border-strong); background: var(--surface-2); }
-.lf-label { font-size: 12px; color: var(--text-2); }
-.lf-value { font-family: var(--font-mono); font-size: 22px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.25; }
-.lf-model { font-size: 13px; color: var(--text-2); }
 .lb-card { padding-bottom: 12px; }
 table.lb td { padding-top: 13px; padding-bottom: 13px; }
 .lb-rank { display: inline-block; min-width: 24px; font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--muted); }
@@ -349,10 +343,6 @@ table.lb tr.row-link:focus-visible td { background: var(--surface-2); }
 table.lb tr.row-link:hover td:nth-child(2) .model-name { text-decoration: underline; text-underline-offset: 3px; }
 tr.lb-divider td { text-transform: none; letter-spacing: 0; font-size: 12px; font-weight: 500; }
 @media (max-width: 640px) {
-  .lb-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-  .lb-fact { padding: 10px 12px; }
-  .lf-value { font-size: 18px; }
-  .lf-model { font-size: 12px; }
   table.cards.lb td.rank { display: flex; justify-content: flex-start; padding-bottom: 0; }
   table.cards.lb td.rank::before { content: "Rank"; margin-right: 8px; align-self: center; }
   table.cards.lb td:nth-child(2) { justify-content: flex-start; text-align: left; padding-bottom: 6px; }
@@ -415,6 +405,7 @@ table.lbt thead .lbt-first { font-size: 12px; font-weight: 600; color: var(--tex
 tr.lbt-groups th { border-bottom: 0; padding-bottom: 2px; }
 th.lbt-group { text-align: center; font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-2); }
 th.lbt-group > * { display: block; }
+table.lbt .lbt-gs { border-left: 1px solid var(--axis); }
 th.lbt-group::after { content: ""; display: block; height: 2px; margin: 4px 6px 0; background: var(--axis); border-radius: 1px; }
 th.lbt-nh { text-align: right; font-size: 12px; font-weight: 600; color: var(--text-2); min-width: 92px; }
 table.lbt th.lbt-model { text-align: center; min-width: 82px; max-width: 112px; white-space: normal; }
@@ -725,19 +716,6 @@ footer code { font-size: 12px; }
       </div>
       <button type="button" class="btn picker-btn" id="lbAllBtn" hidden>Show all</button>
     </div>
-    <div class="lb-facts" id="lbFacts"></div>
-    <div class="card" id="lbScatterCard" data-static>
-      <div class="card-head">
-        <div>
-          <h3 id="scTitle"></h3>
-          <p id="scSub"></p>
-        </div>
-        <div class="seg" id="scSeg" role="group" aria-label="Score">
-          <button data-v="5" type="button">5-class</button><button data-v="3" type="button">3-class</button>
-        </div>
-      </div>
-      <div id="lbScatter"></div>
-    </div>
     <div class="card lb-card" data-static>
       <div class="card-head">
         <div>
@@ -749,12 +727,24 @@ footer code { font-size: 12px; }
             <button data-v="3" type="button">3-class</button><button data-v="5" type="button">5-class</button>
           </div>
           <div class="seg" id="lbOrderSeg" role="group" aria-label="Column order">
-            <button data-v="rank" type="button">By rank</button><button data-v="provider" type="button">By provider</button>
+            <button data-v="section" type="button">By section</button><button data-v="rank" type="button">Overall rank</button>
           </div>
         </div>
       </div>
-      <div class="table-wrap"><table id="leaderboard" class="lbt"></table></div>
+      <div class="table-wrap"><table id="lbTable" class="lbt"></table></div>
       <p class="note" id="lbNote"></p>
+    </div>
+    <div class="card" id="lbScatterCard" data-static>
+      <div class="card-head">
+        <div>
+          <h3 id="scTitle"></h3>
+          <p id="scSub"></p>
+        </div>
+        <div class="seg" id="scSeg" role="group" aria-label="Score">
+          <button data-v="5" type="button">5-class</button><button data-v="3" type="button">3-class</button>
+        </div>
+      </div>
+      <div id="lbScatter"></div>
     </div>
   </section>
 
@@ -843,7 +833,7 @@ footer code { font-size: 12px; }
           <select id="flowCat" aria-label="Disease category"></select>
         </div>
       </div>
-      <div class="flow-grid" id="flows"></div>
+      <div class="flow-grid" id="flowGrid"></div>
     </div>
   </section>
 
@@ -1114,7 +1104,7 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
 
   const state = {
     tab: "leaderboard", clsTab: "leaderboard", clsSubtitle: "",
-    rankBy: "macro_f1_5", scatterScale: "5", lbScale: "3", lbCols: null, lbOrder: "rank",
+    rankBy: "macro_f1_5", scatterScale: "5", lbScale: "3", lbCols: null, lbOrder: "section",
     focus: null,
     comps: ["baseline_bias", "baseline_intervar"],
     catMetric: "macro_f1",
@@ -1261,6 +1251,16 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
     const mi = meth ? METHOD_ORDER.indexOf(meth) : 0;
     return PROVIDER_ORDER.indexOf(p) * 100 + (mi < 0 ? 50 : mi);
   };
+  // Leaderboard sections: AIVA runs, other agents (Claude Code, Antigravity, ...), automated rule-based pipelines
+  const SECTIONS = [["aiva", "AIVA"], ["agent", "Agents"], ["automated", "Automated"]];
+  const SECTION_TIP = { aiva: "Models run through the AIVA agent", agent: "General-purpose agents such as Claude Code or Antigravity", automated: "Rule-based ACMG classification pipelines" };
+  const sectionKey = (m) => {
+    if (SECTIONS.some(([k]) => k === m.section)) return m.section;
+    if (m.family === "Rule-based" || /rules/i.test(m.type || "")) return "automated";
+    return /aiva/i.test(`${m.type || ""} ${m.name}`) ? "aiva" : "agent";
+  };
+  const sectionLabel = (m) => SECTIONS.find(([k]) => k === sectionKey(m))[1];
+  const bySection = (models) => SECTIONS.map(([k, label]) => [label, models.filter((m) => sectionKey(m) === k), k]).filter(([, ms]) => ms.length);
   const byProvider = (models) => [...new Set(models.map(groupOf))].sort((a, b) => groupRank(a) - groupRank(b)).map((g) => [g, models.filter((m) => groupOf(m) === g)]);
 
   function renderSelector() {
@@ -1565,14 +1565,14 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
     const q = ($("lbPickQ").value || "").trim().toLowerCase();
     const keys = shown.map((m) => m.key);
     const list = D.models.filter((m) => !q || `${m.name} ${m.family} ${m.type}`.toLowerCase().includes(q));
-    $("lbPickList").innerHTML = byProvider(list).map(([g, ms]) => {
+    $("lbPickList").innerHTML = bySection(list).map(([g, ms]) => {
       const allOn = ms.every((m) => keys.includes(m.key));
       return `<div class="pk-group"><div class="pk-head"><span>${esc(g)}</span><button type="button" class="pk-all" data-group="${esc(g)}">${allOn ? "Clear" : "Select all"}</button></div>${ms.map((m) =>
         `<label class="pk-item"><input type="checkbox" data-key="${esc(m.key)}"${keys.includes(m.key) ? " checked" : ""}>${swatch(m)}<span>${esc(m.name)}</span><small>${esc(m.type)}${isFull(m) ? "" : " · subset"}</small></label>`).join("")}</div>`;
     }).join("") || `<p class="empty">No models match.</p>`;
     $("lbPickList").querySelectorAll("input[data-key]").forEach((c) => c.onchange = () => toggleLbCol(c.dataset.key));
     $("lbPickList").querySelectorAll(".pk-all").forEach((b) => b.onclick = () => {
-      const ms = list.filter((m) => groupOf(m) === b.dataset.group).map((m) => m.key);
+      const ms = list.filter((m) => sectionLabel(m) === b.dataset.group).map((m) => m.key);
       const cur = lbShown().map((m) => m.key);
       if (ms.every((k) => cur.includes(k))) {
         const rest = cur.filter((k) => !ms.includes(k));
@@ -1601,11 +1601,9 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
     const ranked = visible.filter(isFull).sort((a, b) => b[overallKey] - a[overallKey]);
     const partial = visible.filter((m) => !isFull(m)).sort((a, b) => b[overallKey] - a[overallKey]);
     const cols = [...ranked, ...partial];
-    const full = ranked;
-    const nProviders = new Set(D.models.map(providerOf)).size;
     $("lbLead").textContent = state.lbCols
       ? `Showing ${visible.length} of ${D.models.length} classifiers, each scored against the ClinGen expert classification of ${int(D.metadata.total_variants)} variants. Ranks and highlights are among the models shown.`
-      : `${D.models.length} classifiers from ${nProviders} provider${nProviders === 1 ? "" : "s"}, each scored against the ClinGen expert classification of ${int(D.metadata.total_variants)} variants.`;
+      : `${D.models.length} classifiers (${bySection(D.models).map(([g, ms]) => `${g} ${ms.length}`).join(", ")}), each scored against the ClinGen expert classification of ${int(D.metadata.total_variants)} variants.`;
     $("lbTitle").textContent = `F1 score by expert classification and disease category, ${three ? "3-class" : "5-class"}`;
     $("lbSub").innerHTML = (three
       ? "Calls grouped as pathogenic or likely pathogenic (P/LP), uncertain significance (VUS), and benign or likely benign (B/LB). Overall and category rows are macro F1 across these three groups."
@@ -1614,28 +1612,15 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
 
     renderLbScatter(cols);
 
-    // Key facts across the full cohort
-    const best = (k, low) => full.length ? full.reduce((a, b) => ((low ? metricVal(b, k) < metricVal(a, k) : metricVal(b, k) > metricVal(a, k)) ? b : a)) : null;
-    const claude = full.filter((m) => m.is_anthropic);
-    const facts = [
-      ["Highest macro F1, 5-class", best("macro_f1_5"), (m) => pct(m.macro_f1_5)],
-      ["Highest macro F1, 3-class", best("macro_f1_3"), (m) => pct(m.macro_f1_3)],
-      ["Fewest cross-direction errors", best("per1k", true), (m) => `${int(m.critical_error_count)} of ${int(m.evaluated_count)}`]
-    ];
-    if (claude.length) {
-      const c = claude.reduce((a, b) => (b[overallKey] > a[overallKey] ? b : a));
-      facts.splice(2, 0, [`Highest Claude macro F1, ${three ? "3" : "5"}-class`, c, (m) => pct(m[overallKey])]);
-    }
-    $("lbFacts").innerHTML = facts.filter(([, m]) => m).map(([label, m, fmt]) =>
-      `<button type="button" class="lb-fact" data-key="${esc(m.key)}"><span class="lf-label">${label}</span><span class="lf-value">${fmt(m)}</span><span class="lf-model">${mname(m)}</span></button>`).join("");
-    $("lbFacts").querySelectorAll(".lb-fact").forEach((b) => b.onclick = () => openAnalysis(b.dataset.key));
-
     seg("lbOrderSeg", state.lbOrder, (v) => { state.lbOrder = v; renderLeaderboard(); writeHash(); });
-    if (!cols.length) { $("leaderboard").innerHTML = `<tbody><tr><td class="empty">No models selected.</td></tr></tbody>`; return; }
+    if (!cols.length) { $("lbTable").innerHTML = `<tbody><tr><td class="empty">No models selected.</td></tr></tbody>`; return; }
 
-    // Column order: by overall rank, or grouped by provider (rank order within each group)
-    const groups = byProvider(cols).map(([g, ms]) => [g, ms.slice().sort((a, b) => cols.indexOf(a) - cols.indexOf(b))]);
-    const order = state.lbOrder === "provider" ? groups.flatMap(([, ms]) => ms) : cols;
+    // Column order: grouped by section (rank order within each), or by overall rank
+    const bySec = state.lbOrder === "section";
+    const groups = bySection(cols);
+    const order = bySec ? groups.flatMap(([, ms]) => ms) : cols;
+    const groupStart = new Set(bySec ? groups.slice(1).map(([, ms]) => ms[0].key) : []);
+    const gs = (m) => (groupStart.has(m.key) ? " lbt-gs" : "");
     const rankOf = (m) => (isFull(m) ? ranked.indexOf(m) + 1 : null);
     const SMALL_N = 100;
 
@@ -1664,15 +1649,15 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
     ];
 
 
-    const groupHead = state.lbOrder === "provider"
-      ? `<tr class="lbt-groups"><th class="lbt-first" colspan="2"></th>${groups.map(([g, ms]) => `<th colspan="${ms.length}" class="lbt-group">${esc(g)}</th>`).join("")}</tr>`
+    const groupHead = bySec
+      ? `<tr class="lbt-groups"><th class="lbt-first" colspan="2"></th>${groups.map(([g, ms, k], i) => `<th colspan="${ms.length}" class="lbt-group${i ? " lbt-gs" : ""}"${tipAttr(SECTION_TIP[k])}>${esc(g)}</th>`).join("")}</tr>`
       : "";
     const head = `<thead>${groupHead}<tr><th class="lbt-first">Measure</th><th class="lbt-nh">Variants</th>${order.map((m) => {
       const r = rankOf(m);
-      return `<th class="lbt-model"><button type="button" class="lbt-name" data-key="${esc(m.key)}"${tipAttr(`${m.name}\n${groupOf(m)}${isFull(m) ? "" : `\nScored on ${int(m.evaluated_count)} of ${int(m.total_cohort)} variants; not ranked`}\nSelect to open its analysis`)}>
+      return `<th class="lbt-model${gs(m)}"><button type="button" class="lbt-name" data-key="${esc(m.key)}"${tipAttr(`${m.name}\n${sectionLabel(m)} · ${groupOf(m)}${isFull(m) ? "" : `\nScored on ${int(m.evaluated_count)} of ${int(m.total_cohort)} variants; not ranked`}\nSelect to open its analysis`)}>
         <span class="lbt-rank">${r ? "#" + r : "not ranked"}</span>
         <span class="lbt-label">${swatch(m)}${esc(m.short_name)}${isFull(m) ? "" : "*"}</span>
-        <span class="lbt-meta">${state.lbOrder === "provider" ? esc(m.type) : esc(groupOf(m))}${isFull(m) ? "" : ` · n=${int(m.evaluated_count)}`}</span>
+        <span class="lbt-meta">${bySec ? esc(providerOf(m)) : esc(sectionLabel(m))}${isFull(m) ? "" : ` · n=${int(m.evaluated_count)}`}</span>
       </button></th>`;
     }).join("")}</tr></thead>`;
 
@@ -1686,17 +1671,17 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
         : `<td class="lbt-n"></td>`;
       return `<tr class="${r.strong ? "lbt-overall" : ""}${r.small ? " lbt-small" : ""}">${label}${n}${order.map((m) => {
         const v = r.get(m);
-        if (v == null) return `<td class="lbt-v na">—</td>`;
+        if (v == null) return `<td class="lbt-v na${gs(m)}">—</td>`;
         const isBest = bestVal != null && isFull(m) && Math.abs(v - bestVal) < 1e-9;
         // The best value in each row is tinted in the winning model's colour
         const tint = isBest ? ` style="background:color-mix(in srgb, ${m.color} 18%, var(--surface))"` : "";
-        return `<td class="lbt-v${isBest ? " best" : ""}${isFull(m) ? "" : " partial"}"${tint}${tipAttr(`${m.name}\n${r.label}${r.f1 ? " F1" : ""}: ${fmt(v)}${r.fmt ? "" : "%"}${r.n != null ? `\nn = ${int(r.n)} variants` : ""}${isBest ? "\nBest in row" : ""}`)}>${fmt(v)}</td>`;
+        return `<td class="lbt-v${gs(m)}${isBest ? " best" : ""}${isFull(m) ? "" : " partial"}"${tint}${tipAttr(`${m.name}\n${r.label}${r.f1 ? " F1" : ""}: ${fmt(v)}${r.fmt ? "" : "%"}${r.n != null ? `\nn = ${int(r.n)} variants` : ""}${isBest ? "\nBest in row" : ""}`)}>${fmt(v)}</td>`;
       }).join("")}</tr>`;
     };
     const span = order.length + 2;
     const body = sections.map(([title, rows]) => `<tr class="lbt-sec"><td class="lbt-first" colspan="${span}">${title}</td></tr>` + rows.map(rowHtml).join("")).join("");
-    $("leaderboard").innerHTML = head + `<tbody>${body}</tbody>`;
-    $("leaderboard").querySelectorAll(".lbt-name").forEach((b) => b.onclick = () => openAnalysis(b.dataset.key));
+    $("lbTable").innerHTML = head + `<tbody>${body}</tbody>`;
+    $("lbTable").querySelectorAll(".lbt-name").forEach((b) => b.onclick = () => openAnalysis(b.dataset.key));
     $("lbNote").innerHTML = [
       partial.length ? `* ${partial.map((m) => esc(m.short_name)).join(", ")} ${partial.length > 1 ? "were" : "was"} scored on part of the cohort, so ${partial.length > 1 ? "they are" : "it is"} not ranked and not eligible for best-in-row.` : "",
       cats.some((c) => catCount(c) < SMALL_N) ? `† Fewer than ${SMALL_N} variants; F1 on small categories varies widely.` : "",
@@ -1901,7 +1886,7 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
     $("flowLegend").innerHTML = `<span>Bands coloured by expert class:</span>` + legendLabels.map((l, i) =>
       `<span><span class="swatch" style="background:${classColors(legendLabels.length)[i]}"></span>${l}</span>`).join("");
     $("flowSub").textContent = state.flowCat === "all" ? `All ${int(D.metadata.total_variants)} cohort variants.` : `${state.flowCat}.`;
-    const grid = $("flows");
+    const grid = $("flowGrid");
     const ms = selModels();
     grid.innerHTML = ms.map((m) => `<div class="flow-panel" data-key="${esc(m.key)}"><p class="cm-title">${mname(m)}<span class="cm-n"></span></p><div class="flow-svg"></div></div>`).join("");
     grid.querySelectorAll(".flow-panel").forEach((panel) => {
@@ -1919,7 +1904,7 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
   }
 
   function setupFlowHover() {
-    const grid = $("flows");
+    const grid = $("flowGrid");
     const clear = () => grid.querySelectorAll("svg.hl").forEach((s) => { s.classList.remove("hl"); s.querySelectorAll(".on").forEach((e) => e.classList.remove("on")); });
     grid.addEventListener("pointerover", (e) => {
       const el = e.target.closest(".sk-link, .sk-node");
@@ -2272,7 +2257,7 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
     const q = [];
     if (state.lbScale !== "3") q.push("s=" + state.lbScale);
     if (state.lbCols) q.push("show=" + state.lbCols.map(encodeURIComponent).join(","));
-    if (state.lbOrder !== "rank") q.push("order=" + state.lbOrder);
+    if (state.lbOrder !== "section") q.push("order=" + state.lbOrder);
     return q.length ? "?" + q.join("&") : "";
   }
 
@@ -2288,7 +2273,7 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
     if (h.m && byKey(h.m)) state.focus = h.m;
     if (h.c != null) state.comps = h.c.split(",").filter(Boolean);
     if (h.s === "3" || h.s === "5") state.lbScale = h.s;
-    if (h.order === "provider" || h.order === "rank") state.lbOrder = h.order;
+    if (h.order === "rank") state.lbOrder = "rank";
     if (h.tab === "leaderboard") {
       const keys = (h.show || "").split(",").filter((k) => byKey(k));
       state.lbCols = keys.length && keys.length < D.models.length ? keys : null;
@@ -2723,10 +2708,12 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
     const clipRect = clip && getComputedStyle(clip).textOverflow === "ellipsis" && clip.scrollWidth > clip.clientWidth ? clip.getBoundingClientRect() : null;
     return lines.map((ln) => {
       let text = ln.words.join(" ");
+      if (cs.textTransform === "uppercase") text = text.toUpperCase();
+      else if (cs.textTransform === "lowercase") text = text.toLowerCase();
       if (clipRect) text = fitText(text, font, clipRect.right - ln.left);
       const h = ln.bottom - ln.top;
       const baseline = ln.bottom - (h - fs) / 2 - fs * 0.2;
-      return `<text x="${n2(ln.left - ox)}" y="${n2(baseline - oy)}" font-size="${fs}" font-weight="${cs.fontWeight}"${cs.fontStyle !== "normal" ? ` font-style="${cs.fontStyle}"` : ""} font-family="${xmlEsc(cs.fontFamily)}"${paint("fill", color)}>${xmlEsc(text)}</text>`;
+      return `<text x="${n2(ln.left - ox)}" y="${n2(baseline - oy)}" font-size="${fs}" font-weight="${cs.fontWeight}"${cs.fontStyle !== "normal" ? ` font-style="${cs.fontStyle}"` : ""} font-family="${xmlEsc(cs.fontFamily)}"${cs.letterSpacing !== "normal" && parseFloat(cs.letterSpacing) ? ` letter-spacing="${n2(parseFloat(cs.letterSpacing))}"` : ""}${paint("fill", color)}>${xmlEsc(text)}</text>`;
     }).join("");
   }
 
@@ -2961,7 +2948,7 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
   function figureName(card) {
     const parts = ["aiva", card.querySelector(".card-head h3").textContent];
     if (!card.hasAttribute("data-static")) parts.push(selModels().map((m) => m.short_name).join(" vs "));
-    if (card.querySelector("#flows") && state.flowCat !== "all") parts.push(state.flowCat);
+    if (card.querySelector("#flowGrid") && state.flowCat !== "all") parts.push(state.flowCat);
     if (card.querySelector("#cmGrid")) parts.push(state.cmScale + "-class", state.cmMode === "count" ? "counts" : "row-pct");
     if (card.querySelector("#xdirTable")) {
       if (state.errModel !== "selected") parts.push(byKey(state.errModel)?.short_name || "");
