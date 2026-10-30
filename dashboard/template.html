@@ -1125,7 +1125,10 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
   const int = (v) => Number(v || 0).toLocaleString("en-US");
   const signed = (v, d = 1) => (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v).toFixed(d);
   const byKey = (k) => D.models.find((m) => m.key === k);
-  const isFull = (m) => m.evaluated_count >= m.total_cohort;
+  // Ranked when at least 99% of the cohort was scored; the rest are partial runs
+  const FULL_COVERAGE = 0.99;
+  const isFull = (m) => m.evaluated_count >= FULL_COVERAGE * m.total_cohort;
+  const isComplete = (m) => m.evaluated_count >= m.total_cohort;
   const shortFam = (f) => FAMILY_SHORT[f] || f;
   const tipAttr = (s) => ` data-tip="${esc(s)}"`;
 
@@ -1654,10 +1657,10 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
       : "";
     const head = `<thead>${groupHead}<tr><th class="lbt-first">Measure</th><th class="lbt-nh">Variants</th>${order.map((m) => {
       const r = rankOf(m);
-      return `<th class="lbt-model${gs(m)}"><button type="button" class="lbt-name" data-key="${esc(m.key)}"${tipAttr(`${m.name}\n${sectionLabel(m)} · ${groupOf(m)}${isFull(m) ? "" : `\nScored on ${int(m.evaluated_count)} of ${int(m.total_cohort)} variants; not ranked`}\nSelect to open its analysis`)}>
+      return `<th class="lbt-model${gs(m)}"><button type="button" class="lbt-name" data-key="${esc(m.key)}"${tipAttr(`${m.name}\n${sectionLabel(m)} · ${groupOf(m)}${isComplete(m) ? "" : `\nScored on ${int(m.evaluated_count)} of ${int(m.total_cohort)} variants${isFull(m) ? "" : "; not ranked"}`}\nSelect to open its analysis`)}>
         <span class="lbt-rank">${r ? "#" + r : "not ranked"}</span>
         <span class="lbt-label">${swatch(m)}${esc(m.short_name)}${isFull(m) ? "" : "*"}</span>
-        <span class="lbt-meta">${bySec ? esc(providerOf(m)) : esc(sectionLabel(m))}${isFull(m) ? "" : ` · n=${int(m.evaluated_count)}`}</span>
+        <span class="lbt-meta">${bySec ? esc(providerOf(m)) : esc(sectionLabel(m))}${isComplete(m) ? "" : ` · n=${int(m.evaluated_count)}`}</span>
       </button></th>`;
     }).join("")}</tr></thead>`;
 
@@ -1684,6 +1687,7 @@ window.BENCHMARK_DATA = __BENCHMARK_DATA__;
     $("lbTable").querySelectorAll(".lbt-name").forEach((b) => b.onclick = () => openAnalysis(b.dataset.key));
     $("lbNote").innerHTML = [
       partial.length ? `* ${partial.map((m) => esc(m.short_name)).join(", ")} ${partial.length > 1 ? "were" : "was"} scored on part of the cohort, so ${partial.length > 1 ? "they are" : "it is"} not ranked and not eligible for best-in-row.` : "",
+      ranked.filter((m) => !isComplete(m)).map((m) => `${esc(m.short_name)} returned no call for ${int(m.total_cohort - m.evaluated_count)} variant${m.total_cohort - m.evaluated_count === 1 ? "" : "s"}; it is ranked on the ${int(m.evaluated_count)} it classified.`).join("<br>"),
       cats.some((c) => catCount(c) < SMALL_N) ? `† Fewer than ${SMALL_N} variants; F1 on small categories varies widely.` : "",
       "Categories group variants by the ClinGen expert panel (VCEP) that curated them. Cross-direction errors: a benign or likely benign variant called pathogenic or likely pathogenic, or the reverse."
     ].filter(Boolean).join("<br>");
