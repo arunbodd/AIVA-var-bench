@@ -27,7 +27,11 @@ Results_Claude_Sonnet_5_5_Analysis_rerun/partial_1454/
 !Results_Claude_Sonnet_5_5_Analysis_rerun/sonnet_full.jsonl
 !Results_Claude_Sonnet_5_5_Analysis_rerun/sonnet_metrics.json
 !Results_Gemini_4_Argon_Analysis/argon_full.jsonl
+!Results_Gemini_4_Hydrogen_Analysis/hydrogen_full.jsonl
+!Results_Gemini_4_Neon_Analysis/neon_full.jsonl
 !Results_GPT_6_Astra_Analysis/astra_full.jsonl
+!Results_GPT_6_2_Astra_Analysis/astra62_full.jsonl
+!Results_GPT_6_2_Sol_Analysis/sol62_full.jsonl
 !Results_Claude_Opus_5_5_Analysis_rerun/opus_full.jsonl
 !Results_Claude_Opus_5_5_Analysis_rerun/opus_metrics.json
 !Results_Claude_Sonnet_5_5_Analysis/sonnet_full.jsonl
